@@ -162,8 +162,17 @@ function initializeDataTable() {
                     let typeBadge = '';
                     
                     if (row && row.type !== undefined && row.type !== null) {
+                        const typeVal = row.type;
+                        let badgeClass = 'badge-light-primary';
                         
-                        const displayLabel = row.packSize != null ? row.packSize+":"+"Pack Item" : "Catch Weight";
+                        if (row.packSize != null) {
+                            badgeClass = 'badge-light-secondary';
+                        } else if (row.packSize == null) {
+                            badgeClass = 'badge-light-success';
+                        }
+
+
+                        const displayLabel = row.packSize != null ? row.packSize + ":" + "Pack Item" : "Catch Weight";
 
 
 
