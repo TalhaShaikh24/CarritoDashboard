@@ -672,19 +672,15 @@ function applyInventoryTypeState() {
     const unitFullName = $('#newInvUnit').val() ? $('#newInvUnit option:selected').text().trim() : '';
     const unitCode = unitFullName ? (unitFullName.includes(' - ') ? unitFullName.split(' - ')[0].trim() : unitFullName) : '';
 
-    // Price label follows the type: Pack Item is priced per case,
-    // Catch Weight Item is priced per selected unit (unit code shown as a badge)
-    if (isPackItem) {
-        $('#newInvPriceLabel').html('Price Per Case *');
-        $('#newInvPrice').attr('placeholder', 'Enter Price Per Case');
-    } else if (isCatchWeight) {
-        if (unitCode) {
-            $('#newInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${unitCode}</span> *`);
-            $('#newInvPrice').attr('placeholder', `Enter Price Per ${unitCode}`);
-        } else {
-            $('#newInvPriceLabel').html('Price *');
-            $('#newInvPrice').attr('placeholder', 'Enter Price');
-        }
+    // Price label shows the entered weight with the selected unit
+    // (e.g. "Price Per 2.5 BA *"), for both item types
+    const weightValue = $('#newInvWeight').val() ? String($('#newInvWeight').val()).trim() : '';
+    if (weightValue && unitCode) {
+        $('#newInvPriceLabel').html(`Price Per ${weightValue} <span class="badge badge-light-secondary">${unitCode}</span> *`);
+        $('#newInvPrice').attr('placeholder', `Enter Price Per ${weightValue} ${unitCode}`);
+    } else if (unitCode) {
+        $('#newInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${unitCode}</span> *`);
+        $('#newInvPrice').attr('placeholder', `Enter Price Per ${unitCode}`);
     } else {
         $('#newInvPriceLabel').html('Price *');
         $('#newInvPrice').attr('placeholder', 'Enter Price');
@@ -701,6 +697,7 @@ function applyInventoryTypeState() {
 
 $(document).on('change', '#newInvType', applyInventoryTypeState);
 $(document).on('change', '#newInvUnit', applyInventoryTypeState);
+$(document).on('input change', '#newInvWeight', applyInventoryTypeState);
 
 // Edit form: same Type-based state as Add, but the Type itself is fixed
 // (the #editInvType select is disabled, so it can never change here)
@@ -720,18 +717,15 @@ function applyEditInventoryTypeState() {
     const unitFullName = $('#editInvUnit').val() ? $('#editInvUnit option:selected').text().trim() : '';
     const unitCode = unitFullName ? (unitFullName.includes(' - ') ? unitFullName.split(' - ')[0].trim() : unitFullName) : '';
 
-    // Price label follows the type, same as the Add form
-    if (isPackItem) {
-        $('#editInvPriceLabel').html('Price Per Case *');
-        $('#editInvPrice').attr('placeholder', 'Enter Price Per Case');
-    } else if (isCatchWeight) {
-        if (unitCode) {
-            $('#editInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${unitCode}</span> *`);
-            $('#editInvPrice').attr('placeholder', `Enter Price Per ${unitCode}`);
-        } else {
-            $('#editInvPriceLabel').html('Price *');
-            $('#editInvPrice').attr('placeholder', 'Enter Price');
-        }
+    // Price label shows the entered weight with the selected unit
+    // (e.g. "Price Per 2.5 BA *"), for both item types
+    const weightValue = $('#editInvWeight').val() ? String($('#editInvWeight').val()).trim() : '';
+    if (weightValue && unitCode) {
+        $('#editInvPriceLabel').html(`Price Per ${weightValue} <span class="badge badge-light-secondary">${unitCode}</span> *`);
+        $('#editInvPrice').attr('placeholder', `Enter Price Per ${weightValue} ${unitCode}`);
+    } else if (unitCode) {
+        $('#editInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${unitCode}</span> *`);
+        $('#editInvPrice').attr('placeholder', `Enter Price Per ${unitCode}`);
     } else {
         $('#editInvPriceLabel').html('Price *');
         $('#editInvPrice').attr('placeholder', 'Enter Price');
@@ -747,3 +741,4 @@ function applyEditInventoryTypeState() {
 }
 
 $(document).on('change', '#editInvUnit', applyEditInventoryTypeState);
+$(document).on('input change', '#editInvWeight', applyEditInventoryTypeState);
