@@ -1920,6 +1920,11 @@ a.paginate_button.previous, a.paginate_button.next {
         outline: none;
         transition: border-color 0.2s, box-shadow 0.2s;
     }
+    .form-group input:disabled,
+    .form-group select:disabled,
+    .form-group textarea:disabled {
+        padding:0px!important;
+    }
 
         .form-group input:focus,
         .form-group select:focus,
