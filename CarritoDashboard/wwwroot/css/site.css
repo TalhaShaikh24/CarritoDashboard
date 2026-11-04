@@ -846,6 +846,16 @@ body {
 button:disabled {
     cursor: not-allowed!important;
 }
+
+/* Disabled form controls: greyed out with a not-allowed cursor */
+input:disabled,
+select:disabled,
+textarea:disabled {
+    background-color: #f3f4f6 !important;
+    color: #9ca3af !important;
+    cursor: not-allowed !important;
+    opacity: 1;
+}
 .btn-primary {
     display: inline-flex;
     align-items: center;
