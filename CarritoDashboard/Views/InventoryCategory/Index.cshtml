@@ -12,10 +12,16 @@
                 <input type="text" placeholder="Search categories..." id="categorySearch">
             </div>
         </div>
-        <button id="btnAddNewCategory" class="btn-primary">
-            <i style="width: 18px;" data-lucide="plus"></i>
-            Add Category
-        </button>
+        <div class="module-header-right">
+            <select class="form-control" id="filterStorekeeper" data-search="true" style="min-width: 170px;">
+                <option value="">Loading Storekeepers...</option>
+            </select>
+
+            <button id="btnAddNewCategory" class="btn-primary">
+                <i style="width: 18px;" data-lucide="plus"></i>
+                Add Category
+            </button>
+        </div>
     </div>
 
     <div class="table-container">

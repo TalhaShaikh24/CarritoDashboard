@@ -29,7 +29,16 @@ $(document).ready(() => {
     // 1. Load Filter Options (Storekeepers/Brands/Categories) then Init Table
     Promise.all([fetchStorekeepers(), fetchCategories(), fetchBrands(), fetchUnits()]).then(() => {
         populateFilters();
-        initializeDataTable();
+        if (AuthHelper.isStorekeeper()) {
+            initializeDataTable();
+        } else {
+            // Admin: the storekeeper filter is only populated now, so fetch the
+            // selected storekeeper's categories before initializing the table
+            fetchCategories().then(() => {
+                populateCategoryFilter();
+                initializeDataTable();
+            });
+        }
     });
 
     // Handle storekeeper ready event
@@ -50,10 +59,20 @@ $(document).ready(() => {
         }
     });
 
-    $('#filterStorekeeper, #filterCategory, #filterBrand').on('change', function () {
+    $('#filterCategory, #filterBrand').on('change', function () {
         if (inventoryTable) {
             inventoryTable.ajax.reload();
         }
+    });
+
+    $('#filterStorekeeper').on('change', function () {
+        // Categories belong to the selected storekeeper - reload them first
+        fetchCategories().then(() => {
+            populateCategoryFilter();
+            if (inventoryTable) {
+                inventoryTable.ajax.reload();
+            }
+        });
     });
 
     // 3. Edit Button Listener
@@ -230,11 +249,26 @@ function fetchStorekeepers() {
 
 function fetchCategories() {
     return new Promise(resolve => {
-        $.get(baseApiUrl + '/api/InventoryCategory', { PageSize: 100 }, (res) => {
+        const params = { PageSize: 100 };
+        const storekeeperId = getActiveStorekeeperId();
+        if (storekeeperId) {
+            params.storekeeperId = storekeeperId;
+        }
+        $.get(baseApiUrl + '/api/InventoryCategory', params, (res) => {
             if (res.status === 200) categoriesCache = res.data.items;
             resolve();
         }).fail(() => resolve());
     });
+}
+
+function populateCategoryFilter() {
+    const catSelect = $('#filterCategory');
+    catSelect.empty();
+    catSelect.append(new Option('All Categories', ''));
+    categoriesCache.forEach(c => catSelect.append(new Option(c.name, c.id)));
+    if (catSelect.data('customSelect')) {
+        catSelect.customSelect('refresh');
+    }
 }
 
 function fetchBrands() {

@@ -1,16 +1,99 @@
 ﻿let categoriesTable;
+
+function getActiveStorekeeperId() {
+    if (AuthHelper.isStorekeeper()) {
+        return AuthHelper.getStorekeeperId();
+    }
+    const val = $('#filterStorekeeper').val();
+    return val || AuthHelper.getStorekeeperId() || null;
+}
+
+let storekeepersCache = [];
+
 let selectedFiles = {
     newCategory: {},
     editCategory: {}
 };
 
 $(document).ready(() => {
+    if (AuthHelper.isStorekeeper()) {
+        const storeName = AuthHelper.getStoreName();
+        if (storeName) {
+            $('.page-subtitle').text(`Managing categories for ${storeName}`);
+        }
+    }
+
     $('#categorySearch').on('input', function () {
         categoriesTable.search(this.value).draw();
     });
 
-    initializeDataTable();
+    // Load Storekeepers then Init Table (same sequence as the Inventory Items page)
+    fetchStorekeepers().then(() => {
+        populateStorekeeperFilter();
+        initializeDataTable();
+    });
+
+    // Handle storekeeper ready event
+    $(document).on('storekeeperReady', function (e, skp) {
+        if (skp && skp.storeName) {
+            $('.page-subtitle').text(`Managing categories for ${skp.storeName}`);
+        }
+        populateStorekeeperFilter();
+        if (categoriesTable) {
+            categoriesTable.ajax.reload();
+        }
+    });
+
+    $('#filterStorekeeper').on('change', function () {
+        if (categoriesTable) {
+            categoriesTable.ajax.reload();
+        }
+    });
 });
+
+function fetchStorekeepers() {
+    return new Promise(resolve => {
+        $.get(baseApiUrl + '/api/Storekeeper', { PageNumber: 1, PageSize: 100 }, (res) => {
+            if (res && res.status === 200 && res.data && res.data.items) {
+                storekeepersCache = res.data.items;
+            }
+            resolve();
+        }).fail(() => resolve());
+    });
+}
+
+function populateStorekeeperFilter() {
+    const skSelect = $('#filterStorekeeper');
+
+    skSelect.empty();
+
+    if (AuthHelper.isStorekeeper()) {
+        const skId = getActiveStorekeeperId() || '';
+        const skName = AuthHelper.getStoreName() || 'My Store';
+        skSelect.append(new Option(skName, skId, true, true));
+        // Hide select container and show a store badge
+        skSelect.closest('.custom-select-container, select').hide();
+        if ($('#skpActiveBadge').length === 0) {
+            $(`<div id="skpActiveBadge" class="storekeeper-badge-pill" style="margin-right: 8px;">
+                <i style="width:14px;height:14px;" data-lucide="store"></i>
+                <span>${skName}</span>
+            </div>`).insertBefore(skSelect.parent());
+            if (window.lucide) lucide.createIcons();
+        }
+    } else {
+        if (storekeepersCache.length === 0) {
+            skSelect.append(new Option('No Storekeepers Found', ''));
+        } else {
+            storekeepersCache.forEach((sk, idx) => {
+                const displayName = sk.storeName || sk.fullName || `Storekeeper #${sk.id}`;
+                const isFirst = idx === 0;
+                const opt = new Option(displayName, sk.id, isFirst, isFirst);
+                skSelect.append(opt);
+            });
+        }
+        $(skSelect).customSelect({ placeholder: 'Select Storekeeper', searchable: true, searchableThreshold: 0 });
+    }
+}
 
 function initializeDataTable() {
     categoriesTable = $('#categoriesTable').DataTable({
@@ -22,7 +105,7 @@ function initializeDataTable() {
         lengthMenu: [10, 25, 50, 100],
         language: {
             processing: '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>',
-            emptyTable: "No categories found",
+            emptyTable: "No categories found for selected storekeeper",
             zeroRecords: "No matching categories found",
             info: "Page <strong>_PAGE_</strong> of <strong>_PAGES_</strong>",
             paginate: {
@@ -35,13 +118,22 @@ function initializeDataTable() {
             const pageNumber = (data.start / data.length) + 1;
             const searchValue = data.search.value;
 
+            const storekeeperId = getActiveStorekeeperId();
+
+            if (!storekeeperId) {
+                callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                return;
+            }
+
+            // Always fetch categories for the active storekeeper only
             $.ajax({
                 url: baseApiUrl + '/api/InventoryCategory',
                 type: 'GET',
                 data: {
                     PageNumber: pageNumber,
                     PageSize: pageSize,
-                    Search: searchValue
+                    Search: searchValue,
+                    storekeeperId: storekeeperId
                 },
                 success: function (response) {
                     if (response.status === 200) {
@@ -134,7 +226,14 @@ function addNewCategory() {
         return;
     }
 
+    const storekeeperId = getActiveStorekeeperId();
+    if (!storekeeperId) {
+        showNotification("Please select or assign a storekeeper first", "error");
+        return;
+    }
+
     const formData = new FormData();
+    formData.append('StorekeeperId', storekeeperId);
     formData.append('Name', name);
 
     if (files.photo) {
