@@ -598,14 +598,13 @@ $('#btnAddNewInventory').click(function () {
             </div>
 
             <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label>Weight *</label>
+                    <input type="number" id="newInvWeight" class="form-control" min="0" step="0.01" required placeholder="Enter Weight">
+                </div>
                 <div class="form-group col-md-6">
                     <label id="newInvPriceLabel">Price *</label>
                     <input type="number" id="newInvPrice" class="form-control" min="0" required placeholder="Enter Price">
-                </div>
-                
-                <div class="form-group col-md-3">
-                    <label>Weight</label>
-                    <input type="number" id="newInvWeight" class="form-control" min="0" step="0.01" placeholder="Enter Weight">
                 </div>
                 <div class="form-group col-md-3">
                     <label id="newInvPackSizeLabel">Pack Size</label>
