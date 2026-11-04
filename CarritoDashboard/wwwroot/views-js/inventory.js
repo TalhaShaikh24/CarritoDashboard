@@ -672,15 +672,23 @@ function applyInventoryTypeState() {
     const unitFullName = $('#newInvUnit').val() ? $('#newInvUnit option:selected').text().trim() : '';
     const unitCode = unitFullName ? (unitFullName.includes(' - ') ? unitFullName.split(' - ')[0].trim() : unitFullName) : '';
 
-    // Price label shows the entered weight with the selected unit
-    // (e.g. "Price Per 2.5 BA *"), for both item types
-    const weightValue = $('#newInvWeight').val() ? String($('#newInvWeight').val()).trim() : '';
-    if (weightValue && unitCode) {
-        $('#newInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${weightValue} ${unitCode}</span> *`);
-        $('#newInvPrice').attr('placeholder', `Enter Price Per ${weightValue} ${unitCode}`);
-    } else if (unitCode) {
-        $('#newInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${unitCode}</span> *`);
-        $('#newInvPrice').attr('placeholder', `Enter Price Per ${unitCode}`);
+    // Price label: Pack Item is priced per case; Catch Weight Item shows the
+    // entered weight with the selected unit as a badge (e.g. "Price Per [2.5 BA] *")
+    if (isPackItem) {
+        $('#newInvPriceLabel').html('Price Per Case *');
+        $('#newInvPrice').attr('placeholder', 'Enter Price Per Case');
+    } else if (isCatchWeight) {
+        const weightValue = $('#newInvWeight').val() ? String($('#newInvWeight').val()).trim() : '';
+        if (weightValue && unitCode) {
+            $('#newInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${weightValue} ${unitCode}</span> *`);
+            $('#newInvPrice').attr('placeholder', `Enter Price Per ${weightValue} ${unitCode}`);
+        } else if (unitCode) {
+            $('#newInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${unitCode}</span> *`);
+            $('#newInvPrice').attr('placeholder', `Enter Price Per ${unitCode}`);
+        } else {
+            $('#newInvPriceLabel').html('Price *');
+            $('#newInvPrice').attr('placeholder', 'Enter Price');
+        }
     } else {
         $('#newInvPriceLabel').html('Price *');
         $('#newInvPrice').attr('placeholder', 'Enter Price');
@@ -717,15 +725,23 @@ function applyEditInventoryTypeState() {
     const unitFullName = $('#editInvUnit').val() ? $('#editInvUnit option:selected').text().trim() : '';
     const unitCode = unitFullName ? (unitFullName.includes(' - ') ? unitFullName.split(' - ')[0].trim() : unitFullName) : '';
 
-    // Price label shows the entered weight with the selected unit
-    // (e.g. "Price Per 2.5 BA *"), for both item types
-    const weightValue = $('#editInvWeight').val() ? String($('#editInvWeight').val()).trim() : '';
-    if (weightValue && unitCode) {
-        $('#editInvPriceLabel').html(`Price Per ${weightValue} <span class="badge badge-light-secondary">${unitCode}</span> *`);
-        $('#editInvPrice').attr('placeholder', `Enter Price Per ${weightValue} ${unitCode}`);
-    } else if (unitCode) {
-        $('#editInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${unitCode}</span> *`);
-        $('#editInvPrice').attr('placeholder', `Enter Price Per ${unitCode}`);
+    // Price label: Pack Item is priced per case; Catch Weight Item shows the
+    // entered weight with the selected unit as a badge (e.g. "Price Per [2.5 BA] *")
+    if (isPackItem) {
+        $('#editInvPriceLabel').html('Price Per Case *');
+        $('#editInvPrice').attr('placeholder', 'Enter Price Per Case');
+    } else if (isCatchWeight) {
+        const weightValue = $('#editInvWeight').val() ? String($('#editInvWeight').val()).trim() : '';
+        if (weightValue && unitCode) {
+            $('#editInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${weightValue} ${unitCode}</span> *`);
+            $('#editInvPrice').attr('placeholder', `Enter Price Per ${weightValue} ${unitCode}`);
+        } else if (unitCode) {
+            $('#editInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${unitCode}</span> *`);
+            $('#editInvPrice').attr('placeholder', `Enter Price Per ${unitCode}`);
+        } else {
+            $('#editInvPriceLabel').html('Price *');
+            $('#editInvPrice').attr('placeholder', 'Enter Price');
+        }
     } else {
         $('#editInvPriceLabel').html('Price *');
         $('#editInvPrice').attr('placeholder', 'Enter Price');
