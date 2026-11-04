@@ -392,6 +392,10 @@ function editInventory(id) {
                 $('#editInvWeight').val(item.weight);
                 $('#editInvDescription').val(item.description);
                 // Type is shown but cannot be changed in Edit (the select is disabled)
+                debugger
+                $("#editInvPackSize").removeAttr("required");
+                $('#editInvPackSizeLabel').html('Pack Size');
+
                 $('#editInvType').val(item.type);
                 $('#editInvPackSize').val(item.packSize);
                 $('#editInvMinOrderQuantity').val(item.minOrderQuantity);
@@ -677,7 +681,14 @@ function applyInventoryTypeState() {
     if (isPackItem) {
         $('#newInvPriceLabel').html('Price Per Case *');
         $('#newInvPrice').attr('placeholder', 'Enter Price Per Case');
+
+        $("#newInvPackSize").attr("required", "true");
+        $('#newInvPackSizeLabel').html('Pack Size *');
     } else if (isCatchWeight) {
+
+        $("#newInvPackSize").removeAttr("required");
+        $('#newInvPackSizeLabel').html('Pack Size');
+
         const weightValue = $('#newInvWeight').val() ? String($('#newInvWeight').val()).trim() : '';
         if (weightValue && unitCode) {
             $('#newInvPriceLabel').html(`Price Per <span class="badge badge-light-primary">${weightValue} ${unitCode}</span> *`);
@@ -695,7 +706,6 @@ function applyInventoryTypeState() {
     }
 
     // Pack Size label stays plain; only its placeholder follows the selected unit
-    $('#newInvPackSizeLabel').html('Pack Size *');
     if (unitFullName) {
         $('#newInvPackSize').attr('placeholder', `Enter Size in ${unitCode}`);
     } else {
@@ -730,7 +740,13 @@ function applyEditInventoryTypeState() {
     if (isPackItem) {
         $('#editInvPriceLabel').html('Price Per Case *');
         $('#editInvPrice').attr('placeholder', 'Enter Price Per Case');
+
+        $("#editInvPackSize").attr("required", "true");
+        $('#editInvPackSizeLabel').html('Pack Size *');
     } else if (isCatchWeight) {
+        $("#editInvPackSize").removeAttr("required");
+        $('#editInvPackSizeLabel').html('Pack Size');
+
         const weightValue = $('#editInvWeight').val() ? String($('#editInvWeight').val()).trim() : '';
         if (weightValue && unitCode) {
             $('#editInvPriceLabel').html(`Price Per <span class="badge badge-light-primary">${weightValue} ${unitCode}</span> *`);
@@ -747,8 +763,6 @@ function applyEditInventoryTypeState() {
         $('#editInvPrice').attr('placeholder', 'Enter Price');
     }
 
-    // Pack Size label stays plain; only its placeholder follows the selected unit
-    $('#editInvPackSizeLabel').html('Pack Size *');
     if (unitFullName) {
         $('#editInvPackSize').attr('placeholder', `Enter Size in ${unitCode}`);
     } else {
