@@ -167,9 +167,12 @@ function initializeDataTable() {
                         
                         if (row.packSize != null) {
                             badgeClass = 'badge-light-secondary';
-                        } 
+                        } else if (row.packSize == null) {
+                            badgeClass = 'badge-light-success';
+                        }
 
-                        const displayLabel = row.packSize != null ? "Pack: " + row.packSize : "Catch Weight";
+
+                        const displayLabel = row.packSize != null ? row.packSize + ":" + "Pack Item" : "Catch Weight";
 
 
 
@@ -317,7 +320,13 @@ function populateFilters() {
         skSelect.append(new Option(skName, skId, true, true));
         // Hide select container and show a store badge
         skSelect.closest('.custom-select-container, select').hide();
-        
+        if ($('#skpActiveBadge').length === 0) {
+            $(`<div id="skpActiveBadge" class="storekeeper-badge-pill" style="margin-right: 8px;">
+                <i style="width:14px;height:14px;" data-lucide="store"></i>
+                <span>${skName}</span>
+            </div>`).insertBefore(skSelect.parent());
+            if (window.lucide) lucide.createIcons();
+        }
     } else {
         if (storekeepersCache.length === 0) {
             skSelect.append(new Option('No Storekeepers Found', ''));
@@ -520,7 +529,8 @@ $('#btnAddNewInventory').click(function () {
     // Generate Options from Cache
     const categoryOptions = getOptionsHtml(categoriesCache);
     const brandOptions = getOptionsHtml(brandsCache);
-    const unitOptions = getOptionsHtml(unitsCache);
+    // The first unit is selected by default in the Add form
+    const unitOptions = getOptionsHtml(unitsCache, unitsCache.length ? unitsCache[0].id : undefined);
 
     const addFormHtml = `
         <form id="frmAddInventory">
@@ -555,6 +565,13 @@ $('#btnAddNewInventory').click(function () {
                         <option value="2">Catch Weight Item</option>
                     </select>
                 </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label id="newInvPriceLabel">Price *</label>
+                    <input type="number" id="newInvPrice" class="form-control" min="0" required placeholder="Enter Price">
+                </div>
                 <div class="form-group col-md-6">
                     <label>Unit *</label>
                     <select id="newInvUnit" class="form-control" required>
@@ -562,20 +579,12 @@ $('#btnAddNewInventory').click(function () {
                         ${unitOptions}
                     </select>
                 </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group col-md-6">
-                    <label>Price *</label>
-                    <input type="number" id="newInvPrice" class="form-control" min="0" required placeholder="Enter Price">
-                </div>
-                
                 <div class="form-group col-md-3">
                     <label>Weight</label>
                     <input type="number" id="newInvWeight" class="form-control" min="0" step="0.01" placeholder="Enter Weight">
                 </div>
                 <div class="form-group col-md-3">
-                    <label>Pack Size</label>
+                    <label id="newInvPackSizeLabel">Pack Size</label>
                     <input type="number" id="newInvPackSize" class="form-control" min="0" placeholder="Enter Pack Size">
                 </div>
                 <div class="form-group col-md-3">
@@ -638,6 +647,38 @@ function applyInventoryTypeState() {
     if (isPackItem) {
         $('#newInvWeight').val('');
     }
+
+    // Unit display: full name in the select (e.g. "BA - Bag"), short code before " - " (e.g. "BA")
+    const unitFullName = $('#newInvUnit').val() ? $('#newInvUnit option:selected').text().trim() : '';
+    const unitCode = unitFullName ? (unitFullName.includes(' - ') ? unitFullName.split(' - ')[0].trim() : unitFullName) : '';
+
+    // Price label follows the type: Pack Item is priced per case,
+    // Catch Weight Item is priced per selected unit (unit code shown as a badge)
+    if (isPackItem) {
+        $('#newInvPriceLabel').html('Price Per Case *');
+        $('#newInvPrice').attr('placeholder', 'Enter Price Per Case');
+    } else if (isCatchWeight) {
+        if (unitCode) {
+            $('#newInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${unitCode}</span> *`);
+            $('#newInvPrice').attr('placeholder', `Enter Price Per ${unitCode}`);
+        } else {
+            $('#newInvPriceLabel').html('Price *');
+            $('#newInvPrice').attr('placeholder', 'Enter Price');
+        }
+    } else {
+        $('#newInvPriceLabel').html('Price *');
+        $('#newInvPrice').attr('placeholder', 'Enter Price');
+    }
+
+    // Pack Size label shows the selected unit as a badge ("in BA - Bag")
+    if (unitFullName) {
+        $('#newInvPackSizeLabel').html(`Pack Size * <span class="badge badge-light-secondary">in ${unitFullName}</span>`);
+        $('#newInvPackSize').attr('placeholder', `Enter Size in ${unitCode}`);
+    } else {
+        $('#newInvPackSizeLabel').html('Pack Size');
+        $('#newInvPackSize').attr('placeholder', 'Enter Pack Size');
+    }
 }
 
 $(document).on('change', '#newInvType', applyInventoryTypeState);
+$(document).on('change', '#newInvUnit', applyInventoryTypeState);
