@@ -391,6 +391,11 @@ function editInventory(id) {
                 $('#editInvPrice').val(item.price);
                 $('#editInvWeight').val(item.weight);
                 $('#editInvDescription').val(item.description);
+                // Type is shown but cannot be changed in Edit (the select is disabled)
+                $('#editInvType').val(item.type);
+                $('#editInvPackSize').val(item.packSize);
+                $('#editInvMinOrderQuantity').val(item.minOrderQuantity);
+                applyEditInventoryTypeState();
 
                 $("#editInvBrand").customSelect();
                 $("#editInvCategory").customSelect();
@@ -476,12 +481,30 @@ function updateInventory(id) {
     const formData = new FormData();
     const files = selectedFiles.editInventory;
 
-    formData.append('UpdatedByUserId', AuthHelper.getUserId() || 1); 
+    formData.append('UpdatedByUserId', AuthHelper.getUserId() || 1);
+
+    // Type cannot change in Edit: the disabled select still holds the item's
+    // original type, and the API requires Type on update, so it is sent as-is
+    const type = $('#editInvType').val();
+    const packSize = $('#editInvPackSize').val();
+    const weight = $('#editInvWeight').val();
+
+    // Pack Item needs Pack Size (Weight is not sent); Catch Weight Item needs Weight (Pack Size is not sent)
+    if ((type === '1' && !packSize) || (type === '2' && !weight)) {
+        showNotification("Please fill all required fields", "error");
+        return;
+    }
 
     // Optional/Nullable fields
     formData.append('Title', $('#editInvTitle').val().trim());
     formData.append('Price', $('#editInvPrice').val() || 0);
-    formData.append('Weight', $('#editInvWeight').val() || 0);
+    formData.append('Type', type);
+    if (type === '1') {
+        formData.append('PackSize', packSize);
+    } else {
+        formData.append('Weight', weight || 0);
+    }
+    formData.append('MinOrderQuantity', $('#editInvMinOrderQuantity').val() || 0);
     formData.append('Description', $('#editInvDescription').val().trim());
     formData.append('CategoryId', $('#editInvCategory').val());
     formData.append('BrandId', $('#editInvBrand').val());
@@ -675,3 +698,52 @@ function applyInventoryTypeState() {
 
 $(document).on('change', '#newInvType', applyInventoryTypeState);
 $(document).on('change', '#newInvUnit', applyInventoryTypeState);
+
+// Edit form: same Type-based state as Add, but the Type itself is fixed
+// (the #editInvType select is disabled, so it can never change here)
+function applyEditInventoryTypeState() {
+    const type = $('#editInvType').val();
+    const isPackItem = type === '1';
+    const isCatchWeight = type === '2';
+
+    $('#editInvPackSize').prop('disabled', isCatchWeight);
+    if (isCatchWeight) {
+        $('#editInvPackSize').val('');
+    }
+
+    $('#editInvWeight').prop('disabled', isPackItem);
+    if (isPackItem) {
+        $('#editInvWeight').val('');
+    }
+
+    // Unit display: full name in the select (e.g. "BA - Bag"), short code before " - " (e.g. "BA")
+    const unitFullName = $('#editInvUnit').val() ? $('#editInvUnit option:selected').text().trim() : '';
+    const unitCode = unitFullName ? (unitFullName.includes(' - ') ? unitFullName.split(' - ')[0].trim() : unitFullName) : '';
+
+    // Price label follows the type, same as the Add form
+    if (isPackItem) {
+        $('#editInvPriceLabel').html('Price Per Case *');
+        $('#editInvPrice').attr('placeholder', 'Enter Price Per Case');
+    } else if (isCatchWeight) {
+        if (unitCode) {
+            $('#editInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${unitCode}</span> *`);
+            $('#editInvPrice').attr('placeholder', `Enter Price Per ${unitCode}`);
+        } else {
+            $('#editInvPriceLabel').html('Price *');
+            $('#editInvPrice').attr('placeholder', 'Enter Price');
+        }
+    } else {
+        $('#editInvPriceLabel').html('Price *');
+        $('#editInvPrice').attr('placeholder', 'Enter Price');
+    }
+
+    // Pack Size label stays plain; only its placeholder follows the selected unit
+    $('#editInvPackSizeLabel').html('Pack Size *');
+    if (unitFullName) {
+        $('#editInvPackSize').attr('placeholder', `Enter Size in ${unitCode}`);
+    } else {
+        $('#editInvPackSize').attr('placeholder', 'Enter Pack Size');
+    }
+}
+
+$(document).on('change', '#editInvUnit', applyEditInventoryTypeState);
