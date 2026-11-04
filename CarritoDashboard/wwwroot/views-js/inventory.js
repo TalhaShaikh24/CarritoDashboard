@@ -611,8 +611,8 @@ $('#btnAddNewInventory').click(function () {
                     <input type="number" id="newInvPackSize" class="form-control" min="0" placeholder="Enter Pack Size">
                 </div>
                 <div class="form-group col-md-3">
-                    <label>Min Order Quantity</label>
-                    <input type="number" id="newInvMinOrderQuantity" class="form-control" min="0" step="0.01" placeholder="Enter Min Order Quantity">
+                    <label>Min Order Quantity *</label>
+                    <input type="number" id="newInvMinOrderQuantity" class="form-control" min="0" step="0.01" required placeholder="Enter Min Order Quantity">
                 </div>
             </div>
 
@@ -676,7 +676,7 @@ function applyInventoryTypeState() {
     // (e.g. "Price Per 2.5 BA *"), for both item types
     const weightValue = $('#newInvWeight').val() ? String($('#newInvWeight').val()).trim() : '';
     if (weightValue && unitCode) {
-        $('#newInvPriceLabel').html(`Price Per ${weightValue} <span class="badge badge-light-secondary">${unitCode}</span> *`);
+        $('#newInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${weightValue} ${unitCode}</span> *`);
         $('#newInvPrice').attr('placeholder', `Enter Price Per ${weightValue} ${unitCode}`);
     } else if (unitCode) {
         $('#newInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${unitCode}</span> *`);
