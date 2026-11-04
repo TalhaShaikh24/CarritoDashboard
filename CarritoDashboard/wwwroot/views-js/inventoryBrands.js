@@ -177,7 +177,7 @@ function initializeDataTable() {
             },
             {
                 data: 'updatedAt',
-                render: d => d ? new Date(d).toLocaleDateString() : '-'
+                render: d => d ? new Date(d).toLocaleDateString() : '<span class="status-badge inactive">Never</span>'
             },
             {
                 data: null,
