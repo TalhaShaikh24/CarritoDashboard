@@ -370,12 +370,6 @@ function editInventory(id) {
                 $template.find('#editInvBrand').append(getOptionsHtml(brandsCache, item.brandId));
                 $template.find('#editInvUnit').append(getOptionsHtml(unitsCache, item.unitId));
 
-                // Set Values
-                $template.find('#editInvTitle').val(item.title);
-                $template.find('#editInvPrice').val(item.price);
-                $template.find('#editInvWeight').val(item.weight);
-                $template.find('#editInvDescription').val(item.description);
-
                 $.dynamicModal({
                     title: "Edit Inventory Item",
                     bodyHtml: $template.prop('outerHTML'), // Get HTML string
@@ -390,6 +384,13 @@ function editInventory(id) {
                         }
                     }
                 });
+
+                // Set values on the live modal DOM: .val() on the detached template is
+                // lost because the modal body is passed as an outerHTML string
+                $('#editInvTitle').val(item.title);
+                $('#editInvPrice').val(item.price);
+                $('#editInvWeight').val(item.weight);
+                $('#editInvDescription').val(item.description);
 
                 $("#editInvBrand").customSelect();
                 $("#editInvCategory").customSelect();
