@@ -155,21 +155,21 @@ function editStorekeeper(storekeeperId) {
 
         const editFormHtml = `
                 <form id="frmEditStorekeeper">
-                    <div class="form-group"><label>Full Name *</label><input type="text" id="editSkFullName" value="${sk.fullName || ''}" required></div>
-                    <div class="form-group"><label>Phone *</label><input type="tel" id="editSkPhone" value="${sk.phone || ''}" required></div>
-                    <div class="form-group"><label>Email</label><input type="email" id="editSkEmail" value="${sk.email || ''}"></div>
+                    <div class="form-group"><label>Full Name *</label><input type="text" id="editSkFullName" value="${sk.fullName || ''}" required placeholder="Enter Full Name"></div>
+                    <div class="form-group"><label>Phone *</label><input type="tel" id="editSkPhone" value="${sk.phone || ''}" required placeholder="Enter Phone"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="editSkEmail" value="${sk.email || ''}" placeholder="Enter Email"></div>
                     
                     <hr style="margin:20px 0;">
                     
-                    <div class="form-group"><label>Store Name *</label><input type="text" id="editSkStoreName" value="${sk.storeName || ''}" required></div>
-                    <div class="form-group"><label>NIC Number *</label><input type="text" id="editSkNIC" value="${sk.nic || ''}" required></div>
-                    <div class="form-group"><label>Address *</label><textarea id="editSkAddress" rows="2" required>${sk.address || ''}</textarea></div>
+                    <div class="form-group"><label>Store Name *</label><input type="text" id="editSkStoreName" value="${sk.storeName || ''}" required placeholder="Enter Store Name"></div>
+                    <div class="form-group"><label>NIC Number *</label><input type="text" id="editSkNIC" value="${sk.nic || ''}" required placeholder="Enter NIC Number"></div>
+                    <div class="form-group"><label>Address *</label><textarea id="editSkAddress" rows="2" required placeholder="Enter Address">${sk.address || ''}</textarea></div>
                     <div class="form-row">
-                        <div class="form-group"><label>State *</label><input type="text" id="editSkState" value="${sk.state || ''}" required></div>
-                        <div class="form-group"><label>City *</label><input type="text" id="editSkCity" value="${sk.city || ''}" required></div>
+                        <div class="form-group"><label>State *</label><input type="text" id="editSkState" value="${sk.state || ''}" required placeholder="Enter State"></div>
+                        <div class="form-group"><label>City *</label><input type="text" id="editSkCity" value="${sk.city || ''}" required placeholder="Enter City"></div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group"><label>Zip Code</label><input type="text" id="editSkZipCode" value="${sk.zipCode || ''}"></div>
+                        <div class="form-group"><label>Zip Code</label><input type="text" id="editSkZipCode" value="${sk.zipCode || ''}" placeholder="Enter Zip Code"></div>
                         <div class="form-group"><label>Status</label>
                             <select id="editSkStatus">
                                 <option value="1" ${sk.status === 1 ? 'selected' : ''}>Active</option>

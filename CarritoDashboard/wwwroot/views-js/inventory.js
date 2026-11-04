@@ -412,8 +412,13 @@ function addNewInventory() {
     const unitId = $('#newInvUnit').val();
     const price = $('#newInvPrice').val();
     const weight = $('#newInvWeight').val() || 0;
+    const type = $('#newInvType').val();
+    const packSize = $('#newInvPackSize').val();
+    const minOrderQuantity = $('#newInvMinOrderQuantity').val() || 0;
 
-    if (!title || !categoryId || !brandId || !unitId || !price || !weight) {
+    // Pack Item needs Pack Size (Weight is not sent); Catch Weight Item needs Weight (Pack Size is not sent)
+    if (!title || !categoryId || !brandId || !unitId || !price || !type ||
+        (type === '1' && !packSize) || (type === '2' && !weight)) {
         showNotification("Please fill all required fields", "error");
         return;
     }
@@ -430,7 +435,15 @@ function addNewInventory() {
     formData.append('[0].BrandId', brandId);
     formData.append('[0].UnitId', unitId);
     formData.append('[0].Price', price);
-    formData.append('[0].Weight', weight);
+    formData.append('[0].Type', type);
+    if (type === '1') {
+        // Pack Item: PackSize is sent, Weight is not sent (stays null/default on the API side)
+        formData.append('[0].PackSize', packSize);
+    } else {
+        // Catch Weight Item: Weight is sent, PackSize is not sent (stays null on the API side)
+        formData.append('[0].Weight', weight);
+    }
+    formData.append('[0].MinOrderQuantity', minOrderQuantity);
     formData.append('[0].Description', $('#newInvDescription').val().trim());
     formData.append('[0].CreatedByUserId', AuthHelper.getUserId() || 1);
 
@@ -513,7 +526,7 @@ $('#btnAddNewInventory').click(function () {
         <form id="frmAddInventory">
             <div class="form-group">
                 <label>Title *</label>
-                <input type="text" id="newInvTitle" class="form-control" required>
+                <input type="text" id="newInvTitle" class="form-control" required placeholder="Enter Title">
             </div>
             
             <div class="form-row">
@@ -535,8 +548,23 @@ $('#btnAddNewInventory').click(function () {
 
             <div class="form-row">
                 <div class="form-group col-md-6">
+                    <label>Type *</label>
+                    <select id="newInvType" class="form-control" required>
+                        <option value="">Select Type</option>
+                        <option value="1">Pack Item</option>
+                        <option value="2">Catch Weight Item</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-6">
+                    <label>Pack Size</label>
+                    <input type="number" id="newInvPackSize" class="form-control" min="0" placeholder="Enter Pack Size">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-6">
                     <label>Price *</label>
-                    <input type="number" id="newInvPrice" class="form-control" min="0" required>
+                    <input type="number" id="newInvPrice" class="form-control" min="0" required placeholder="Enter Price">
                 </div>
                 <div class="form-group col-md-6">
                     <label>Unit *</label>
@@ -547,13 +575,17 @@ $('#btnAddNewInventory').click(function () {
                 </div>
                 <div class="form-group col-md-3">
                     <label>Weight</label>
-                    <input type="number" id="newInvWeight" class="form-control" min="0" step="0.01">
+                    <input type="number" id="newInvWeight" class="form-control" min="0" step="0.01" placeholder="Enter Weight">
+                </div>
+                <div class="form-group col-md-3">
+                    <label>Min Order Quantity</label>
+                    <input type="number" id="newInvMinOrderQuantity" class="form-control" min="0" step="0.01" placeholder="Enter Min Order Quantity">
                 </div>
             </div>
 
             <div class="form-group">
                 <label>Description</label>
-                <textarea id="newInvDescription" class="form-control" rows="3"></textarea>
+                <textarea id="newInvDescription" class="form-control" rows="3" placeholder="Enter Description"></textarea>
             </div>
 
             <hr style="margin:20px 0;">
@@ -584,7 +616,16 @@ $('#btnAddNewInventory').click(function () {
     $("#newInvCategory").customSelect();
     $("#newInvBrand").customSelect();
     $("#newInvUnit").customSelect();
+    $("#newInvType").customSelect();
 
     
     initUploader('#newInvPhoto', 'newInventory', 'photo');
+});
+// Add Inventory: Catch Weight Item has no pack, so the Pack Size input is disabled for it
+$(document).on('change', '#newInvType', function () {
+    const isCatchWeight = $(this).val() === '2';
+    $('#newInvPackSize').prop('disabled', isCatchWeight);
+    if (isCatchWeight) {
+        $('#newInvPackSize').val('');
+    }
 });

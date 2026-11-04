@@ -283,7 +283,7 @@ $(document).on('click', '.action-btn.edit', function () {
         <form id="frmEditBrand">
             <div class="form-group">
                 <label>Brand Name <span style="color: red;">*</span></label>
-                <input type="text" id="editIbName" value="${name}" required>
+                <input type="text" id="editIbName" value="${name}" required placeholder="Enter Brand Name">
             </div>
             <hr style="margin: 25px 0;">
             <div class="form-group">

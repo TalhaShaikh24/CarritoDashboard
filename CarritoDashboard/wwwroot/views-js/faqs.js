@@ -161,7 +161,7 @@ $(document).ready(() => {
             <form id="frmAddFaq">
                 <div class="form-group">
                     <label>Sort Index</label>
-                    <input type="number" id="faqIndex" class="form-control" value="0" required>
+                    <input type="number" id="faqIndex" class="form-control" value="0" required placeholder="Enter Sort Index">
                 </div>
                 <div class="form-group">
                     <label>User Type</label>
@@ -177,11 +177,11 @@ $(document).ready(() => {
                 </div>
                 <div class="form-group">
                     <label>Question *</label>
-                    <input type="text" id="faqQuestion" class="form-control" required>
+                    <input type="text" id="faqQuestion" class="form-control" required placeholder="Enter Question">
                 </div>
                 <div class="form-group">
                     <label>Answer *</label>
-                    <textarea id="faqAnswer" class="form-control" rows="4" required></textarea>
+                    <textarea id="faqAnswer" class="form-control" rows="4" required placeholder="Enter Answer"></textarea>
                 </div>
             </form>
         `;
@@ -215,7 +215,7 @@ $(document).ready(() => {
             <form id="frmFaq">
                 <div class="form-group">
                     <label>Sort Index</label>
-                    <input type="number" id="faqIndex" class="form-control" value="${isEdit ? faq.index : 0}" required>
+                    <input type="number" id="faqIndex" class="form-control" value="${isEdit ? faq.index : 0}" required placeholder="Enter Sort Index">
                 </div>
                 <div class="form-group">
                     <label>User Type</label>
@@ -231,11 +231,11 @@ $(document).ready(() => {
                 </div>
                 <div class="form-group">
                     <label>Question *</label>
-                    <input type="text" id="faqQuestion" class="form-control" value="${isEdit ? faq.question : ''}" required>
+                    <input type="text" id="faqQuestion" class="form-control" value="${isEdit ? faq.question : ''}" required placeholder="Enter Question">
                 </div>
                 <div class="form-group">
                     <label>Answer *</label>
-                    <textarea id="faqAnswer" class="form-control" rows="4" required>${isEdit ? faq.answer : ''}</textarea>
+                    <textarea id="faqAnswer" class="form-control" rows="4" required placeholder="Enter Answer">${isEdit ? faq.answer : ''}</textarea>
                 </div>
             </form>`;
 
