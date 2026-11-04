@@ -160,20 +160,26 @@ function initializeDataTable() {
                 render: function (data, type, row) {
                     const titleText = data || 'N/A';
                     let typeBadge = '';
-                    
-                    if (row && row.type !== undefined && row.type !== null) {
-                        const typeVal = row.type;
-                        let badgeClass = 'badge-light-primary';
-                        
-                        if (typeVal == 1) {
-                            badgeClass = 'badge-light-secondary';
-                        } 
 
-                        const displayLabel = row.type == 1 ? "Pack: " + row.packSize : "Catch Weight";
+                    if (row?.type !== undefined && row?.type !== null) {
+                        const typeVal = Number(row.type);
 
-
-
-                        typeBadge = `<span class="badge ${badgeClass} badge-type">${displayLabel}</span>`;
+                        if (typeVal === 1) {
+                            typeBadge = `
+                                <span class="badge badge-light-secondary badge-type">
+                                    Pack: ${row.packSize ?? ''}
+                                </span>
+                                <span class="badge badge-light-primary badge-type">
+                                    Weight: ${row.weight + " " +row.unitName.toUpperCase() ?? ''}
+                                </span>
+                            `;
+                                            } else {
+                                                typeBadge = `
+                                <span class="badge badge-light-primary badge-type">
+                                    Catch Weight
+                                </span>
+                            `;
+                        }
                     }
                     
                     return `
@@ -196,14 +202,8 @@ function initializeDataTable() {
                 data: null,
                 render: function (data, type, row) {
                     const unit = (row && row.unitName ? row.unitName : 'UNIT').toUpperCase();
-                    return `<span>${row.price} / ${unit}</span>`;
-                }
-            },
-            {
-                data: 'weight',
-                render: function (data, type, row) {
-                    const unit = (row && row.unitName ? row.unitName : 'UNIT').toUpperCase();
-                    return `<span>${row.weight} ${unit}</span>`;
+                    const weight = row.weight;
+                    return row.type == 2 ? `<span>${row.price} / ${weight} ${unit}</span>` : `<span>${row.price} / CASE</span>`;
                 }
             },
             {
@@ -680,10 +680,10 @@ function applyInventoryTypeState() {
     } else if (isCatchWeight) {
         const weightValue = $('#newInvWeight').val() ? String($('#newInvWeight').val()).trim() : '';
         if (weightValue && unitCode) {
-            $('#newInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${weightValue} ${unitCode}</span> *`);
+            $('#newInvPriceLabel').html(`Price Per <span class="badge badge-light-primary">${weightValue} ${unitCode}</span> *`);
             $('#newInvPrice').attr('placeholder', `Enter Price Per ${weightValue} ${unitCode}`);
         } else if (unitCode) {
-            $('#newInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${unitCode}</span> *`);
+            $('#newInvPriceLabel').html(`Price Per <span class="badge badge-light-primary">${unitCode}</span> *`);
             $('#newInvPrice').attr('placeholder', `Enter Price Per ${unitCode}`);
         } else {
             $('#newInvPriceLabel').html('Price *');
