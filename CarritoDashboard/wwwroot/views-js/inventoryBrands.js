@@ -188,7 +188,7 @@ function initializeDataTable() {
 
                     return `
                         <div class="action-btns">
-                            <button class="action-btn edit" disabled="${AuthHelper.isStorekeeper() ? false : true}" data-id="${row.id}" data-name="${row.name}" data-photo="${row.photoFilePath || ''}">
+                            <button class="action-btn edit" ${AuthHelper.isStorekeeper() ? '' : 'disabled'} data-id="${row.id}" data-name="${row.name}" data-photo="${row.photoFilePath || ''}">
                                 <i style="width: 18px;" data-lucide="square-pen"></i>
                             </button>
                         </div>

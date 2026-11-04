@@ -218,9 +218,10 @@ function initializeDataTable() {
                 className: 'text-center',
                 visible: AuthHelper.isStorekeeper() ? true : false,
                 render: function (data, type, row) {
+                    debugger
                     return `
                         <div class="action-btns">
-                            <button class="action-btn edit" disabled="${AuthHelper.isStorekeeper() ? false : true}" data-id="${row.id}">
+                            <button class="action-btn edit" ${AuthHelper.isStorekeeper() ? '' : 'disabled'} data-id="${row.id}">
                                 <i style="width: 18px;" data-lucide="square-pen"></i>
                             </button>
                         </div>

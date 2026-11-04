@@ -844,7 +844,8 @@ body {
 
 /* Buttons */
 button:disabled {
-    cursor: not-allowed!important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
 }
 
 /* Disabled form controls: greyed out with a not-allowed cursor */
