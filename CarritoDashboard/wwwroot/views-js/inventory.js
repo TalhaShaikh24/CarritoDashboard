@@ -4,6 +4,9 @@ function getActiveStorekeeperId() {
     if (AuthHelper.isStorekeeper()) {
         return AuthHelper.getStorekeeperId();
     }
+    if (!AuthHelper.isStorekeeper()) {
+        $('#btnAddNewInventory').hide()
+    }
     const val = $('#filterStorekeeper').val();
     return val || AuthHelper.getStorekeeperId() || null;
 }
@@ -159,20 +162,8 @@ function initializeDataTable() {
                     let typeBadge = '';
                     
                     if (row && row.type !== undefined && row.type !== null) {
-                        const typeVal = row.type;
-                        let badgeClass = 'badge-light-primary';
                         
-                        if (typeVal === 0 || typeVal === '0') {
-                            badgeClass = 'badge-light-info';
-                        } else if (typeVal === 1 || typeVal === '1') {
-                            badgeClass = 'badge-light-secondary';
-                        } else if (typeVal === 2 || typeVal === '2') {
-                            badgeClass = 'badge-light-success';
-                        }
-
-                        debugger;
-                        const displayLabel = typeVal == 1 ? "Pack Item" :
-                                             typeVal == 2 ? "Catch Weight" : "";
+                        const displayLabel = row.packSize != null ? row.packSize+":"+"Pack Item" : "Catch Weight";
 
 
 
@@ -219,10 +210,11 @@ function initializeDataTable() {
                 data: null,
                 orderable: false,
                 className: 'text-center',
+                visible: AuthHelper.isStorekeeper() ? true : false,
                 render: function (data, type, row) {
                     return `
                         <div class="action-btns">
-                            <button class="action-btn edit" data-id="${row.id}">
+                            <button class="action-btn edit" disabled="${AuthHelper.isStorekeeper() ? false : true}" data-id="${row.id}">
                                 <i style="width: 18px;" data-lucide="square-pen"></i>
                             </button>
                         </div>

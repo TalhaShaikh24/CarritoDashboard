@@ -998,16 +998,7 @@ body {
     padding-left: 18px;
 }
 
-.sidebar .submenu-item.active::before {
-    content: '';
-    position: absolute;
-    left: 7px;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: #ffffff;
-    box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
-}
+
 
 /* Parent Group when active */
 .sidebar .nav-group.open > .nav-item.has-submenu.active-parent,

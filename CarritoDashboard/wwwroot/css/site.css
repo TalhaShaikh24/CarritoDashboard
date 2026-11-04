@@ -843,6 +843,9 @@ body {
     }
 
 /* Buttons */
+button:disabled {
+    cursor: not-allowed!important;
+}
 .btn-primary {
     display: inline-flex;
     align-items: center;
