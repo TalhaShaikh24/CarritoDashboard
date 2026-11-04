@@ -662,12 +662,11 @@ function applyInventoryTypeState() {
         $('#newInvPrice').attr('placeholder', 'Enter Price');
     }
 
-    // Pack Size label shows the selected unit as a badge ("in BA - Bag")
+    // Pack Size label stays plain; only its placeholder follows the selected unit
+    $('#newInvPackSizeLabel').html('Pack Size *');
     if (unitFullName) {
-        $('#newInvPackSizeLabel').html(`Pack Size * <span class="badge badge-light-secondary">in ${unitFullName}</span>`);
         $('#newInvPackSize').attr('placeholder', `Enter Size in ${unitCode}`);
     } else {
-        $('#newInvPackSizeLabel').html('Pack Size');
         $('#newInvPackSize').attr('placeholder', 'Enter Pack Size');
     }
 }
