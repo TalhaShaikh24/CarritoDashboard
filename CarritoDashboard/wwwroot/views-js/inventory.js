@@ -564,10 +564,6 @@ $('#btnAddNewInventory').click(function () {
                         <option value="2">Catch Weight Item</option>
                     </select>
                 </div>
-                <div class="form-group col-md-6">
-                    <label>Pack Size</label>
-                    <input type="number" id="newInvPackSize" class="form-control" min="0" placeholder="Enter Pack Size">
-                </div>
             </div>
 
             <div class="form-row">
@@ -585,6 +581,10 @@ $('#btnAddNewInventory').click(function () {
                 <div class="form-group col-md-3">
                     <label>Weight</label>
                     <input type="number" id="newInvWeight" class="form-control" min="0" step="0.01" placeholder="Enter Weight">
+                </div>
+                <div class="form-group col-md-3">
+                    <label>Pack Size</label>
+                    <input type="number" id="newInvPackSize" class="form-control" min="0" placeholder="Enter Pack Size">
                 </div>
                 <div class="form-group col-md-3">
                     <label>Min Order Quantity</label>
