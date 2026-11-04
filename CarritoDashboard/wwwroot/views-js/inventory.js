@@ -33,9 +33,10 @@ $(document).ready(() => {
             initializeDataTable();
         } else {
             // Admin: the storekeeper filter is only populated now, so fetch the
-            // selected storekeeper's categories before initializing the table
-            fetchCategories().then(() => {
+            // selected storekeeper's categories and brands before initializing the table
+            Promise.all([fetchCategories(), fetchBrands()]).then(() => {
                 populateCategoryFilter();
+                populateBrandFilter();
                 initializeDataTable();
             });
         }
@@ -66,9 +67,10 @@ $(document).ready(() => {
     });
 
     $('#filterStorekeeper').on('change', function () {
-        // Categories belong to the selected storekeeper - reload them first
-        fetchCategories().then(() => {
+        // Categories and brands belong to the selected storekeeper - reload them first
+        Promise.all([fetchCategories(), fetchBrands()]).then(() => {
             populateCategoryFilter();
+            populateBrandFilter();
             if (inventoryTable) {
                 inventoryTable.ajax.reload();
             }
@@ -273,11 +275,26 @@ function populateCategoryFilter() {
 
 function fetchBrands() {
     return new Promise(resolve => {
-        $.get(baseApiUrl + '/api/InventoryBrand', { PageSize: 100 }, (res) => {
+        const params = { PageSize: 100 };
+        const storekeeperId = getActiveStorekeeperId();
+        if (storekeeperId) {
+            params.storekeeperId = storekeeperId;
+        }
+        $.get(baseApiUrl + '/api/InventoryBrand', params, (res) => {
             if (res.status === 200) brandsCache = res.data.items;
             resolve();
         }).fail(() => resolve());
     });
+}
+
+function populateBrandFilter() {
+    const brandSelect = $('#filterBrand');
+    brandSelect.empty();
+    brandSelect.append(new Option('All Brands', ''));
+    brandsCache.forEach(b => brandSelect.append(new Option(b.name, b.id)));
+    if (brandSelect.data('customSelect')) {
+        brandSelect.customSelect('refresh');
+    }
 }
 function fetchUnits() {
     return new Promise(resolve => {

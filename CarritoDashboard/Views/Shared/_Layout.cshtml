@@ -90,7 +90,7 @@
                     </div>
                     <div class="submenu @(isInventoryActive ? "open" : "")" id="submenu-inventory">
                         <a class="submenu-item @Html.IsActive("Inventory")" data-module="inventory" data-storekeeper="true" href="@Url.Action("Index", "Inventory")">Items</a>
-                        <a class="submenu-item @Html.IsActive("InventoryBrand")" data-module="inventoryBrand" href="@Url.Action("Index", "InventoryBrand")">Brands</a>
+                        <a class="submenu-item @Html.IsActive("InventoryBrand")" data-module="inventoryBrand" data-storekeeper="true" href="@Url.Action("Index", "InventoryBrand")">Brands</a>
                         <a class="submenu-item @Html.IsActive("InventoryCategory")" data-module="inventoryCategory" data-storekeeper="true" href="@Url.Action("Index", "InventoryCategory")">Categories</a>
                         <a class="submenu-item @Html.IsActive("InventoryUnit")" data-module="inventoryUnit" href="@Url.Action("Index", "InventoryUnit")">Units</a>
                     </div>

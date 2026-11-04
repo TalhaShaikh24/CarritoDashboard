@@ -104,11 +104,12 @@ const AuthHelper = (function () {
                 '', '/', '/home', '/home/index',
                 '/inventory', '/inventory/index',
                 '/inventorycategory', '/inventorycategory/index',
+                '/inventorybrand', '/inventorybrand/index',
                 '/order', '/order/index'
             ];
 
             if (!allowedPaths.includes(path)) {
-                sessionStorage.setItem('accessDeniedNotice', 'Storekeepers can only access Dashboard, Inventory, Categories, and Orders.');
+                sessionStorage.setItem('accessDeniedNotice', 'Storekeepers can only access Dashboard, Inventory, Categories, Brands, and Orders.');
                 window.location.replace('/Home/Index');
                 return;
             }
