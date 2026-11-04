@@ -276,7 +276,7 @@ $(document).on('click', '.action-btn.edit', function () {
         <form id="frmEditCategory">
             <div class="form-group">
                 <label>Category Name <span style="color: red;">*</span></label>
-                <input type="text" id="editIcName" value="${name}" required>
+                <input type="text" id="editIcName" value="${name}" required placeholder="Enter Category Name">
             </div>
             <hr style="margin: 25px 0;">
             <div class="form-group">

@@ -160,12 +160,12 @@ $(document).ready(() => {
 
             const editFormHtml = `
                 <form id="frmEditRider">
-                    <div class="form-group"><label>Full Name <span style="color: red;">*</span></label><input type="text" id="editRiderFullName" value="${r.fullName || ''}" required></div>
-                    <div class="form-group"><label>Email</label><input type="email" id="editRiderEmail" value="${r.email || ''}"></div>
-                    <div class="form-group"><label>Phone <span style="color: red;">*</span></label><input type="tel" id="editRiderPhone" value="${r.phone || ''}" required></div>
-                    <div class="form-group"><label>Bike Plate Number</label><input type="text" id="editRiderBikePlate" value="${r.bikePlateNumber || ''}"></div>
-                    <div class="form-group"><label>Bike Model</label><input type="text" id="editRiderBikeModel" value="${r.bikeModel || ''}"></div>
-                    <div class="form-group"><label>Driving License No</label><input type="text" id="editRiderDrivingLicense" value="${r.drivingLicenseNo || ''}"></div>
+                    <div class="form-group"><label>Full Name <span style="color: red;">*</span></label><input type="text" id="editRiderFullName" value="${r.fullName || ''}" required placeholder="Enter Full Name"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="editRiderEmail" value="${r.email || ''}" placeholder="Enter Email"></div>
+                    <div class="form-group"><label>Phone <span style="color: red;">*</span></label><input type="tel" id="editRiderPhone" value="${r.phone || ''}" required placeholder="Enter Phone"></div>
+                    <div class="form-group"><label>Bike Plate Number</label><input type="text" id="editRiderBikePlate" value="${r.bikePlateNumber || ''}" placeholder="Enter Bike Plate Number"></div>
+                    <div class="form-group"><label>Bike Model</label><input type="text" id="editRiderBikeModel" value="${r.bikeModel || ''}" placeholder="Enter Bike Model"></div>
+                    <div class="form-group"><label>Driving License No</label><input type="text" id="editRiderDrivingLicense" value="${r.drivingLicenseNo || ''}" placeholder="Enter Driving License No"></div>
 
                     <hr style="margin: 20px 0;">
                     

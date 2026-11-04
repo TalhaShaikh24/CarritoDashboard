@@ -128,9 +128,9 @@ $(document).ready(() => {
             debugger
             const editFormHtml = `
                 <form id="frmEditCustomer">
-                    <div class="form-group"><label>Full Name *</label><input type="text" id="editCustomerFullName" value="${user.fullName || ''}" required></div>
-                    <div class="form-group"><label>Email</label><input type="email" id="editCustomerEmail" value="${user.email || ''}"></div>
-                    <div class="form-group"><label>Phone *</label><input type="tel" id="editCustomerPhone" value="${user.phone || ''}" required></div>
+                    <div class="form-group"><label>Full Name *</label><input type="text" id="editCustomerFullName" value="${user.fullName || ''}" required placeholder="Enter Full Name"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="editCustomerEmail" value="${user.email || ''}" placeholder="Enter Email"></div>
+                    <div class="form-group"><label>Phone *</label><input type="tel" id="editCustomerPhone" value="${user.phone || ''}" required placeholder="Enter Phone"></div>
 
                     <hr style="margin:20px 0;">
 

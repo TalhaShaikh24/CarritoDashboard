@@ -114,7 +114,7 @@ $(document).on('click', '.action-btn.edit', function () {
         <form id="frmEditUnit">
             <div class="form-group">
                 <label>Unit Name <span style="color: red;">*</span></label>
-                <input type="text" id="unitName" class="form-control" value="${name}" required>
+                <input type="text" id="unitName" class="form-control" value="${name}" required placeholder="Enter Unit Name">
             </div>
         </form>
     `;

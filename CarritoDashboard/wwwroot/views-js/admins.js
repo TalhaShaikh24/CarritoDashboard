@@ -120,9 +120,9 @@ function editAdmin(adminId) {
             const adm = response.data;
             const editForm = `
                 <form id="frmEditAdmin">
-                    <div class="form-group"><label>Full Name</label><input type="text" id="editAdmFullName" value="${adm.fullName}"></div>
-                    <div class="form-group"><label>Designation</label><input type="text" id="editAdmDesignation" value="${adm.designation}"></div>
-                    <div class="form-group"><label>Phone</label><input type="text" id="editAdmPhone" value="${adm.phone}"></div>
+                    <div class="form-group"><label>Full Name</label><input type="text" id="editAdmFullName" value="${adm.fullName}" placeholder="Enter Full Name"></div>
+                    <div class="form-group"><label>Designation</label><input type="text" id="editAdmDesignation" value="${adm.designation}" placeholder="Enter Designation"></div>
+                    <div class="form-group"><label>Phone</label><input type="text" id="editAdmPhone" value="${adm.phone}" placeholder="Enter Phone"></div>
                     <div class="form-group">
                         <label>Status</label>
                         <select id="editAdmActive">

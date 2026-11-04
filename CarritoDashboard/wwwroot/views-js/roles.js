@@ -369,7 +369,7 @@ function openEditModal(role) {
             <div class="row" style="display: flex; gap: 15px; margin-bottom: 15px;">
                 <div class="form-group" style="flex: 1;">
                     <label style="font-weight: 600; font-size: 13px;">Role Name <span style="color: red;">*</span></label>
-                    <input type="text" id="editRoleName" value="${role.name}" required>
+                    <input type="text" id="editRoleName" value="${role.name}" required placeholder="Enter Role Name">
                 </div>
                 <div class="form-group" style="flex: 1.5;">
                     <label style="font-weight: 600; font-size: 13px;">Description</label>
