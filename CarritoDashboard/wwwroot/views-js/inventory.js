@@ -423,7 +423,7 @@ function addNewInventory() {
     const packSize = $('#newInvPackSize').val();
     const minOrderQuantity = $('#newInvMinOrderQuantity').val() || 0;
 
-    // Pack Item needs Pack Size (Weight is not sent); Catch Weight Item needs Weight (Pack Size is not sent)
+    // Pack Item needs Pack Size (Weight is optional); Catch Weight Item needs Weight (Pack Size is not sent)
     if (!title || !categoryId || !brandId || !unitId || !price || !type ||
         (type === '1' && !packSize) || (type === '2' && !weight)) {
         showNotification("Please fill all required fields", "error");
@@ -444,8 +444,11 @@ function addNewInventory() {
     formData.append('[0].Price', price);
     formData.append('[0].Type', type);
     if (type === '1') {
-        // Pack Item: PackSize is sent, Weight is not sent (stays null/default on the API side)
+        // Pack Item: PackSize is sent; Weight is optional and sent only when entered
         formData.append('[0].PackSize', packSize);
+        if ($('#newInvWeight').val()) {
+            formData.append('[0].Weight', weight);
+        }
     } else {
         // Catch Weight Item: Weight is sent, PackSize is not sent (stays null on the API side)
         formData.append('[0].Weight', weight);
@@ -489,7 +492,7 @@ function updateInventory(id) {
     const packSize = $('#editInvPackSize').val();
     const weight = $('#editInvWeight').val();
 
-    // Pack Item needs Pack Size (Weight is not sent); Catch Weight Item needs Weight (Pack Size is not sent)
+    // Pack Item needs Pack Size (Weight is optional); Catch Weight Item needs Weight (Pack Size is not sent)
     if ((type === '1' && !packSize) || (type === '2' && !weight)) {
         showNotification("Please fill all required fields", "error");
         return;
@@ -500,7 +503,11 @@ function updateInventory(id) {
     formData.append('Price', $('#editInvPrice').val() || 0);
     formData.append('Type', type);
     if (type === '1') {
+        // Pack Item: PackSize is sent; Weight is optional and sent only when entered
         formData.append('PackSize', packSize);
+        if (weight) {
+            formData.append('Weight', weight);
+        }
     } else {
         formData.append('Weight', weight || 0);
     }
@@ -660,10 +667,7 @@ function applyInventoryTypeState() {
         $('#newInvPackSize').val('');
     }
 
-    $('#newInvWeight').prop('disabled', isPackItem);
-    if (isPackItem) {
-        $('#newInvWeight').val('');
-    }
+    // Weight stays enabled for Pack Item too (it is optional there)
 
     // Unit display: full name in the select (e.g. "BA - Bag"), short code before " - " (e.g. "BA")
     const unitFullName = $('#newInvUnit').val() ? $('#newInvUnit option:selected').text().trim() : '';
@@ -711,10 +715,7 @@ function applyEditInventoryTypeState() {
         $('#editInvPackSize').val('');
     }
 
-    $('#editInvWeight').prop('disabled', isPackItem);
-    if (isPackItem) {
-        $('#editInvWeight').val('');
-    }
+    // Weight stays enabled for Pack Item too (it is optional there)
 
     // Unit display: full name in the select (e.g. "BA - Bag"), short code before " - " (e.g. "BA")
     const unitFullName = $('#editInvUnit').val() ? $('#editInvUnit option:selected').text().trim() : '';
