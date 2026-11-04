@@ -733,10 +733,10 @@ function applyEditInventoryTypeState() {
     } else if (isCatchWeight) {
         const weightValue = $('#editInvWeight').val() ? String($('#editInvWeight').val()).trim() : '';
         if (weightValue && unitCode) {
-            $('#editInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${weightValue} ${unitCode}</span> *`);
+            $('#editInvPriceLabel').html(`Price Per <span class="badge badge-light-primary">${weightValue} ${unitCode}</span> *`);
             $('#editInvPrice').attr('placeholder', `Enter Price Per ${weightValue} ${unitCode}`);
         } else if (unitCode) {
-            $('#editInvPriceLabel').html(`Price Per <span class="badge badge-light-secondary">${unitCode}</span> *`);
+            $('#editInvPriceLabel').html(`Price Per <span class="badge badge-light-primary">${unitCode}</span> *`);
             $('#editInvPrice').attr('placeholder', `Enter Price Per ${unitCode}`);
         } else {
             $('#editInvPriceLabel').html('Price *');
