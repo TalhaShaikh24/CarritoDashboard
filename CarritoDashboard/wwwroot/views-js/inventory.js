@@ -167,12 +167,9 @@ function initializeDataTable() {
                         
                         if (row.packSize != null) {
                             badgeClass = 'badge-light-secondary';
-                        } else if (row.packSize == null) {
-                            badgeClass = 'badge-light-success';
-                        }
+                        } 
 
-
-                        const displayLabel = row.packSize != null ? row.packSize + ":" + "Pack Item" : "Catch Weight";
+                        const displayLabel = row.packSize != null ? "Pack: " + row.packSize : "Catch Weight";
 
 
 
@@ -320,13 +317,7 @@ function populateFilters() {
         skSelect.append(new Option(skName, skId, true, true));
         // Hide select container and show a store badge
         skSelect.closest('.custom-select-container, select').hide();
-        if ($('#skpActiveBadge').length === 0) {
-            $(`<div id="skpActiveBadge" class="storekeeper-badge-pill" style="margin-right: 8px;">
-                <i style="width:14px;height:14px;" data-lucide="store"></i>
-                <span>${skName}</span>
-            </div>`).insertBefore(skSelect.parent());
-            if (window.lucide) lucide.createIcons();
-        }
+        
     } else {
         if (storekeepersCache.length === 0) {
             skSelect.append(new Option('No Storekeepers Found', ''));
@@ -565,13 +556,6 @@ $('#btnAddNewInventory').click(function () {
                         <option value="2">Catch Weight Item</option>
                     </select>
                 </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group col-md-6">
-                    <label id="newInvPriceLabel">Price *</label>
-                    <input type="number" id="newInvPrice" class="form-control" min="0" required placeholder="Enter Price">
-                </div>
                 <div class="form-group col-md-6">
                     <label>Unit *</label>
                     <select id="newInvUnit" class="form-control" required>
@@ -579,6 +563,14 @@ $('#btnAddNewInventory').click(function () {
                         ${unitOptions}
                     </select>
                 </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label id="newInvPriceLabel">Price *</label>
+                    <input type="number" id="newInvPrice" class="form-control" min="0" required placeholder="Enter Price">
+                </div>
+                
                 <div class="form-group col-md-3">
                     <label>Weight</label>
                     <input type="number" id="newInvWeight" class="form-control" min="0" step="0.01" placeholder="Enter Weight">
