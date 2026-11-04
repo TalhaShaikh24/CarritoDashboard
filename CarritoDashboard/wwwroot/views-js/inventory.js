@@ -551,7 +551,7 @@ $('#btnAddNewInventory').click(function () {
                     <label>Type *</label>
                     <select id="newInvType" class="form-control" required>
                         <option value="">Select Type</option>
-                        <option value="1">Pack Item</option>
+                        <option value="1" selected>Pack Item</option>
                         <option value="2">Catch Weight Item</option>
                     </select>
                 </div>
@@ -618,15 +618,26 @@ $('#btnAddNewInventory').click(function () {
     $("#newInvBrand").customSelect();
     $("#newInvUnit").customSelect();
     $("#newInvType").customSelect();
+    applyInventoryTypeState();
 
     
     initUploader('#newInvPhoto', 'newInventory', 'photo');
 });
-// Add Inventory: Catch Weight Item has no pack, so the Pack Size input is disabled for it
-$(document).on('change', '#newInvType', function () {
-    const isCatchWeight = $(this).val() === '2';
+// Add Inventory: Pack Item uses Pack Size (Weight disabled); Catch Weight Item uses Weight (Pack Size disabled)
+function applyInventoryTypeState() {
+    const type = $('#newInvType').val();
+    const isPackItem = type === '1';
+    const isCatchWeight = type === '2';
+
     $('#newInvPackSize').prop('disabled', isCatchWeight);
     if (isCatchWeight) {
         $('#newInvPackSize').val('');
     }
-});
+
+    $('#newInvWeight').prop('disabled', isPackItem);
+    if (isPackItem) {
+        $('#newInvWeight').val('');
+    }
+}
+
+$(document).on('change', '#newInvType', applyInventoryTypeState);
