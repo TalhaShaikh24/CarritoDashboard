@@ -3,7 +3,7 @@
  * Single source of truth for Role and Storekeeper checks.
  */
 const AuthHelper = (function () {
-    const STOREKEEPER_ROLE_ID = 4;
+    const STOREKEEPER_ROLE_ID = 2;
 
     function getCurrentUser() {
         try {
