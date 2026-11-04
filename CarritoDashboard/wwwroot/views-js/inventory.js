@@ -556,8 +556,11 @@ $('#btnAddNewInventory').click(function () {
                     </select>
                 </div>
                 <div class="form-group col-md-6">
-                    <label>Pack Size</label>
-                    <input type="number" id="newInvPackSize" class="form-control" min="0" placeholder="Enter Pack Size">
+                    <label>Unit *</label>
+                    <select id="newInvUnit" class="form-control" required>
+                        <option value="">Select Unit</option>
+                        ${unitOptions}
+                    </select>
                 </div>
             </div>
 
@@ -566,16 +569,14 @@ $('#btnAddNewInventory').click(function () {
                     <label>Price *</label>
                     <input type="number" id="newInvPrice" class="form-control" min="0" required placeholder="Enter Price">
                 </div>
-                <div class="form-group col-md-6">
-                    <label>Unit *</label>
-                    <select id="newInvUnit" class="form-control" required>
-                        <option value="">Select Unit</option>
-                        ${unitOptions}
-                    </select>
-                </div>
+                
                 <div class="form-group col-md-3">
                     <label>Weight</label>
                     <input type="number" id="newInvWeight" class="form-control" min="0" step="0.01" placeholder="Enter Weight">
+                </div>
+                <div class="form-group col-md-3">
+                    <label>Pack Size</label>
+                    <input type="number" id="newInvPackSize" class="form-control" min="0" placeholder="Enter Pack Size">
                 </div>
                 <div class="form-group col-md-3">
                     <label>Min Order Quantity</label>
