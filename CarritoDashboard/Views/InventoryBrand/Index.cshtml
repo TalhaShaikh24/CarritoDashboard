@@ -1,0 +1,59 @@
+﻿@{
+    ViewData["Title"] = "Inventory Brands";
+}
+
+<link href="~/css/file-uploader.css" rel="stylesheet" />
+
+<div class="module" id="module-inventory-brands">
+    <div class="module-header">
+        <div>
+            <div class="search-bar">
+                <i style="width: 20px;" data-lucide="search"></i>
+                <input type="text" placeholder="Search brands..." id="brandSearch">
+            </div>
+        </div>
+        <button id="btnAddNewBrand" class="btn-primary">
+            <i style="width: 18px;" data-lucide="plus"></i>
+            Add Brand
+        </button>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table" id="brandsTable">
+            <thead>
+                <tr>
+                    <th style="width: 80px;">Logo</th>
+                    <th>Brand Name</th>
+                    <th>Created At</th>
+                    <th>Last Updated</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<template id="brandFormTemplate">
+    <form id="frmBrand">
+        <div class="form-group">
+            <label>Brand Name <span style="color: red;">*</span></label>
+            <input type="text" id="ibName" placeholder="e.g. Nestle" required>
+            <small class="text-muted">Must be letters and spaces only.</small>
+        </div>
+
+        <hr style="margin: 25px 0;">
+
+        <h5>Brand Logo</h5>
+        <div class="form-group">
+            <label>Photo</label>
+            <input type="file" id="ibPhoto" accept="image/*">
+            <small>Recommended size: 200x200px</small>
+        </div>
+    </form>
+</template>
+
+@section scripts {
+    <script src="~/views-js/inventoryBrands.js"></script>
+    <script src="~/js/file-uploader.js"></script>
+}

@@ -1,0 +1,136 @@
+<link href="~/css/file-uploader.css" rel="stylesheet" />
+
+<div class="module" id="module-storekeepers">
+    <div class="module-header">
+        <div>
+            <div class="search-bar">
+                <i style="width: 20px;" data-lucide="search"></i>
+                <input type="text" placeholder="Search storekeepers..." id="storekeeperSearch">
+            </div>
+        </div>
+        <button id="btnAddNewStorekeeper" class="btn-primary">
+            <i style="width: 18px;" data-lucide="plus"></i>
+            Add Storekeeper
+        </button>
+    </div>
+
+    
+
+    <div class="table-container">
+        <table class="data-table" id="storekeepersTable">
+            <thead>
+                <tr>
+                    <th>Store Name</th>
+                    <th>Owner</th>
+                    <th>Phone</th>
+                    <th>City</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Storekeeper Template -->
+<template id="storekeeperFormTemplate">
+    <form id="frmAddNewStorekeeper">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Full Name <span style="color: red;">*</span></label>
+                <input type="text" id="skFullName" placeholder="Muhammad Ali" required>
+            </div>
+            <div class="form-group">
+                <label>Username <span style="color: red;">*</span></label>
+                <input type="text" id="skUsername" placeholder="muhammadali01" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Password <span style="color: red;">*</span></label>
+                <input type="password" id="skPassword" placeholder="Strong password" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="skEmail" placeholder="example@domain.com">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Phone <span style="color: red;">*</span></label>
+                <input type="tel" id="skPhone" placeholder="03001234567" maxlength="11" required>
+                <small style="color: #64748b; font-size: 11px;">Example: 03001234567 (11 digits)</small>
+            </div>
+            <div class="form-group">
+                <label>NIC Number <span style="color: red;">*</span></label>
+                <input type="text" id="skNIC" placeholder="12345-1234567-1" maxlength="15" required>
+                <small style="color: #64748b; font-size: 11px;">Format: 12345-1234567-1</small>
+            </div>
+        </div>
+
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">
+
+        <h5 style="margin-bottom: 12px; font-weight: 600; color: #1e293b;">Store Details</h5>
+
+        <div class="form-group">
+            <label>Store Name <span style="color: red;">*</span></label>
+            <input type="text" id="skStoreName" placeholder="Ali General Store" required>
+        </div>
+        <div class="form-group">
+            <label>Address <span style="color: red;">*</span></label>
+            <textarea id="skAddress" rows="2" placeholder="Full address..." required></textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>State/Province <span style="color: red;">*</span></label>
+                <input type="text" id="skState" placeholder="Sindh / Punjab" required>
+            </div>
+            <div class="form-group">
+                <label>City <span style="color: red;">*</span></label>
+                <input type="text" id="skCity" placeholder="Karachi / Lahore" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Zip/Postal Code</label>
+                <input type="text" id="skZipCode" placeholder="74000">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="skStatus">
+                    <option value="1">Active</option>
+                    <option value="0">Inactive</option>
+                </select>
+            </div>
+        </div>
+
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">
+
+        <h5 style="margin-bottom: 12px; font-weight: 600; color: #1e293b;">Photos & Documents</h5>
+
+        <div class="form-group">
+            <label>Profile Photo</label>
+            <input type="file" id="skProfilePhoto" accept="image/*">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>NIC Front <span style="color: red;">*</span></label>
+                <input type="file" id="skNICFront" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label>NIC Back <span style="color: red;">*</span></label>
+                <input type="file" id="skNICBack" accept="image/*" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Store Photos (multiple) <span style="color: red;">*</span></label>
+            <input type="file" id="skStorePhotos" accept="image/*" multiple required>
+        </div>
+    </form>
+</template>
+
+@section scripts {
+    <script src="~/views-js/storekeepers.js"></script>
+    <script src="~/js/file-uploader.js"></script>
+}

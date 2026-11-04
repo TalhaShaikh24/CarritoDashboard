@@ -1,0 +1,57 @@
+﻿@{
+    ViewData["Title"] = "Inventory Categories";
+}
+
+<link href="~/css/file-uploader.css" rel="stylesheet" />
+
+<div class="module" id="module-inventory-categories">
+    <div class="module-header">
+        <div>
+            <div class="search-bar">
+                <i style="width: 20px;" data-lucide="search"></i>
+                <input type="text" placeholder="Search categories..." id="categorySearch">
+            </div>
+        </div>
+        <button id="btnAddNewCategory" class="btn-primary">
+            <i style="width: 18px;" data-lucide="plus"></i>
+            Add Category
+        </button>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table" id="categoriesTable">
+            <thead>
+                <tr>
+                    <th style="width: 80px;">Logo</th>
+                    <th>Category Name</th>
+                    <th>Created At</th>
+                    <th>Last Updated</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<template id="categoryFormTemplate">
+    <form id="frmCategory">
+        <div class="form-group">
+            <label>Category Name <span style="color: red;">*</span></label>
+            <input type="text" id="icName" placeholder="e.g. Dairy" required>
+        </div>
+
+        <hr style="margin: 25px 0;">
+
+        <div class="form-group">
+            <label>Photo</label>
+            <input type="file" id="icPhoto" accept="image/*">
+            <small>Recommended size: 200x200px</small>
+        </div>
+    </form>
+</template>
+
+@section scripts {
+    <script src="~/views-js/inventoryCategories.js"></script>
+    <script src="~/js/file-uploader.js"></script>
+}

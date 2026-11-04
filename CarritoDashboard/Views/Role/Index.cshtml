@@ -1,0 +1,73 @@
+<div class="module" id="module-roles">
+    <div class="module-header">
+        <div>
+            <h2 class="module-title">Roles & Access Control</h2>
+            <p class="module-subtitle">Define user roles, manage module permissions, and inspect system access matrix</p>
+        </div>
+        <button id="btnAddNewRole" class="btn-primary">
+            <i style="width: 18px;" data-lucide="plus"></i>
+            New Role
+        </button>
+    </div>
+
+    <!-- Roles Grid / Cards View -->
+    <div class="roles-grid" id="rolesGrid"></div>
+
+    <!-- Permission Matrix Table Card -->
+    <div class="table-container mt-4" style="overflow: hidden; border-radius: 12px; border: 1px solid var(--dash-border, #e2e8f0); background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; gap: 12px; background: #fafbfc;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #1e293b;">Role Permission Matrix</h3>
+                    <span id="matrixModulesCountBadge" style="background: #ecf7e3; color: #4c9b0e; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;">17 Modules</span>
+                </div>
+                <p class="text-muted" style="font-size: 0.8rem; margin: 4px 0 0 0;">
+                    Dynamic overview of module permissions assigned across all roles.
+                    <span style="color: #64748b; margin-left: 8px;"><i style="width: 13px; vertical-align: middle;" data-lucide="chevrons-left-right"></i> Scroll table horizontally to view all modules</span>
+                </p>
+            </div>
+            <button class="btn-outline btn-sm" id="btnRefreshMatrix" title="Reload Matrix">
+                <i style="width: 14px; vertical-align: middle; margin-right: 4px;" data-lucide="refresh-cw"></i> Refresh
+            </button>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table permission-matrix" id="roleMatrixTable">
+                <thead>
+                    <tr id="permissionMatrixHeader">
+                        <th class="sticky-col">Role</th>
+                        <!-- Populated dynamically from API modules -->
+                    </tr>
+                </thead>
+                <tbody id="permissionMatrixBody">
+                    <tr><td colspan="100" class="text-center text-muted" style="padding: 24px;">Loading permission matrix...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Role Form Template (Create & Edit) -->
+<template id="roleFormTemplate">
+    <form id="frmRole">
+        <div class="form-group">
+            <label>Role Name <span style="color: red;">*</span></label>
+            <input type="text" id="roleName" placeholder="e.g. Moderator" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Description (Optional)</label>
+            <textarea id="roleDescription" rows="2" placeholder="Brief description of the role..."></textarea>
+        </div>
+
+        <hr style="margin: 25px 0;">
+
+        <h5 style="margin-bottom: 15px;">Permissions</h5>
+        <div class="permission-checkbox-grid" id="permissionsContainer">
+            <!-- Dynamically populated -->
+        </div>
+    </form>
+</template>
+
+@section scripts {
+    <script src="~/views-js/roles.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,43 @@
+﻿<div class="module" id="module-offers">
+    <div class="module-header d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title">Manage Offers</h2>
+        <button id="btnAddNewOffer" class="btn-primary">
+            <i data-lucide="plus" style="width: 18px;"></i>
+            New Offer
+        </button>
+    </div>
+
+    <div class="offers-grid" id="offersGrid">
+    </div>
+</div>
+
+<template id="offerFormTemplate">
+    <form id="frmOffer">
+        <div class="row">
+            <div class="col-md-12 form-group mb-3">
+                <label class="fw-bold">Promo Code <span class="text-danger">*</span></label>
+                <input type="text" id="couponCode" class="form-control" placeholder="e.g. SAVE50" required>
+            </div>
+            <div class="col-md-6 form-group mb-3">
+                <label class="fw-bold">Discount (%)</label>
+                <input type="number" id="discountPercentage" class="form-control" placeholder="0">
+            </div>
+            <div class="col-md-6 form-group mb-3">
+                <label class="fw-bold">Flat Discount Value</label>
+                <input type="number" id="discountValue" class="form-control" placeholder="0">
+            </div>
+            <div class="col-md-6 form-group mb-3">
+                <label class="fw-bold">Min Order Value</label>
+                <input type="number" id="minOrderValue" class="form-control" placeholder="2000">
+            </div>
+            <div class="col-md-6 form-group mb-3">
+                <label class="fw-bold">Expiry Date</label>
+                <input type="date" id="expiryDate" class="form-control" required>
+            </div>
+        </div>
+    </form>
+</template>
+
+@section scripts {
+    <script src="~/views-js/offers.js"></script>
+}

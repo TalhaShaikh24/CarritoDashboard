@@ -1,0 +1,225 @@
+@using Restaurant.Utility
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Carrito</title>
+    
+    <script>
+        // Authentication Guard: Redirect to Login if no JWT token
+        (function() {
+            var token = localStorage.getItem('jwtToken');
+            if (!token) {
+                window.location.replace('/Account/Login');
+            }
+        })();
+    </script>
+
+    <script type="importmap"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <link href="~/css/error-popup.css" rel="stylesheet" />
+    <link href="~/plugins/customselect/customselect.css" rel="stylesheet" />
+    <link href="~/plugins/customdatepicker/date-picker.css" rel="stylesheet" />
+    <link href="~/css/site.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/dashboard-modern.css" rel="stylesheet" asp-append-version="true" />
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <div class="logo-icon">C</div>
+                    <span class="logo-text">Carrito</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="icon-close" data-lucide="x"></i>
+                    <i class="icon-menu" data-lucide="menu"></i>
+                </button>
+            </div>
+
+            @{
+                var isOperationsActive = Html.IsActive("Order") == "active" || Html.IsActive("Settlement") == "active";
+                var isInventoryActive = Html.IsActive("Inventory") == "active" || Html.IsActive("InventoryBrand") == "active" || Html.IsActive("InventoryCategory") == "active" || Html.IsActive("InventoryUnit") == "active";
+                var isUsersActive = Html.IsActive("Admin") == "active" || Html.IsActive("Customer") == "active" || Html.IsActive("Rider") == "active" || Html.IsActive("Storekeeper") == "active";
+                var isSupportActive = Html.IsActive("Offer") == "active" || Html.IsActive("Ticket") == "active" || Html.IsActive("Faq") == "active";
+                var isAccessActive = Html.IsActive("Role") == "active" || Html.IsActive("Permission") == "active";
+            }
+
+            <nav class="sidebar-nav">
+                <!-- Overview -->
+                <a class="nav-item @Html.IsActive("Home")" data-module="dashboard" data-storekeeper="true" href="@Url.Action("Index", "Home")">
+                    <i class="nav-icon" data-lucide="layout-dashboard"></i>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+
+                <!-- Operations -->
+                <div class="nav-section-title">Operations</div>
+                <div class="nav-group @(isOperationsActive ? "open" : "")" data-storekeeper="true">
+                    <div class="nav-item has-submenu @(isOperationsActive ? "active-parent" : "")" data-submenu="operations" data-storekeeper="true">
+                        <i class="nav-icon" data-lucide="shopping-bag"></i>
+                        <span class="nav-label">Orders & Finance</span>
+                        <i class="chevron nav-icon" data-lucide="chevron-down"></i>
+                    </div>
+                    <div class="submenu @(isOperationsActive ? "open" : "")" id="submenu-operations">
+                        <a class="submenu-item @Html.IsActive("Order")" data-module="orders" data-storekeeper="true" href="@Url.Action("Index", "Order")">Orders</a>
+                        <a class="submenu-item @Html.IsActive("Settlement")" data-module="settlements" href="@Url.Action("Index", "Settlement")">Settlements</a>
+                    </div>
+                </div>
+
+                <div class="nav-group @(isInventoryActive ? "open" : "")" data-storekeeper="true">
+                    <div class="nav-item has-submenu @(isInventoryActive ? "active-parent" : "")" data-submenu="inventory" data-storekeeper="true">
+                        <i class="nav-icon" data-lucide="package"></i>
+                        <span class="nav-label">Inventory</span>
+                        <i class="chevron nav-icon" data-lucide="chevron-down"></i>
+                    </div>
+                    <div class="submenu @(isInventoryActive ? "open" : "")" id="submenu-inventory">
+                        <a class="submenu-item @Html.IsActive("Inventory")" data-module="inventory" data-storekeeper="true" href="@Url.Action("Index", "Inventory")">Items</a>
+                        <a class="submenu-item @Html.IsActive("InventoryBrand")" data-module="inventoryBrand" href="@Url.Action("Index", "InventoryBrand")">Brands</a>
+                        <a class="submenu-item @Html.IsActive("InventoryCategory")" data-module="inventoryCategory" href="@Url.Action("Index", "InventoryCategory")">Categories</a>
+                        <a class="submenu-item @Html.IsActive("InventoryUnit")" data-module="inventoryUnit" href="@Url.Action("Index", "InventoryUnit")">Units</a>
+                    </div>
+                </div>
+
+                <!-- Management -->
+                <div class="nav-section-title">Management</div>
+                <div class="nav-group @(isUsersActive ? "open" : "")">
+                    <div class="nav-item has-submenu @(isUsersActive ? "active-parent" : "")" data-submenu="users">
+                        <i class="nav-icon" data-lucide="users"></i>
+                        <span class="nav-label">Users</span>
+                        <i class="chevron nav-icon" data-lucide="chevron-down"></i>
+                    </div>
+                    <div class="submenu @(isUsersActive ? "open" : "")" id="submenu-users">
+                        <a class="submenu-item @Html.IsActive("Admin")" data-module="admins" href="@Url.Action("Index", "Admin")">Admins</a>
+                        <a class="submenu-item @Html.IsActive("Customer")" data-module="customers" href="@Url.Action("Index", "Customer")">Customers</a>
+                        <a class="submenu-item @Html.IsActive("Rider")" data-module="riders" href="@Url.Action("Index", "Rider")">Riders</a>
+                        <a class="submenu-item @Html.IsActive("Storekeeper")" data-module="storekeepers" href="@Url.Action("Index", "Storekeeper")">Storekeepers</a>
+                    </div>
+                </div>
+
+                <div class="nav-group @(isSupportActive ? "open" : "")">
+                    <div class="nav-item has-submenu @(isSupportActive ? "active-parent" : "")" data-submenu="support">
+                        <i class="nav-icon" data-lucide="headset"></i>
+                        <span class="nav-label">Support & Offers</span>
+                        <i class="chevron nav-icon" data-lucide="chevron-down"></i>
+                    </div>
+                    <div class="submenu @(isSupportActive ? "open" : "")" id="submenu-support">
+                        <a class="submenu-item @Html.IsActive("Offer")" data-module="offers" href="@Url.Action("Index", "Offer")">Offers</a>
+                        <a class="submenu-item @Html.IsActive("Ticket")" data-module="tickets" href="@Url.Action("Index", "Ticket")">Tickets</a>
+                        <a class="submenu-item @Html.IsActive("Faq")" data-module="faqs" href="@Url.Action("Index", "Faq")">FAQs</a>
+                    </div>
+                </div>
+
+                <!-- Security & System -->
+                <div class="nav-section-title">Security & System</div>
+                <div class="nav-group @(isAccessActive ? "open" : "")">
+                    <div class="nav-item has-submenu @(isAccessActive ? "active-parent" : "")" data-submenu="access">
+                        <i class="nav-icon" data-lucide="shield-check"></i>
+                        <span class="nav-label">Access Control</span>
+                        <i class="chevron nav-icon" data-lucide="chevron-down"></i>
+                    </div>
+                    <div class="submenu @(isAccessActive ? "open" : "")" id="submenu-access">
+                        <a class="submenu-item @Html.IsActive("Role")" data-module="roles" href="@Url.Action("Index", "Role")">Roles</a>
+                        <a class="submenu-item @Html.IsActive("Permission")" data-module="permissions" href="@Url.Action("Index", "Permission")">Permissions</a>
+                    </div>
+                </div>
+
+                <a class="nav-item @Html.IsActive("Setting", "Index")" data-module="settings" href="@Url.Action("Index", "Setting")">
+                    <i class="nav-icon" data-lucide="settings"></i>
+                    <span class="nav-label">Settings</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="logout-btn" id="sidebarLogoutBtn" type="button" title="Sign out of Carrito">
+                    <i style="width: 18px;" data-lucide="log-out"></i>
+                    <span class="nav-label">Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <div class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <h1 class="page-title" id="pageTitle">@ViewBag.PageTitle</h1>
+                    <p class="page-subtitle"> @ViewBag.PageSubtitle</p>
+                </div>
+                <div class="header-right">
+                    <div class="storekeeper-badge-pill" id="headerStoreBadge" style="display: none;">
+                        <i style="width: 15px; height: 15px;" data-lucide="store"></i>
+                        <span id="headerStoreName">My Store</span>
+                    </div>
+                    <button class="header-icon-btn">
+                        <i style="width: 20px;" data-lucide="bell"></i>
+                        <span class="notification-dot"></span>
+                    </button>
+                    <div class="user-profile">
+                        <div class="user-avatar" id="headerAvatar">A</div>
+                        <div class="user-info">
+                            <p class="user-name" id="headerUserName">Admin</p>
+                            <p class="user-role" id="headerUserRole">Administrator</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="content-area" id="contentArea">
+                <div class="modal" id="confirmDeleteModal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Confirm Deletion</h3>
+                            <button class="modal-close" onclick="closeModal('confirmDeleteModal')">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <p id="confirmDeleteMessage">Are you sure you want to delete this item? This action cannot be undone.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-outline" onclick="closeModal('confirmDeleteModal')">Cancel</button>
+                            <button id="confirmDeleteBtn" class="btn btn-primary">Delete</button>
+                        </div>
+                    </div>
+                </div>
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+   
+    <script>
+        window.baseApiUrl = "@Configuration["BaseApiUrl"]";
+    </script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="~/views-js/permissions.js"></script>
+    <script src="~/js/auth-helper.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/confirmationpopup.js"></script>
+    <script src="~/js/error-popup.js"></script>
+    <script src="~/js/globalajax.js"></script>
+    <script src="~/plugins/dynamicslidingmodal/dynamicslidingmodal.js"></script>
+    <script src="~/plugins/customdatepicker/date-picker.js"></script>
+    <script src="~/plugins/customselect/customselect.js"></script>
+    
+    <script>
+        lucide.createIcons();
+        AuthHelper.enforceAccessRestrictions();
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

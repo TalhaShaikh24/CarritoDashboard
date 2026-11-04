@@ -1,0 +1,624 @@
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign In - Carrito Grocery Dashboard</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <link href="~/css/site.css" rel="stylesheet" />
+    <link href="~/css/dashboard-modern.css" rel="stylesheet" />
+
+    <style>
+        :root {
+            --primary: #4c9b0e;
+            --primary-hover: #3d8009;
+            --secondary: #ff8712;
+            --secondary-hover: #e67507;
+            --bg-light: #ecf7e3;
+            --bg-warm: #faf0e7;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --card-border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 10% 20%, #ecf7e3 0%, #faf0e7 45%, #ffffff 90%);
+            padding: 20px;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        .login-wrapper {
+            width: 100%;
+            max-width: 440px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-card {
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 36px 32px;
+            box-shadow: 0 20px 40px -15px rgba(76, 155, 14, 0.08), 0 10px 20px -10px rgba(0, 0, 0, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary);
+        }
+
+        .brand-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-light);
+            border: 1px solid rgba(76, 155, 14, 0.2);
+            color: var(--primary);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .brand-header h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+        }
+
+        .brand-header p {
+            font-size: 13.5px;
+            color: var(--text-muted);
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+
+        .input-group-custom {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .input-group-custom i.icon-prefix {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 15px;
+            width: 18px;
+            text-align: center;
+            pointer-events: none;
+            transition: color 0.2s;
+            z-index: 2;
+        }
+
+        /* Override any generic .form-group input styles so padding and height are clean */
+        .login-card .form-group input[type="text"],
+        .login-card .form-group input[type="password"],
+        .input-group-custom input {
+            width: 100% !important;
+            height: 44px !important;
+            padding-left: 44px !important;
+            padding-right: 44px !important;
+            padding-top: 10px !important;
+            padding-bottom: 10px !important;
+            border: 1.5px solid #cbd5e1 !important;
+            border-radius: 10px !important;
+            font-size: 14px !important;
+            color: #0f172a !important;
+            background: #ffffff !important;
+            transition: all 0.2s ease !important;
+            box-sizing: border-box !important;
+        }
+
+        .login-card .form-group input[type="text"]:focus,
+        .login-card .form-group input[type="password"]:focus,
+        .input-group-custom input:focus {
+            outline: none !important;
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px rgba(76, 155, 14, 0.15) !important;
+        }
+
+        .login-card .form-group input::placeholder,
+        .input-group-custom input::placeholder {
+            color: #94a3b8 !important;
+            font-size: 13.5px !important;
+        }
+
+        .input-group-custom:focus-within i.icon-prefix {
+            color: var(--primary) !important;
+        }
+
+        .btn-toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+            z-index: 2;
+        }
+
+        .btn-toggle-password:hover {
+            color: #334155;
+        }
+
+        .btn-submit {
+            width: 100%;
+            height: 46px;
+            background: linear-gradient(135deg, var(--primary) 0%, #3d8009 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(76, 155, 14, 0.25);
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(76, 155, 14, 0.35);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Step 2 - OTP Specific */
+        .step-view {
+            display: none;
+        }
+
+        .step-view.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .otp-inputs-wrapper {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .otp-input-digit {
+            width: 56px;
+            height: 56px;
+            font-size: 22px;
+            font-weight: 800;
+            text-align: center;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            color: var(--text-dark);
+            background: #f8fafc;
+            transition: all 0.2s;
+        }
+
+        .otp-input-digit:focus {
+            outline: none;
+            border-color: var(--secondary);
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(255, 135, 18, 0.15);
+        }
+
+        .otp-info-box {
+            background: var(--bg-warm);
+            border: 1px solid rgba(255, 135, 18, 0.25);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #7c2d12;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .otp-links {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 18px;
+            font-size: 13px;
+        }
+
+        .otp-links a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .otp-links a:hover {
+            text-decoration: underline;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Toast Container */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 420px;
+            width: calc(100vw - 40px);
+            pointer-events: none;
+        }
+    </style>
+
+    <script>
+        // If already logged in, redirect straight to dashboard
+        (function() {
+            var token = localStorage.getItem('jwtToken');
+            if (token) {
+                window.location.replace('/Home/Index');
+            }
+        })();
+    </script>
+</head>
+<body>
+
+    <div class="login-wrapper">
+        <div class="login-card">
+            
+            <div class="brand-header">
+                <div class="brand-badge">
+                    <i class="fa-solid fa-cart-shopping"></i> Carrito Operations
+                </div>
+                <h1>Welcome Back</h1>
+                <p id="stepSubtitle">Sign in with your credentials to access the dashboard</p>
+            </div>
+
+            <!-- STEP 1: Username & Password -->
+            <div id="stepCredentials" class="step-view active">
+                <form id="frmLogin">
+                    <div class="form-group">
+                        <label for="txtUsername">Username <span style="color: #ef4444;">*</span></label>
+                        <div class="input-group-custom">
+                            <input type="text" id="txtUsername" placeholder="e.g. TALHA" required autofocus autocomplete="username">
+                            <i class="fa-regular fa-user icon-prefix"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="txtPassword">Password <span style="color: #ef4444;">*</span></label>
+                        <div class="input-group-custom">
+                            <input type="password" id="txtPassword" placeholder="••••••••" required autocomplete="current-password">
+                            <i class="fa-solid fa-lock icon-prefix"></i>
+                            <button type="button" class="btn-toggle-password" id="btnTogglePassword" tabindex="-1">
+                                <i class="fa-regular fa-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="btnSignIn">
+                        <span>Sign In</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- STEP 2: OTP Verification -->
+            <div id="stepOtp" class="step-view">
+                <div class="otp-info-box">
+                    <i class="fa-solid fa-shield-halved"></i> 
+                    Security verification code sent to <strong id="lblMaskedPhone">your phone</strong>.
+                </div>
+
+                <form id="frmOtp">
+                    <div class="otp-inputs-wrapper">
+                        <input type="text" maxlength="1" class="otp-input-digit" id="otp1" inputmode="numeric" pattern="[0-9]*" autofocus>
+                        <input type="text" maxlength="1" class="otp-input-digit" id="otp2" inputmode="numeric" pattern="[0-9]*">
+                        <input type="text" maxlength="1" class="otp-input-digit" id="otp3" inputmode="numeric" pattern="[0-9]*">
+                        <input type="text" maxlength="1" class="otp-input-digit" id="otp4" inputmode="numeric" pattern="[0-9]*">
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="btnVerifyOtp" style="background: linear-gradient(135deg, var(--secondary) 0%, #e67507 100%);">
+                        <span>Verify & Enter Dashboard</span>
+                        <i class="fa-solid fa-check"></i>
+                    </button>
+
+                    <div class="otp-links">
+                        <a href="javascript:void(0)" id="btnBackToLogin">
+                            <i class="fa-solid fa-chevron-left"></i> Back
+                        </a>
+                        <a href="javascript:void(0)" id="btnResendOtp">
+                            <i class="fa-solid fa-rotate-right"></i> Resend Code
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="login-footer">
+                &copy; 2026 Carrito Supermarket Network &bull; v2.0
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="notificationContainer" class="notification-container"></div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/site.js"></script>
+    <script src="~/js/globalajax.js"></script>
+
+    <script>
+        const baseApiUrl = "@Configuration["BaseApiUrl"]";
+        let activeUserId = null;
+        let activeUserPhone = null;
+
+        // Password visibility toggle
+        $('#btnTogglePassword').click(function () {
+            const $pwd = $('#txtPassword');
+            const isPassword = $pwd.attr('type') === 'password';
+            $pwd.attr('type', isPassword ? 'text' : 'password');
+            $('#eyeIcon').toggleClass('fa-eye fa-eye-slash');
+        });
+
+        // OTP inputs auto-advance
+        $('.otp-input-digit').on('input', function (e) {
+            const val = $(this).val();
+            if (val.length === 1) {
+                $(this).next('.otp-input-digit').focus();
+            }
+        });
+
+        $('.otp-input-digit').on('keydown', function (e) {
+            if (e.key === 'Backspace' && !$(this).val()) {
+                $(this).prev('.otp-input-digit').focus();
+            }
+        });
+
+        // Step 1: Submit Credentials
+        $('#frmLogin').submit(function (e) {
+            e.preventDefault();
+            const username = $('#txtUsername').val().trim();
+            const password = $('#txtPassword').val();
+            const userType = 4;
+
+            if (!username || !password) {
+                showNotification("Please enter username and password", "warning");
+                return;
+            }
+
+            const $btn = $('#btnSignIn');
+            $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...');
+
+            $.ajax({
+                url: `${baseApiUrl}/api/Auth/login`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ username, password, userType }),
+                success: function (res) {
+                    $btn.prop('disabled', false).html('<span>Sign In</span> <i class="fa-solid fa-arrow-right"></i>');
+
+                    if (res && res.status === 200 && res.data) {
+                        activeUserId = res.data.userId || res.data.UserId;
+                        activeUserPhone = res.data.phone || res.data.Phone;
+
+                        // Switch to Step 2 (OTP)
+                        $('#stepCredentials').removeClass('active');
+                        $('#stepOtp').addClass('active');
+                        $('#stepSubtitle').text('Enter the 4-digit code sent to your registered phone');
+                        
+                        const maskedPhone = activeUserPhone ? activeUserPhone.replace(/(\d{4})\d{4}(\d{3})/, '$1****$2') : 'phone';
+                        $('#lblMaskedPhone').text(maskedPhone);
+
+                        // If dev OTP provided
+                        if (res.data.otp || res.data.Otp) {
+                            const devOtp = String(res.data.otp || res.data.Otp);
+                            $('#otp1').val(devOtp[0]);
+                            $('#otp2').val(devOtp[1]);
+                            $('#otp3').val(devOtp[2]);
+                            $('#otp4').val(devOtp[3]);
+                        }
+
+                        $('#otp1').focus();
+                        showNotification("Credentials verified. Please enter the OTP code.", "info");
+                    } else {
+                        showNotification(res.responseMsg || "Login failed. Please check your credentials.", "error");
+                    }
+                },
+                error: function (xhr) {
+                    $btn.prop('disabled', false).html('<span>Sign In</span> <i class="fa-solid fa-arrow-right"></i>');
+                    let msg = "Invalid username or password";
+                    try {
+                        if (xhr.responseJSON && xhr.responseJSON.responseMsg) {
+                            msg = xhr.responseJSON.responseMsg;
+                        }
+                    } catch (e) {}
+                    showNotification(msg, "error");
+                }
+            });
+        });
+
+        // Step 2: Submit OTP
+        $('#frmOtp').submit(function (e) {
+            e.preventDefault();
+            const otp = $('#otp1').val() + $('#otp2').val() + $('#otp3').val() + $('#otp4').val();
+
+            if (otp.length < 4) {
+                showNotification("Please enter all 4 digits of the OTP code.", "warning");
+                return;
+            }
+
+            const $btn = $('#btnVerifyOtp');
+            $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Validating code...');
+
+            // Get or create persistent device ID
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = 'web-' + Math.random().toString(36).substring(2, 12);
+                localStorage.setItem('deviceId', deviceId);
+            }
+
+            $.ajax({
+                url: `${baseApiUrl}/api/Auth/validateOTP?userId=${activeUserId}&otp=${otp}`,
+                method: 'POST',
+                headers: {
+                    'X-DeviceId': deviceId
+                },
+                success: function (res) {
+                    if (res && res.status === 200 && res.data) {
+                        const authData = res.data;
+                        const token = authData.token || authData.Token;
+
+                        if (token) {
+                            // Store JWT Token & user details
+                            localStorage.setItem('jwtToken', token);
+                            const skp = authData.storekeeper || authData.Storekeeper || null;
+                            const skpId = skp ? (skp.id || skp.Id) : null;
+                            const skpStoreName = skp ? (skp.storeName || skp.StoreName) : null;
+
+                            localStorage.setItem('currentUser', JSON.stringify({
+                                userId: authData.userId || authData.UserId,
+                                username: authData.username || authData.Username,
+                                fullName: authData.fullName || authData.FullName,
+                                roleId: authData.roleId || authData.RoleId,
+                                roleName: authData.roleName || authData.RoleName,
+                                storekeeperId: skpId,
+                                storeName: skpStoreName
+                            }));
+
+                            showNotification(`Welcome, ${authData.fullName || 'User'}! Redirecting to Dashboard...`, "success");
+                            
+                            setTimeout(function () {
+                                window.location.href = '/Home/Index';
+                            }, 800);
+                        } else {
+                            $btn.prop('disabled', false).html('<span>Verify & Enter Dashboard</span> <i class="fa-solid fa-check"></i>');
+                            showNotification("Token not received. Please try again.", "error");
+                        }
+                    } else {
+                        $btn.prop('disabled', false).html('<span>Verify & Enter Dashboard</span> <i class="fa-solid fa-check"></i>');
+                        showNotification(res.responseMsg || "Invalid OTP code. Please try again.", "error");
+                    }
+                },
+                error: function (xhr) {
+                    $btn.prop('disabled', false).html('<span>Verify & Enter Dashboard</span> <i class="fa-solid fa-check"></i>');
+                    let msg = "Invalid or expired OTP code.";
+                    try {
+                        if (xhr.responseJSON && xhr.responseJSON.responseMsg) {
+                            msg = xhr.responseJSON.responseMsg;
+                        }
+                    } catch (e) {}
+                    showNotification(msg, "error");
+                }
+            });
+        });
+
+        // Back to Login
+        $('#btnBackToLogin').click(function () {
+            $('#stepOtp').removeClass('active');
+            $('#stepCredentials').addClass('active');
+            $('#stepSubtitle').text('Sign in with your credentials to access the dashboard');
+            $('.otp-input-digit').val('');
+        });
+
+        // Resend OTP
+        $('#btnResendOtp').click(function () {
+            if (!activeUserId) return;
+            const $link = $(this);
+            $link.text('Sending...');
+
+            $.ajax({
+                url: `${baseApiUrl}/api/Auth/resendOTP?userId=${activeUserId}&phone=${encodeURIComponent(activeUserPhone)}`,
+                method: 'POST',
+                success: function (res) {
+                    $link.html('<i class="fa-solid fa-rotate-right"></i> Resend Code');
+                    showNotification("A new OTP code has been sent.", "success");
+                    if (res && res.data && res.data.otp) {
+                        const devOtp = String(res.data.otp);
+                        $('#otp1').val(devOtp[0]);
+                        $('#otp2').val(devOtp[1]);
+                        $('#otp3').val(devOtp[2]);
+                        $('#otp4').val(devOtp[3]);
+                    }
+                },
+                error: function () {
+                    $link.html('<i class="fa-solid fa-rotate-right"></i> Resend Code');
+                    showNotification("Failed to resend code. Please try again.", "error");
+                }
+            });
+        });
+    </script>
+</body>
+</html>

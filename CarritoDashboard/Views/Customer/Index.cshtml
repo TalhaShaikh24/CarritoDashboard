@@ -1,0 +1,124 @@
+﻿<link href="~/css/file-uploader.css" rel="stylesheet" />
+
+<div class="module" id="module-customers">
+    <div class="module-header">
+        <div class="search-bar">
+            <i style="width: 20px;" data-lucide="search"></i>
+            <input type="text" placeholder="Search customers..." id="customerSearch">
+        </div>
+
+        <div class="module-header-right">
+            <div class="header-actions">
+                <button id="myDatePicker" class="datepicker-trigger">
+                    <i style="width: 18px;" data-lucide="calendar"></i>
+                    <span class="date-text">Select Date Range</span>
+                </button>
+                <button id="btnAddNewCustomer" class="btn-primary">
+                    <i style="width: 18px;" data-lucide="plus"></i>
+                    Add Customer
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    
+
+    <div class="table-container">
+        <table class="data-table" id="customersTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Customer Template -->
+<template id="customerFormTemplate">
+    <form id="frmAddNewCustomer">
+        <div class="form-group">
+            <label>Full Name <span style="color: red;">*</span></label>
+            <input type="text" id="customerFullName" placeholder="Muhammad Ali" required>
+        </div>
+        <div class="form-group">
+            <label>Username <span style="color: red;">*</span></label>
+            <input type="text" id="customerUsername" placeholder="muhammadali123" required>
+        </div>
+        <div class="form-group">
+            <label>Password <span style="color: red;">*</span></label>
+            <input type="password" id="customerPassword" placeholder="Strong password" required>
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="customerEmail" placeholder="example@domain.com">
+        </div>
+        <div class="form-group">
+            <label>Phone <span style="color: red;">*</span></label>
+            <input type="tel" id="customerPhone" placeholder="+92 300 1234567" required>
+        </div>
+
+        <hr style="margin: 25px 0;">
+
+        <h5 style="margin-bottom: 15px;">Default Address (Optional)</h5>
+
+        <div class="form-group">
+            <label>Address Line</label>
+            <textarea id="customerAddress" rows="2" placeholder="House #123, Street ABC, Area XYZ"></textarea>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>City</label>
+                <input type="text" id="customerCity" placeholder="Karachi / Lahore">
+            </div>
+            <div class="form-group">
+                <label>State/Province</label>
+                <input type="text" id="customerState" placeholder="Sindh / Punjab">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Zip/Postal Code</label>
+                <input type="text" id="customerZipCode" placeholder="75500">
+            </div>
+            <div class="form-group">
+                <label>Country</label>
+                <input type="text" id="customerCountry" value="Pakistan" readonly>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Latitude</label>
+                <input type="text" id="customerLatitude" placeholder="24.8607" value="24.8607">
+            </div>
+            <div class="form-group">
+                <label>Longitude</label>
+                <input type="text" id="customerLongitude" placeholder="67.0011" value="67.0011">
+            </div>
+        </div>
+
+        <hr style="margin: 25px 0;">
+
+        <div class="form-group">
+            <label>Profile Photo</label>
+            <input type="file" id="customerProfilePhoto" accept="image/*">
+            <small class="text-muted">Optional</small>
+        </div>
+    </form>
+</template>
+
+@section scripts {
+    <script src="~/views-js/customers.js"></script>
+    <script src="~/js/file-uploader.js"></script>
+}

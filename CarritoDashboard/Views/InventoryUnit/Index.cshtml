@@ -1,0 +1,44 @@
+﻿@{
+    ViewData["Title"] = "Inventory Units";
+}
+
+<div class="module" id="module-inventory-units">
+    <div class="module-header">
+        <div>
+            <div class="search-bar">
+                <i style="width: 20px;" data-lucide="search"></i>
+                <input type="text" placeholder="Search units..." id="unitSearch">
+            </div>
+        </div>
+        <button id="btnAddNewUnit" class="btn-primary">
+            <i style="width: 18px;" data-lucide="plus"></i>
+            Add Unit
+        </button>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table" id="unitsTable">
+            <thead>
+                <tr>
+                    <th style="width: 100px;">ID</th>
+                    <th>Unit Name</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<template id="unitFormTemplate">
+    <form id="frmUnit">
+        <div class="form-group">
+            <label>Unit Name <span style="color: red;">*</span></label>
+            <input type="text" id="unitName" class="form-control" placeholder="e.g. kg, ltr, pcs" required>
+        </div>
+    </form>
+</template>
+
+@section scripts {
+    <script src="~/views-js/inventoryUnits.js"></script>
+}

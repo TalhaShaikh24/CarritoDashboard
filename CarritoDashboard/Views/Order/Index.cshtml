@@ -1,0 +1,55 @@
+﻿<div class="module" id="module-orders">
+
+    <div class="module-header">
+        <div class="search-bar flex-1">
+            <i style="width: 20px;" data-lucide="search"></i>
+            <input type="text" placeholder="Search by order ID, customer or phone..." id="orderSearch">
+        </div>
+
+        <div class="module-header-right">
+            <div class="filter-tabs" id="orderStatusTabs">
+                <button class="filter-tab active" data-status="0">All</button>
+                <button class="filter-tab" data-status="1">Pending</button>
+                <button class="filter-tab" data-status="2">Confirmed</button>
+                <button class="filter-tab" data-status="3">Out for Delivery</button>
+                <button class="filter-tab" data-status="4">Delivered</button>
+                <button class="filter-tab" data-status="5">Cancelled</button>
+            </div>
+
+            <button class="icon-btn" id="btnExportOrders" title="Export to CSV">
+                <i style="width: 20px;" data-lucide="download"></i>
+            </button>
+        </div>
+
+    </div>
+
+
+    
+
+    <div class="table-container">
+        <table class="data-table" id="ordersTable">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Store</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Rider</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Order Detail Modal Template -->
+<template id="orderDetailTemplate">
+    <!-- Will be populated dynamically -->
+</template>
+
+@section scripts {
+    <script src="~/views-js/orders.js"></script>
+}

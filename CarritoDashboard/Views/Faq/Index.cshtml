@@ -1,0 +1,51 @@
+﻿@{
+    ViewData["Title"] = "FAQs Management";
+}
+
+
+
+
+<div class="module" id="module-faqs">
+    
+    <div class="module-header">
+        <div class="search-bar">
+            <i style="width: 20px;" data-lucide="search"></i>
+            <input type="text" placeholder="Search FAQs..." id="faqSearch">
+        </div>
+
+        <div class="module-header-right">
+            <select class="form-control" id="filterFaqUserType" data-custom-select>
+                <option value="">Select Type</option>
+                <option value="1">Customer</option>
+                <option value="2">Storekeeper</option>
+                <option value="3">Rider</option>
+            </select>
+            <button id="btnAddNewFaq" class="btn-primary">
+                <i style="width: 18px;" data-lucide="plus"></i>
+                Add FAQ
+            </button>
+        </div>
+
+    </div>
+    
+
+    <div class="table-container">
+        <table class="data-table" id="faqsTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Question</th>
+                    <th style="width: 30%;">Answer</th>
+                    <th>Category</th>
+                    <th>User Type</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/views-js/faqs.js"></script>
+}

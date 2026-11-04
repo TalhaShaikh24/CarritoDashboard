@@ -1,0 +1,59 @@
+<div class="module" id="module-permissions">
+    <div class="module-header">
+        <div>
+            <h2 class="module-title">Permissions Directory</h2>
+            <p class="module-subtitle">All system permissions and their role assignments across modules</p>
+        </div>
+        <a href="@Url.Action("Index", "Role")" class="btn-primary">
+            <i style="width: 18px;" data-lucide="shield-check"></i>
+            Manage Role Permissions
+        </a>
+    </div>
+
+    <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+        <div class="search-bar" style="flex: 1; min-width: 240px; margin-bottom: 0;">
+            <i style="width: 18px;" data-lucide="search"></i>
+            <input type="text" placeholder="Search module or action..." id="permissionSearch">
+        </div>
+        <div style="min-width: 200px;">
+            <select id="moduleFilterSelect" class="form-control" style="height: 42px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 12px; font-size: 13px; background: #fff; width: 100%;">
+                <option value="">All Modules</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table" id="permissionsTable">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">ID</th>
+                    <th>Module</th>
+                    <th>Action</th>
+                    <th>System Key</th>
+                    <th>Assigned Roles</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody id="permissionsTableBody">
+                <tr>
+                    <td colspan="7" class="text-center text-muted" style="padding: 30px;">Loading permissions...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="alert-box warning" style="margin-top: 24px;">
+        <i style="width: 20px;" data-lucide="triangle-alert"></i>
+        <div>
+            <p class="alert-title">Role-Based Access Control</p>
+            <p class="alert-message">
+                Permissions are assigned to user roles. To grant or restrict access to any module (such as Inventory, Orders, Admins), navigate to the <strong>Roles</strong> management section and configure permissions per role.
+            </p>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/views-js/permissions.js"></script>
+}

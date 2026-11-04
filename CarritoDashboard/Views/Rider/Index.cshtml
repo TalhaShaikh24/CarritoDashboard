@@ -1,0 +1,111 @@
+<link href="~/css/file-uploader.css" rel="stylesheet" />
+<div class="module" id="module-riders">
+    <div class="module-header">
+        <div>
+            <div class="search-bar">
+                <i style="width: 20px;" data-lucide="search"></i>
+                <input type="text" placeholder="Search riders..." id="riderSearch">
+            </div>
+        </div>
+        <button id="btnAddNewRider" class="btn-primary" data-modal="riderForm">
+            <i style="width: 18px;" data-lucide="plus"></i>
+            Add Rider
+        </button>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-box"></i> Riders Overview</h3>
+        </div>
+        <div class="card-content">
+            <div class="table-container">
+                <table class="data-table" id="ridersTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Bike Plate</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ridersTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<!-- Add Rider Template -->
+<template id="riderFormTemplate">
+    <form id="frmAddNewRider">
+        <div class="form-group">
+            <label>Full Name <span style="color: red;">*</span></label>
+            <input type="text" id="riderFullName" placeholder="Usman Khan" required>
+        </div>
+        <div class="form-group">
+            <label>Username <span style="color: red;">*</span></label>
+            <input type="text" id="riderUsername" placeholder="usman01" required>
+        </div>
+        <div class="form-group">
+            <label>Password <span style="color: red;">*</span></label>
+            <input type="password" id="riderPassword" placeholder="Enter strong password" required>
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="riderEmail" placeholder="usman@example.com">
+        </div>
+        <div class="form-group">
+            <label>Phone <span style="color: red;">*</span></label>
+            <input type="tel" id="riderPhone" placeholder="03001234567" maxlength="11" required>
+            <small style="color: #64748b; font-size: 11px;">Example: 03001234567 (11 digits)</small>
+        </div>
+
+        <hr style="margin: 20px 0;">
+        <h5 style="margin-bottom: 15px;">Rider Specific Details</h5>
+
+        <div class="form-group">
+            <label>NIC Number <span style="color: red;">*</span></label>
+            <input type="text" id="riderNIC" placeholder="12345-1234567-1" maxlength="15" required>
+            <small style="color: #64748b; font-size: 11px;">Format: 12345-1234567-1</small>
+        </div>
+        <div class="form-group">
+            <label>Driving License No <span style="color: red;">*</span></label>
+            <input type="text" id="riderDrivingLicense" placeholder="123456789" required>
+        </div>
+        <div class="form-group">
+            <label>Bike Plate Number <span style="color: red;">*</span></label>
+            <input type="text" id="riderBikePlate" placeholder="ABC-123" required>
+        </div>
+        <div class="form-group">
+            <label>Bike Model <span style="color: red;">*</span></label>
+            <input type="text" id="riderBikeModel" placeholder="Honda CD 70 2023" required>
+        </div>
+
+        <div class="form-group">
+            <label>Profile Photo</label>
+            <input type="file" id="riderProfilePhoto" accept="image/*">
+            <small class="text-muted">Optional</small>
+        </div>
+        <div class="form-group">
+            <label>NIC Front Photo <span style="color: red;">*</span></label>
+            <input type="file" id="riderNICFront" accept="image/*" multiple required>
+        </div>
+        <div class="form-group">
+            <label>NIC Back Photo <span style="color: red;">*</span></label>
+            <input type="file" id="riderNICBack" accept="image/*" required>
+        </div>
+        <div class="form-group">
+            <label>Bike Photo <span style="color: red;">*</span></label>
+            <input type="file" id="riderBikePhoto" accept="image/*" required>
+        </div>
+    </form>
+</template>
+
+@section scripts {
+    <script src="~/views-js/riders.js"></script>
+    <script src="~/js/file-uploader.js"></script>
+}
+

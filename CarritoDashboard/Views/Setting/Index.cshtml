@@ -1,0 +1,33 @@
+﻿@{
+    ViewData["Title"] = "System Settings";
+}
+
+
+
+
+    <div class="module" id="module-settings">
+        <div class="module-header" style="margin-bottom: 20px;">
+            <div>
+                <h3>Global Configuration</h3>
+            </div>
+            <button id="btnGlobalSave" class="btn-primary">
+                <i style="width: 18px;" data-lucide="save"></i> Save Changes
+            </button>
+        </div>
+
+        <div class="settings-layout">
+            <div class="settings-sidebar" id="settingsSidebar">
+                <div class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+
+            <div class="settings-content" id="settingsContent">
+            </div>
+        </div>
+    </div>
+
+
+@section scripts {
+    <script src="~/views-js/settings.js"></script>
+}

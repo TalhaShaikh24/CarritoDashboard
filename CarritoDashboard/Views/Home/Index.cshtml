@@ -1,0 +1,160 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="module" id="module-dashboard">
+    <!-- Compact Top Bar -->
+    <div class="dash-top-bar">
+        <div class="dash-title-group">
+            <h2 class="dash-page-heading">Platform Overview</h2>
+            <span class="dash-live-indicator">
+                <span class="dash-dot"></span> Live
+            </span>
+        </div>
+
+        <div class="dash-filters">
+            <select id="cityFilter" class="chart-select" data-custom-select style="width: 130px;">
+                <option value="">All Cities</option>
+                <option value="Hyderabad">Hyderabad</option>
+                <option value="Karachi">Karachi</option>
+                <option value="Lahore">Lahore</option>
+            </select>
+
+            <button id="dashboardDateRange" class="datepicker-trigger">
+                <i data-lucide="calendar"></i>
+                <span class="date-text">Select Date Range</span>
+            </button>
+
+            <button id="btnApply" class="btn-compact-apply">Apply</button>
+            <button id="btnClear" class="btn-compact-clear">Reset</button>
+        </div>
+    </div>
+
+    <!-- 6 Compact KPI Cards -->
+    <div class="dash-kpi-grid">
+        <!-- 1. Total Revenue -->
+        <div class="kpi-card">
+            <div class="kpi-top">
+                <span class="kpi-label">Total Revenue</span>
+                <i class="kpi-icon" data-lucide="wallet"></i>
+            </div>
+            <div class="kpi-value" id="stat-revenue">Rs 0</div>
+            <div class="kpi-foot">
+                <span class="kpi-badge-green">Gross sales</span>
+            </div>
+        </div>
+
+        <!-- 2. Platform Commission -->
+        <div class="kpi-card">
+            <div class="kpi-top">
+                <span class="kpi-label">Commission</span>
+                <i class="kpi-icon" data-lucide="percent"></i>
+            </div>
+            <div class="kpi-value" id="stat-commission">Rs 0</div>
+            <div class="kpi-foot">
+                <span class="kpi-badge-orange">Platform share</span>
+            </div>
+        </div>
+
+        <!-- 3. Active Customers -->
+        <div class="kpi-card">
+            <div class="kpi-top">
+                <span class="kpi-label">Customers</span>
+                <i class="kpi-icon" data-lucide="users"></i>
+            </div>
+            <div class="kpi-value" id="stat-customers">0</div>
+            <div class="kpi-foot">
+                <span class="kpi-badge-green">Active buyers</span>
+            </div>
+        </div>
+
+        <!-- 4. Orders Delivered -->
+        <div class="kpi-card">
+            <div class="kpi-top">
+                <span class="kpi-label">Orders</span>
+                <i class="kpi-icon" data-lucide="package-check"></i>
+            </div>
+            <div class="kpi-value" id="stat-orders">0</div>
+            <div class="kpi-foot">
+                <span class="kpi-badge-orange" id="stat-canceled-label">0 Canceled</span>
+            </div>
+        </div>
+
+        <!-- 5. Active Stores -->
+        <div class="kpi-card">
+            <div class="kpi-top">
+                <span class="kpi-label">Stores</span>
+                <i class="kpi-icon" data-lucide="store"></i>
+            </div>
+            <div class="kpi-value" id="stat-storekeepers">0</div>
+            <div class="kpi-foot">
+                <span class="kpi-trend">Vendors</span>
+            </div>
+        </div>
+
+        <!-- 6. Active Riders -->
+        <div class="kpi-card">
+            <div class="kpi-top">
+                <span class="kpi-label">Riders</span>
+                <i class="kpi-icon" data-lucide="bike"></i>
+            </div>
+            <div class="kpi-value" id="stat-riders">0</div>
+            <div class="kpi-foot">
+                <span class="kpi-trend">Fleet online</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Analytics (Compact) -->
+    <div class="dash-block">
+        <div class="dash-block-head">
+            <span class="dash-block-title">Revenue Analytics</span>
+            <span class="dash-badge-neutral">Monthly Trajectory</span>
+        </div>
+        <div class="dash-chart-box" style="height: 240px;">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 2 Column Compact Grid: Top Stores & Top Products -->
+    <div class="dash-split-grid">
+        <div class="dash-block" style="margin-bottom: 0;">
+            <div class="dash-block-head">
+                <span class="dash-block-title">Top Stores</span>
+                <span class="dash-badge-neutral">By Revenue</span>
+            </div>
+            <div class="compact-list" id="topSellersList">
+                <div class="empty-state">Loading stores...</div>
+            </div>
+        </div>
+
+        <div class="dash-block" style="margin-bottom: 0;">
+            <div class="dash-block-head">
+                <span class="dash-block-title">Top Selling Products</span>
+                <span class="dash-badge-neutral">By Volume</span>
+            </div>
+            <div class="compact-list" id="topProductsList">
+                <div class="empty-state">Loading products...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales by Category (Compact) -->
+    <div class="dash-block" style="margin-top: 16px;">
+        <div class="dash-block-head">
+            <span class="dash-block-title">Sales by Category</span>
+            <span class="dash-badge-neutral">Distribution</span>
+        </div>
+        <div class="dash-chart-box" style="height: 210px;">
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/views-js/dashboard.js?v=@DateTime.Now.Ticks"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+}

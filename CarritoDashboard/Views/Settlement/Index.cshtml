@@ -1,0 +1,145 @@
+﻿@{
+    ViewData["Title"] = "Settlement Management";
+}
+
+<link href="~/css/file-uploader.css" rel="stylesheet" />
+
+
+<div class="module" id="module-settlement">
+    <div class="module-header">
+        <div class="search-bar">
+            <i style="width: 20px;" data-lucide="search"></i>
+            <input type="text" placeholder="Search by name or ID..." id="settlementSearch">
+        </div>
+
+        <div class="module-header-right">
+            <select class="form-control" id="filterType" style="min-width: 180px;">
+                <option value="">All Types</option>
+                <option value="1">Rider COD Settlement</option>
+                <option value="10">Store Withdrawal</option>
+            </select>
+
+            <select class="form-control" id="filterStatus" style="min-width: 150px; margin-left: 10px;">
+                <option value="">All Statuses</option>
+                <option value="1">Pending</option>
+                <option value="2">Processing</option>
+                <option value="3">Completed</option>
+                <option value="4">Rejected</option>
+            </select>
+
+            <button id="btnAddNewSettlement" class="btn-primary">
+                <i style="width: 18px;" data-lucide="plus"></i>
+                New Settlement
+            </button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table" id="settlementTable">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">Receipt</th>
+                    <th>Target User</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<template id="settlementAddTemplate">
+    <form id="frmAddSettlement">
+
+        <div class="form-group">
+            <label>Settlement Type</label>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" name="settlementType" id="typeRider" value="1" checked>
+                    <label class="radio-label" for="typeRider">
+                        <i data-lucide="bike" style="width:18px;"></i>
+                        Rider COD
+                    </label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="settlementType" id="typeStore" value="10">
+                    <label class="radio-label" for="typeStore">
+                        <i data-lucide="store" style="width:18px;"></i>
+                        Store Withdrawal
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group col-md-12">
+                <label>Target User <span style="color: red;">*</span></label>
+                <select id="newSetTargetUser" class="form-control" required>
+                    <option value="">Select User</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label>Amount <span style="color: red;">*</span></label>
+                <input type="number" id="newSetAmount" class="form-control" min="0" step="0.01" required>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Initial Status</label>
+                <select id="newSetStatus" class="form-control" required>
+                    <option value="1" selected>Pending</option>
+                    <option value="2">Processing</option>
+                    <option value="3">Completed</option>
+                </select>
+            </div>
+        </div>
+
+        <hr style="margin: 20px 0;">
+
+        <div class="form-group">
+            <label>Receipt Photo <span style="color: red;">*</span></label>
+            <input type="file" id="newSetPhoto" accept="image/*" required>
+        </div>
+    </form>
+</template>
+
+<template id="settlementEditTemplate">
+    <form id="frmEditSettlement">
+        <div class="alert-box info" style="margin-bottom: 20px;">
+            <i data-lucide="info" style="width: 16px;"></i>
+            <div class="alert-content">
+                <div class="alert-title">Update Status</div>
+                <div class="alert-message">You can only update the status of existing settlements.</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Current Status</label>
+            <select id="editSetStatus" class="form-control">
+                <option value="1">Pending</option>
+                <option value="2">Processing</option>
+                <option value="3">Completed</option>
+                <option value="4">Rejected</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Amount</label>
+            <input type="text" id="readOnlyAmount" class="form-control" disabled>
+        </div>
+        <div class="form-group">
+            <label>Target User</label>
+            <input type="text" id="readOnlyUser" class="form-control" disabled>
+        </div>
+    </form>
+</template>
+
+@section scripts {
+    <script src="~/views-js/settlement.js"></script>
+    <script src="~/js/file-uploader.js"></script>
+}

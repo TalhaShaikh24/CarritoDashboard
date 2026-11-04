@@ -1,0 +1,110 @@
+@{
+    ViewData["Title"] = "Inventory Management";
+}
+
+<link href="~/css/file-uploader.css" rel="stylesheet" />
+
+<div class="module" id="module-inventory">
+    <div class="module-header">
+        <div class="search-bar">
+            <i style="width: 20px;" data-lucide="search"></i>
+            <input type="text" placeholder="Search inventory..." id="inventorySearch">
+        </div>
+
+        <div class="module-header-right">
+            <select class="form-control" id="filterStorekeeper" data-search="true" style="min-width: 170px;">
+                <option value="">Loading Storekeepers...</option>
+            </select>
+
+            <select class="form-control" id="filterCategory" style="min-width: 140px;">
+                <option value="">All Categories</option>
+            </select>
+
+            <select class="form-control" id="filterBrand" style="min-width: 140px;">
+                <option value="">All Brands</option>
+            </select>
+
+            <button id="btnAddNewInventory" class="btn-primary">
+                <i style="width: 18px;" data-lucide="plus"></i>
+                Add Inventory
+            </button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table" id="inventoryTable">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">Image</th>
+                    <th>Product Title</th>
+                    <th>Category</th>
+                    <th>Brand</th>
+                    <th>Price</th>
+                    <th>Weight</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<template id="inventoryFormTemplate">
+    <form id="frmInventory">
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label>Category</label>
+                <select id="editInvCategory" class="form-control">
+                    <option value="">Select Category</option>
+                </select>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Brand</label>
+                <select id="editInvBrand" class="form-control">
+                    <option value="">Select Brand</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label>Unit</label>
+                <select id="editInvUnit" class="form-control">
+                    <option value="">Select Unit</option>
+                </select>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Price</label>
+                <input type="number" id="editInvPrice" class="form-control" min="0" required>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Weight</label>
+                <input type="number" id="editInvWeight" class="form-control" min="0" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Title <span style="color: red;">*</span></label>
+            <input type="text" id="editInvTitle" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="editInvDescription" class="form-control" rows="3"></textarea>
+        </div>
+
+        <hr style="margin: 20px 0;">
+
+        <div class="form-group">
+            <label>Product Photo</label>
+            <input type="file" id="editInvPhoto" accept="image/*">
+            <small>Leave empty to keep current photo</small>
+        </div>
+    </form>
+</template>
+
+@section scripts {
+    <script src="~/views-js/inventory.js"></script>
+    <script src="~/js/file-uploader.js"></script>
+}
