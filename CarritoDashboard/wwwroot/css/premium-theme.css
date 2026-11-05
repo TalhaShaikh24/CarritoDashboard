@@ -1,0 +1,538 @@
+/* ==========================================================================
+   Carrito Dashboard - Premium Theme
+   Design language inspired by MenuOptics: Inter typography, one decisive
+   orange accent (#f08d11), generous spacing, 12-14px radii and soft shadows.
+   This file is loaded LAST (after site.css and dashboard-modern.css) and
+   only re-skins existing classes - no markup or behaviour changes.
+   Brand green stays as the semantic/success colour.
+   ========================================================================== */
+
+:root {
+    --mo-orange: #f08d11;
+    --mo-orange-hover: #e07c0a;
+    --mo-orange-2: #ff9f2e;
+    --mo-orange-tint: #fdf0dd;
+    --mo-ink: #111827;
+    --mo-text: #1f2937;
+    --mo-muted: #6b7280;
+    --mo-faint: #9ca3af;
+    --mo-border: #e5e7eb;
+    --mo-border-strong: #d1d5db;
+    --mo-bg: #f8fafc;
+    --mo-shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.06);
+    --mo-shadow-md: 0 8px 20px rgba(16, 24, 40, 0.10);
+}
+
+/* --------------------------------------------------------------------------
+   Base & Typography
+   -------------------------------------------------------------------------- */
+body {
+    font-size: 14px !important;
+    color: var(--mo-text) !important;
+    background-color: var(--mo-bg) !important;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+::selection {
+    background: rgba(240, 141, 17, 0.25);
+}
+
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: #d4d8de;
+    border-radius: 8px;
+    border: 2px solid var(--mo-bg);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: #b6bcc6;
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar (MenuOptics: white, roomy, solid gradient active pill)
+   -------------------------------------------------------------------------- */
+.sidebar {
+    width: 256px !important;
+    border-right: 1px solid var(--mo-border) !important;
+}
+
+.sidebar-header {
+    height: 64px !important;
+    padding: 0 20px !important;
+    border-bottom: 1px solid var(--mo-border) !important;
+}
+
+.logo-icon {
+    width: 34px !important;
+    height: 34px !important;
+    background: linear-gradient(135deg, #f08d11 0%, #ff9f2e 100%) !important;
+    border-radius: 9px !important;
+    font-size: 16px !important;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(240, 141, 17, 0.35) !important;
+}
+
+.logo-text {
+    font-size: 17px !important;
+    font-weight: 700 !important;
+    color: var(--mo-ink) !important;
+    letter-spacing: -0.02em !important;
+}
+
+.nav-section-title {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    color: var(--mo-faint) !important;
+}
+
+.sidebar .nav-item {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #374151 !important;
+    padding: 11px 14px !important;
+    border-radius: 10px !important;
+    margin-bottom: 3px !important;
+    transition: all 0.2s ease !important;
+}
+
+.sidebar .nav-item .nav-icon {
+    color: var(--mo-muted);
+    transition: color 0.2s ease;
+}
+
+.sidebar .nav-item:hover:not(.active) {
+    background: #f3f4f6 !important;
+    color: var(--mo-orange) !important;
+}
+
+.sidebar .nav-item:hover:not(.active) .nav-icon {
+    color: var(--mo-orange);
+}
+
+.sidebar .nav-item.active {
+    background: linear-gradient(135deg, #f08d11 0%, #ff9f2e 100%) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 6px 14px rgba(240, 141, 17, 0.35) !important;
+}
+
+.sidebar .nav-item.active .nav-icon {
+    color: #ffffff !important;
+}
+
+.sidebar .submenu-item {
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+    border-radius: 10px !important;
+    color: var(--mo-muted) !important;
+    transition: all 0.2s ease !important;
+}
+
+.sidebar .submenu-item:hover {
+    background: #f3f4f6 !important;
+    color: var(--mo-orange) !important;
+}
+
+.sidebar .submenu-item.active {
+    background: #fdf0dd !important;
+    color: #b25f06 !important;
+    font-weight: 600 !important;
+}
+
+.logout-btn {
+    border-radius: 10px !important;
+    transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+    background: #fef2f2 !important;
+    color: #dc2626 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Top Header
+   -------------------------------------------------------------------------- */
+.top-header {
+    height: 64px !important;
+    padding: 0 28px !important;
+    border-bottom: 1px solid var(--mo-border) !important;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+}
+
+.page-title {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: var(--mo-ink) !important;
+    letter-spacing: -0.02em !important;
+}
+
+.page-subtitle {
+    font-size: 13px !important;
+    color: var(--mo-muted) !important;
+}
+
+.header-icon-btn {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 10px !important;
+    border: 1px solid var(--mo-border) !important;
+    background: #ffffff !important;
+    color: #4b5563 !important;
+    transition: all 0.2s ease;
+}
+
+.header-icon-btn:hover {
+    background: #f3f4f6 !important;
+    color: var(--mo-orange) !important;
+}
+
+.notification-dot {
+    background: #f08d11 !important;
+}
+
+.user-avatar {
+    width: 34px !important;
+    height: 34px !important;
+    background: linear-gradient(135deg, #f08d11 0%, #ff9f2e 100%) !important;
+    font-size: 13px !important;
+    box-shadow: 0 4px 10px rgba(240, 141, 17, 0.30) !important;
+}
+
+.user-name {
+    font-size: 13.5px
+...[truncated 7802 chars] !important;
+    color: var(--mo-ink) !important;
+}
+
+.user-role {
+    font-size: 11.5px !important;
+    color: var(--mo-muted) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Content Area & Module Headers
+   -------------------------------------------------------------------------- */
+.content-area {
+    padding: 28px 32px !important;
+}
+
+.module-title {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    color: var(--mo-ink) !important;
+    letter-spacing: -0.02em;
+}
+
+.module-subtitle {
+    font-size: 14px !important;
+    color: var(--mo-muted) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Buttons (MenuOptics: solid orange primary, clean outline)
+   -------------------------------------------------------------------------- */
+.btn-primary {
+    background: #f08d11 !important;
+    border: 1px solid #f08d11 !important;
+    border-radius: 10px !important;
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08) !important;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: #e07c0a !important;
+    border-color: #e07c0a !important;
+}
+
+.btn-outline {
+    background: #ffffff !important;
+    border: 1px solid var(--mo-border-strong) !important;
+    color: #374151 !important;
+    border-radius: 10px !important;
+    padding: 10px 18px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease;
+}
+
+.btn-outline:hover {
+    background: #f3f4f6 !important;
+    border-color: var(--mo-faint) !important;
+}
+
+.btn-compact-apply {
+    background: #f08d11 !important;
+    border-radius: 9px !important;
+}
+
+.btn-compact-apply:hover {
+    background: #e07c0a !important;
+}
+
+.btn-compact-clear {
+    border-radius: 9px !important;
+}
+
+/* --------------------------------------------------------------------------
+   Forms (MenuOptics: 8-10px radii, warm orange focus ring)
+   -------------------------------------------------------------------------- */
+.form-group label {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    margin-bottom: 6px !important;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="tel"],
+.form-group input[type="number"],
+.form-group input[type="date"],
+.form-group select,
+.form-control {
+    height: 40px !important;
+    padding: 8px 12px !important;
+    font-size: 13.5px !important;
+    color: var(--mo-text) !important;
+    background-color: #ffffff !important;
+    border: 1px solid var(--mo-border-strong) !important;
+    border-radius: 10px !important;
+}
+
+.form-group textarea {
+    padding: 10px 12px !important;
+    font-size: 13.5px !important;
+    color: var(--mo-text) !important;
+    border: 1px solid var(--mo-border-strong) !important;
+    border-radius: 10px !important;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+.form-control:focus {
+    border-color: #f08d11 !important;
+    box-shadow: 0 0 0 3px rgba(240, 141, 17, 0.16) !important;
+}
+
+.form-group input::placeholder,
+.form-control::placeholder {
+    color: var(--mo-faint) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Cards, KPI Cards & Dashboard Blocks
+   -------------------------------------------------------------------------- */
+.card {
+    border: 1px solid var(--mo-border) !important;
+    border-radius: 14px !important;
+    box-shadow: var(--mo-shadow-sm) !important;
+}
+
+.card:hover {
+    box-shadow: var(--mo-shadow-md) !important;
+}
+
+.kpi-card {
+    border: 1px solid var(--mo-border) !important;
+    border-radius: 14px !important;
+    padding: 18px 20px !important;
+    box-shadow: var(--mo-shadow-sm) !important;
+    transition: all 0.2s ease !important;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--mo-shadow-md) !important;
+    border-color: #f0d3a8 !important;
+}
+
+.kpi-label {
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    color: var(--mo-muted) !important;
+}
+
+.kpi-icon {
+    width: 34px !important;
+    height: 34px !important;
+    padding: 8px;
+    box-sizing: border-box;
+    background: #fdf0dd;
+    color: var(--mo-orange) !important;
+    border-radius: 10px;
+}
+
+.kpi-value {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    color: var(--mo-ink) !important;
+}
+
+.kpi-badge-green,
+.kpi-badge-orange {
+    border-radius: 999px !important;
+    padding: 2px 8px !important;
+}
+
+.dash-block {
+    border: 1px solid var(--mo-border) !important;
+    border-radius: 14px !important;
+    box-shadow: var(--mo-shadow-sm) !important;
+    padding: 20px !important;
+}
+
+.dash-block-title {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: var(--mo-ink) !important;
+}
+
+.compact-item:hover {
+    background: #f8fafc;
+}
+
+/* --------------------------------------------------------------------------
+   Tables (DataTables): card container, quiet uppercase header, warm hover
+   -------------------------------------------------------------------------- */
+.table-container {
+    background: #ffffff !important;
+    border: 1px solid var(--mo-border) !important;
+    border-radius: 14px !important;
+    box-shadow: var(--mo-shadow-sm) !important;
+    overflow: hidden;
+}
+
+table.dataTable thead th {
+    background: #f9fafb !important;
+    color: var(--mo-muted) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 13px 16px !important;
+    border-bottom: 1px solid var(--mo-border) !important;
+}
+
+table.dataTable tbody td {
+    padding: 13px 16px !important;
+    font-size: 13.5px !important;
+    color: var(--mo-text) !important;
+    border-bottom: 1px solid #eef1f5 !important;
+}
+
+table.dataTable tbody tr {
+    transition: background 0.15s ease;
+}
+
+table.dataTable tbody tr:hover {
+    background: #fffaf2 !important;
+}
+
+.dataTables_length select,
+.dataTables_filter input {
+    height: 36px;
+    padding: 6px 10px !important;
+    font-size: 13px !important;
+    color: var(--mo-text) !important;
+    background: #ffffff !important;
+    border: 1px solid var(--mo-border-strong) !important;
+    border-radius: 9px !important;
+    outline: none;
+}
+
+.dataTables_length select:focus,
+.dataTables_filter input:focus {
+    border-color: #f08d11 !important;
+    box-shadow: 0 0 0 3px rgba(240, 141, 17, 0.16) !important;
+}
+
+.dataTables_info {
+    color: var(--mo-muted) !important;
+    font-size: 13px !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border-radius: 9px !important;
+    padding: 6px 12px !important;
+    border: 1px solid transparent !important;
+    color: #374151 !important;
+    background: transparent !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: #f3f4f6 !important;
+    color: var(--mo-ink) !important;
+    border-color: transparent !important;
+}
+
+.table-container .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.table-container .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background: #f08d11 !important;
+    border-color: #f08d11 !important;
+    color: #ffffff !important;
+}
+
+.action-btn {
+    border-radius: 9px !important;
+}
+
+/* --------------------------------------------------------------------------
+   Modals
+   -------------------------------------------------------------------------- */
+.modal .modal-content {
+    border: none !important;
+    border-radius: 16px !important;
+    box-shadow: 0 24px 48px rgba(16, 24, 40, 0.20) !important;
+    overflow: hidden;
+}
+
+.modal .modal-header {
+    padding: 20px 24px !important;
+    background: #ffffff;
+    border-bottom: 1px solid var(--mo-border) !important;
+}
+
+.modal .modal-header h3 {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: var(--mo-ink) !important;
+}
+
+.modal .modal-body {
+    padding: 24px !important;
+}
+
+.modal .modal-footer {
+    padding: 16px 24px !important;
+    background: #f9fafb !important;
+    border-top: 1px solid var(--mo-border) !important;
+}
+
+.modal-close {
+    border-radius: 9px !important;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: #f3f4f6;
+    color: var(--mo-ink);
+}
