@@ -1236,3 +1236,35 @@ table.dataTable tbody td:first-child {
     padding: 5px 13px !important;
     font-size: 12.5px !important;
 }
+
+/* ================================================================
+   ROUND 4 — one unified table card (like the sample):
+   the layout script moves .module-header inside .table-container,
+   so title + actions sit at the top of the card itself.
+   ================================================================ */
+.table-container > .module-header {
+    margin-bottom: 8px !important;
+    padding-bottom: 0 !important;
+    border-bottom: none !important;
+}
+
+    .table-container > .module-header .module-title {
+        font-size: 19px !important;
+    }
+
+    .table-container > .module-header .module-subtitle {
+        font-size: 13px !important;
+        margin-top: 2px !important;
+    }
+
+/* Sample toolbar has no "Show entries" selector — page size stays as the
+   page's DataTables default, the control itself is hidden */
+.dataTables_wrapper .dataTables_length {
+    display: none !important;
+}
+
+/* Search row sits tight under the in-card header */
+.dataTables_wrapper .dataTables_filter {
+    margin-top: 2px !important;
+    margin-bottom: 8px !important;
+}

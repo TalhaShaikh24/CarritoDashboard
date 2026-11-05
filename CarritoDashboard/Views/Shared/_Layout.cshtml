@@ -272,6 +272,21 @@
             });
         })();
     </script>
+    <script>
+        // FreshCart table card: move each page's module header inside its table
+        // card, so title/actions, toolbar, table and pagination form one card
+        // (like the design sample). Static markup only — tables are untouched.
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.table-container').forEach(function (tc) {
+                var parent = tc.parentElement;
+                if (!parent) return;
+                var mh = parent.querySelector(':scope > .module-header');
+                if (mh && (mh.compareDocumentPosition(tc) & Node.DOCUMENT_POSITION_FOLLOWING)) {
+                    tc.insertBefore(mh, tc.firstChild);
+                }
+            });
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
