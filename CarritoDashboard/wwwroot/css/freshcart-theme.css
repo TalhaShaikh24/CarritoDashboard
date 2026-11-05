@@ -1101,3 +1101,138 @@ table.dataTable tbody tr:hover {
         justify-content: center !important;
         padding: 20px 8px 14px !important;
     }
+
+/* ================================================================
+   ROUND 3 — tables replicated from the user's table sample
+   (roomy card, in-card toolbar, sample pagination footer, fuller badges)
+   ================================================================ */
+
+/* Roomier card, like the sample */
+.table-container {
+    padding: 24px 28px 26px !important;
+}
+
+/* First column reads as the item name, like the sample */
+table.dataTable tbody td:first-child {
+    font-weight: 600 !important;
+    color: #22312a !important;
+}
+
+/* ---------- Card toolbar: length (left, subtle) + search pill (right) ---------- */
+.dataTables_wrapper .dataTables_length {
+    margin-bottom: 10px !important;
+    color: #8a978e !important;
+    font-size: 13px !important;
+}
+
+.dataTables_length select {
+    background: #f4f7f4 !important;
+    border: none !important;
+    border-radius: 999px !important;
+    padding: 6px 12px !important;
+    height: 38px !important;
+}
+
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 10px !important;
+}
+
+    /* Hide the "Search:" label text; the pill itself speaks (sample-style) */
+    .dataTables_wrapper .dataTables_filter label {
+        font-size: 0 !important;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        width: 240px !important;
+        height: 42px !important;
+        padding: 10px 18px 10px 42px !important;
+        font-size: 13.5px !important;
+        background-color: #f4f7f4 !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='%238a978e' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.8-3.8'/%3E%3C/svg%3E") !important;
+        background-repeat: no-repeat !important;
+        background-position: 15px center !important;
+        border: none !important;
+        border-radius: 999px !important;
+        margin-left: 0 !important;
+    }
+
+        .dataTables_wrapper .dataTables_filter input:focus {
+            box-shadow: 0 0 0 3px rgba(10, 166, 74, 0.12) !important;
+        }
+
+/* ---------- Pagination footer, exactly like the sample:
+   Previous pill (left) — plain numbers, current = mint circle (centre) — Next pill (right).
+   The "Showing x of y" info line is not part of the sample, so it is hidden. */
+.dataTables_info {
+    display: none !important;
+}
+
+.dataTables_wrapper .dataTables_paginate {
+    display: flex !important;
+    width: 100% !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-top: 20px !important;
+    float: none !important;
+}
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        background: transparent !important;
+        border: none !important;
+        min-width: 38px !important;
+        height: 38px !important;
+        padding: 0 8px !important;
+        border-radius: 10px !important;
+        color: #42534a !important;
+        font-weight: 600 !important;
+    }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #f2f7f3 !important;
+            color: #22312a !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+            background: #e7f8ef !important;
+            color: #078a3e !important;
+            border-radius: 999px !important;
+            font-weight: 700 !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.previous,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.next {
+            background: #ffffff !important;
+            border: 1px solid #e6eee8 !important;
+            border-radius: 999px !important;
+            height: 40px !important;
+            padding: 0 18px !important;
+            font-weight: 600 !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.previous {
+            margin-right: auto !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.next {
+            margin-left: auto !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+            opacity: 0.45 !important;
+        }
+
+    .dataTables_wrapper .dataTables_paginate .ellipsis {
+        color: #8a978e !important;
+        padding: 0 2px !important;
+    }
+
+/* ---------- Badges: fuller presence (sample-sized pills) ---------- */
+.badge,
+.badge-pill,
+.badge-type,
+.status-badge {
+    padding: 5px 13px !important;
+    font-size: 12.5px !important;
+}
