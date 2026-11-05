@@ -24,6 +24,11 @@
                 <option value="">All Brands</option>
             </select>
 
+            <button id="btnImportInventory" class="btn-outline">
+                <i style="width: 18px;" data-lucide="upload"></i>
+                Import
+            </button>
+
             <button id="btnAddNewInventory" class="btn-primary">
                 <i style="width: 18px;" data-lucide="plus"></i>
                 Add Inventory
@@ -124,6 +129,7 @@
 </template>
 
 @section scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="~/views-js/inventory.js"></script>
     <script src="~/js/file-uploader.js"></script>
 }

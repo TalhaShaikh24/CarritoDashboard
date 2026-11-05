@@ -5,7 +5,7 @@ function getActiveStorekeeperId() {
         return AuthHelper.getStorekeeperId();
     }
     if (!AuthHelper.isStorekeeper()) {
-        $('#btnAddNewInventory').hide()
+        $('#btnAddNewInventory, #btnImportInventory').hide()
     }
     const val = $('#filterStorekeeper').val();
     return val || AuthHelper.getStorekeeperId() || null;
@@ -772,3 +772,517 @@ function applyEditInventoryTypeState() {
 
 $(document).on('change', '#editInvUnit', applyEditInventoryTypeState);
 $(document).on('input change', '#editInvWeight', applyEditInventoryTypeState);
+
+// ==================== Import Inventory (Excel / CSV) ====================
+// Same flow as the MenuOptics import: download a sample file, upload the
+// filled file, review and edit the rows inside the popup, then submit. The
+// API create endpoint already accepts a list of items (the Add form uses the
+// same endpoint with a single item), so all preview rows go in one request
+// with the exact same field rules as the Add form.
+
+let importInvRows = [];
+
+const IMPORT_INV_HEADERS = ['Title', 'Category', 'Brand', 'Type', 'Unit', 'Price', 'Weight', 'Pack Size', 'Min Order Quantity', 'Description'];
+
+function escapeImportHtml(value) {
+    return String(value === null || value === undefined ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+$('#btnImportInventory').click(function () {
+    importInvRows = [];
+
+    const bodyHtml = `
+        <style>
+            .import-inv-table { width: 100%; min-width: 1080px; border-collapse: collapse; }
+            .import-inv-table th { text-align: left; font-size: 12px; padding: 8px 6px; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+            .import-inv-table td { padding: 6px; border-bottom: 1px solid #eef1ee; vertical-align: middle; }
+            .import-inv-table .form-control { height: 36px; font-size: 13px; padding: 6px 8px; }
+            .import-inv-table select.form-control { min-width: 120px; }
+            .import-inv-unmatched { border-color: #dc2626 !important; }
+        </style>
+        <p style="margin: 0 0 14px; color: #6b7280; font-size: 13px;">
+            Download the sample file, fill in your inventory items, then upload the
+            Excel (.xlsx) or CSV file here. Every row loads below &mdash; you can edit
+            any value or delete a row before importing. Items are added to the
+            currently selected storekeeper.
+        </p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px;">
+            <button type="button" id="btnDownloadImportSample" class="btn-outline">
+                <i style="width: 16px;" data-lucide="download"></i>
+                Download Sample File
+            </button>
+            <label for="importInvFileInput" class="btn-primary" style="margin: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <i style="width: 16px;" data-lucide="file-up"></i>
+                Choose Excel / CSV File
+            </label>
+            <input type="file" id="importInvFileInput" accept=".xlsx,.xls,.csv" style="display: none;">
+            <span id="importInvFileName" style="font-size: 13px; color: #6b7280;">No file chosen</span>
+        </div>
+        <div id="importInvPreviewWrap" style="display: none;">
+            <div id="importInvSummary" style="font-size: 13px; margin-bottom: 10px;"></div>
+            <div style="overflow-x: auto;">
+                <table class="import-inv-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 34px;">#</th>
+                            <th>Title *</th>
+                            <th>Category *</th>
+                            <th>Brand *</th>
+                            <th>Type *</th>
+                            <th>Unit *</th>
+                            <th>Price *</th>
+                            <th>Weight</th>
+                            <th>Pack Size</th>
+                            <th>Min Order Qty</th>
+                            <th>Description</th>
+                            <th style="width: 44px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="importInvTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    `;
+
+    $.dynamicModal({
+        title: "Import Inventory Items",
+        bodyHtml: bodyHtml,
+        buttons: [
+            { text: "Cancel", class: "btn-outline", action: "close" },
+            { text: "Import Items", class: "btn-primary", action: "save" }
+        ],
+        onButtonClick: function (action) {
+            if (action === "save") {
+                submitImportInventory();
+                return true;
+            }
+        }
+    });
+
+    $('#btnDownloadImportSample').on('click', function (e) {
+        e.preventDefault();
+        downloadImportSampleFile();
+    });
+
+    $('#importInvFileInput').on('change', function (e) {
+        handleImportInvFile(e);
+        // Reset so the same file can be chosen again
+        $(this).val('');
+    });
+});
+
+function downloadImportSampleFile() {
+    const categoryName = categoriesCache.length ? categoriesCache[0].name : 'Category Name';
+    const brandName = brandsCache.length ? brandsCache[0].name : 'Brand Name';
+    const unitName = unitsCache.length ? unitsCache[0].name : 'Unit Name';
+
+    const sampleRows = [
+        IMPORT_INV_HEADERS,
+        ['Sample Pack Item', categoryName, brandName, 'Pack Item', unitName, 1200, '', 12, 1, 'Sample pack item - replace with your own data'],
+        ['Sample Catch Weight Item', categoryName, brandName, 'Catch Weight Item', unitName, 850, 2.5, '', 0.5, 'Sample catch weight item - replace with your own data']
+    ];
+    const fileDate = new Date().toISOString().slice(0, 10);
+
+    if (typeof XLSX !== 'undefined') {
+        const worksheet = XLSX.utils.aoa_to_sheet(sampleRows);
+        worksheet['!cols'] = [{ wch: 26 }, { wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 11 }, { wch: 18 }, { wch: 40 }];
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventory');
+        XLSX.writeFile(workbook, `Inventory_Import_Sample_${fileDate}.xlsx`);
+        return;
+    }
+
+    // Fallback when the Excel library could not be loaded: same content as CSV
+    const csvContent = sampleRows.map(row => row.map(cell => {
+        const text = cell === null || cell === undefined ? '' : String(cell);
+        return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    }).join(',')).join('\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Inventory_Import_Sample_${fileDate}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+function handleImportInvFile(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    $('#importInvFileName').text(file.name);
+    const fileName = file.name.toLowerCase();
+
+    if (fileName.endsWith('.csv')) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            try {
+                buildImportInvRows(parseImportCsvText(event.target.result));
+            } catch (err) {
+                console.error('Error parsing CSV:', err);
+                showNotification('Error processing CSV file. Please check the file structure.', 'error');
+            }
+        };
+        reader.readAsText(file);
+    } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+        if (typeof XLSX === 'undefined') {
+            showNotification('Excel support could not be loaded. Please upload the file as CSV instead.', 'error');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            try {
+                const workbook = XLSX.read(new Uint8Array(event.target.result), { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+                buildImportInvRows(rows);
+            } catch (err) {
+                console.error('Error parsing Excel file:', err);
+                showNotification('Error processing Excel file. Please check the file structure.', 'error');
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    } else {
+        showNotification('Please choose an Excel (.xlsx) or CSV file.', 'error');
+    }
+}
+
+// Quote-aware CSV parser (same approach as the MenuOptics import parser)
+function parseImportCsvText(text) {
+    const rows = [];
+    let row = [];
+    let inQuotes = false;
+    let currentCell = '';
+
+    const source = String(text || '').replace(/^\uFEFF/, '');
+
+    for (let i = 0; i < source.length; i++) {
+        const char = source[i];
+        const nextChar = source[i + 1];
+
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+                currentCell += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if ((char === ',' || char === '\t') && !inQuotes) {
+            row.push(currentCell.trim());
+            currentCell = '';
+        } else if ((char === '\r' || char === '\n') && !inQuotes) {
+            if (char === '\r' && nextChar === '\n') {
+                i++;
+            }
+            row.push(currentCell.trim());
+            currentCell = '';
+            if (row.some(c => c !== '')) {
+                rows.push(row);
+            }
+            row = [];
+        } else {
+            currentCell += char;
+        }
+    }
+
+    if (currentCell.length > 0 || row.length > 0) {
+        row.push(currentCell.trim());
+        if (row.some(c => c !== '')) {
+            rows.push(row);
+        }
+    }
+
+    return rows;
+}
+
+function normalizeImportHeader(value) {
+    return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// Match a file cell to a cached Category / Brand / Unit: by Id when the cell is
+// numeric, otherwise by name (case-insensitive). Units can also be written as
+// just the short code ("BA") while the saved name is "BA - Bag".
+function findImportCachedItem(cache, rawValue) {
+    const text = String(rawValue === null || rawValue === undefined ? '' : rawValue).trim();
+    if (!text) return null;
+
+    const asNumber = Number(text);
+    if (!isNaN(asNumber)) {
+        const byId = cache.find(item => item.id === asNumber);
+        if (byId) return byId;
+    }
+
+    const wanted = text.toLowerCase();
+    let match = cache.find(item => String(item.name || '').trim().toLowerCase() === wanted);
+    if (match) return match;
+
+    match = cache.find(item => {
+        const name = String(item.name || '').trim().toLowerCase();
+        return name.split('-')[0].trim() === wanted || wanted.split('-')[0].trim() === name;
+    });
+    return match || null;
+}
+
+function cleanImportNumber(value) {
+    if (value === null || value === undefined) return '';
+    return String(value).replace(/[^0-9.\-]/g, '');
+}
+
+function parseImportType(rawValue) {
+    const text = String(rawValue || '').trim().toLowerCase();
+    if (text === '2' || text.includes('catch')) return '2';
+    return '1'; // Pack Item is the default, same as the Add form
+}
+
+function buildImportInvRows(rows) {
+    if (!rows || rows.length === 0) {
+        showNotification('The uploaded file is empty.', 'error');
+        return;
+    }
+
+    const headerRow = (rows[0] || []).map(normalizeImportHeader);
+    const col = {
+        title: headerRow.findIndex(h => h.includes('title') || h === 'name' || h.includes('product')),
+        category: headerRow.findIndex(h => h.includes('categor')),
+        brand: headerRow.findIndex(h => h.includes('brand')),
+        type: headerRow.findIndex(h => h.includes('type')),
+        unit: headerRow.findIndex(h => h.includes('unit')),
+        price: headerRow.findIndex(h => h.includes('price')),
+        weight: headerRow.findIndex(h => h.includes('weight')),
+        packSize: headerRow.findIndex(h => h.includes('packsize') || h === 'pack'),
+        minOrder: headerRow.findIndex(h => h.includes('minorder') || h === 'moq'),
+        description: headerRow.findIndex(h => h.includes('desc'))
+    };
+
+    const hasHeader = Object.values(col).some(idx => idx !== -1);
+    if (!hasHeader) {
+        // No recognisable header: fall back to the sample file's column order
+        // and treat every row as data
+        col.title = 0; col.category = 1; col.brand = 2; col.type = 3; col.unit = 4;
+        col.price = 5; col.weight = 6; col.packSize = 7; col.minOrder = 8; col.description = 9;
+    }
+
+    const cell = (row, idx) => (idx === -1 || row[idx] === undefined || row[idx] === null) ? '' : row[idx];
+
+    importInvRows = [];
+    for (let r = hasHeader ? 1 : 0; r < rows.length; r++) {
+        const row = rows[r] || [];
+        if (row.every(c => String(c === null || c === undefined ? '' : c).trim() === '')) continue;
+
+        const category = findImportCachedItem(categoriesCache, cell(row, col.category));
+        const brand = findImportCachedItem(brandsCache, cell(row, col.brand));
+        const unit = findImportCachedItem(unitsCache, cell(row, col.unit));
+
+        importInvRows.push({
+            title: String(cell(row, col.title)).trim(),
+            categoryId: category ? String(category.id) : '',
+            brandId: brand ? String(brand.id) : '',
+            unitId: unit ? String(unit.id) : '',
+            type: parseImportType(cell(row, col.type)),
+            price: cleanImportNumber(cell(row, col.price)),
+            weight: cleanImportNumber(cell(row, col.weight)),
+            packSize: cleanImportNumber(cell(row, col.packSize)),
+            minOrderQuantity: cleanImportNumber(cell(row, col.minOrder)),
+            description: String(cell(row, col.description)).trim()
+        });
+    }
+
+    if (importInvRows.length === 0) {
+        showNotification('The uploaded file does not contain any item rows.', 'error');
+        return;
+    }
+
+    renderImportInvPreview();
+}
+
+function getImportOptionsHtml(items, selectedId, placeholder) {
+    let html = `<option value="">${placeholder}</option>`;
+    items.forEach(item => {
+        html += `<option value="${item.id}" ${String(item.id) === String(selectedId) ? 'selected' : ''}>${escapeImportHtml(item.name)}</option>`;
+    });
+    return html;
+}
+
+function renderImportInvPreview() {
+    let html = '';
+
+    importInvRows.forEach((row, index) => {
+        html += `
+        <tr data-row-index="${index}">
+            <td>${index + 1}</td>
+            <td><input type="text" class="form-control" data-field="title" value="${escapeImportHtml(row.title)}" placeholder="Enter Title"></td>
+            <td><select class="form-control ${row.categoryId ? '' : 'import-inv-unmatched'}" data-field="categoryId">${getImportOptionsHtml(categoriesCache, row.categoryId, 'Select Category')}</select></td>
+            <td><select class="form-control ${row.brandId ? '' : 'import-inv-unmatched'}" data-field="brandId">${getImportOptionsHtml(brandsCache, row.brandId, 'Select Brand')}</select></td>
+            <td>
+                <select class="form-control" data-field="type">
+                    <option value="1" ${row.type === '1' ? 'selected' : ''}>Pack Item</option>
+                    <option value="2" ${row.type === '2' ? 'selected' : ''}>Catch Weight Item</option>
+                </select>
+            </td>
+            <td><select class="form-control ${row.unitId ? '' : 'import-inv-unmatched'}" data-field="unitId">${getImportOptionsHtml(unitsCache, row.unitId, 'Select Unit')}</select></td>
+            <td><input type="number" class="form-control" data-field="price" min="0" step="0.01" value="${escapeImportHtml(row.price)}" placeholder="Enter Price" style="min-width: 90px;"></td>
+            <td><input type="number" class="form-control" data-field="weight" min="0" step="0.01" value="${escapeImportHtml(row.weight)}" placeholder="Enter Weight" style="min-width: 90px;"></td>
+            <td><input type="number" class="form-control import-inv-packsize" data-field="packSize" min="0" step="1" value="${escapeImportHtml(row.packSize)}" placeholder="Enter Pack Size" style="min-width: 90px;"></td>
+            <td><input type="number" class="form-control" data-field="minOrderQuantity" min="0" step="0.01" value="${escapeImportHtml(row.minOrderQuantity)}" placeholder="Enter Min Order Quantity" style="min-width: 100px;"></td>
+            <td><input type="text" class="form-control" data-field="description" value="${escapeImportHtml(row.description)}" placeholder="Enter Description" style="min-width: 140px;"></td>
+            <td><button type="button" class="action-btn delete import-inv-delete" title="Delete row"><i style="width: 16px;" data-lucide="trash-2"></i></button></td>
+        </tr>`;
+    });
+
+    $('#importInvTableBody').html(html);
+    applyImportInvTypeStates();
+    updateImportInvSummary();
+    $('#importInvPreviewWrap').show();
+
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+}
+
+function applyImportInvTypeStates() {
+    $('#importInvTableBody tr').each(function () {
+        const index = Number($(this).data('row-index'));
+        const row = importInvRows[index];
+        if (!row) return;
+        // Catch Weight rows do not use Pack Size (same rule as the Add form)
+        const $packSize = $(this).find('.import-inv-packsize');
+        $packSize.prop('disabled', row.type === '2');
+        if (row.type === '2') {
+            $packSize.val('');
+            row.packSize = '';
+        }
+    });
+}
+
+function updateImportInvSummary() {
+    const unmatchedCount = importInvRows.filter(row => !row.categoryId || !row.brandId || !row.unitId).length;
+    let html = `<strong>${importInvRows.length}</strong> row(s) ready to import.`;
+    if (unmatchedCount > 0) {
+        html += ` <span style="color: #dc2626;">${unmatchedCount} row(s) have a Category, Brand or Unit that could not be matched &mdash; please select them before importing.</span>`;
+    }
+    $('#importInvSummary').html(html);
+}
+
+// Preview rows stay editable: every input/select writes back into importInvRows
+$(document).on('input change', '#importInvTableBody input, #importInvTableBody select', function () {
+    const index = Number($(this).closest('tr').data('row-index'));
+    const field = $(this).data('field');
+    if (!importInvRows[index] || !field) return;
+
+    importInvRows[index][field] = $(this).val();
+    if (field === 'type') {
+        applyImportInvTypeStates();
+    }
+    if (field === 'categoryId' || field === 'brandId' || field === 'unitId') {
+        $(this).toggleClass('import-inv-unmatched', !$(this).val());
+        updateImportInvSummary();
+    }
+});
+
+$(document).on('click', '.import-inv-delete', function () {
+    const index = Number($(this).closest('tr').data('row-index'));
+    importInvRows.splice(index, 1);
+    if (importInvRows.length === 0) {
+        $('#importInvPreviewWrap').hide();
+        return;
+    }
+    renderImportInvPreview();
+});
+
+function submitImportInventory() {
+    if (!importInvRows || importInvRows.length === 0) {
+        showNotification('Please choose an Excel or CSV file first', 'error');
+        return;
+    }
+
+    const activeSkpId = getActiveStorekeeperId();
+    if (!activeSkpId) {
+        showNotification('Please select or assign a storekeeper first', 'error');
+        return;
+    }
+
+    // Validate every row with the same rules as the Add form
+    for (let i = 0; i < importInvRows.length; i++) {
+        const row = importInvRows[i];
+        const rowLabel = `Row ${i + 1}`;
+        if (!row.title || !String(row.title).trim()) {
+            showNotification(`${rowLabel}: Title is required`, 'error');
+            return;
+        }
+        if (!row.categoryId) {
+            showNotification(`${rowLabel}: Please select a Category`, 'error');
+            return;
+        }
+        if (!row.brandId) {
+            showNotification(`${rowLabel}: Please select a Brand`, 'error');
+            return;
+        }
+        if (!row.unitId) {
+            showNotification(`${rowLabel}: Please select a Unit`, 'error');
+            return;
+        }
+        if (row.price === '' || isNaN(Number(row.price))) {
+            showNotification(`${rowLabel}: Price is required`, 'error');
+            return;
+        }
+        if (row.type === '1' && (row.packSize === '' || isNaN(Number(row.packSize)))) {
+            showNotification(`${rowLabel}: Pack Size is required for Pack Item`, 'error');
+            return;
+        }
+        if (row.type === '2' && (row.weight === '' || isNaN(Number(row.weight)))) {
+            showNotification(`${rowLabel}: Weight is required for Catch Weight Item`, 'error');
+            return;
+        }
+    }
+
+    const formData = new FormData();
+    importInvRows.forEach((row, i) => {
+        formData.append(`[${i}].Title`, String(row.title).trim());
+        formData.append(`[${i}].CategoryId`, row.categoryId);
+        formData.append(`[${i}].BrandId`, row.brandId);
+        formData.append(`[${i}].UnitId`, row.unitId);
+        formData.append(`[${i}].Price`, row.price);
+        formData.append(`[${i}].Type`, row.type);
+        if (row.type === '1') {
+            // Pack Item: PackSize is sent; Weight is optional and sent only when entered
+            formData.append(`[${i}].PackSize`, row.packSize);
+            if (row.weight !== '' && !isNaN(Number(row.weight))) {
+                formData.append(`[${i}].Weight`, row.weight);
+            }
+        } else {
+            // Catch Weight Item: Weight is sent, PackSize is not sent (stays null on the API side)
+            formData.append(`[${i}].Weight`, row.weight);
+        }
+        formData.append(`[${i}].MinOrderQuantity`, row.minOrderQuantity === '' ? 0 : row.minOrderQuantity);
+        formData.append(`[${i}].Description`, row.description || '');
+        formData.append(`[${i}].CreatedByUserId`, AuthHelper.getUserId() || 1);
+    });
+
+    showNotification(`Importing ${importInvRows.length} inventory item(s)...`, 'info');
+
+    ajaxRequest({
+        url: `${baseApiUrl}/api/Inventory?storekeeperId=${activeSkpId}`,
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        showMessage: true,
+        onSuccess: (response) => {
+            if (response.status === 200) {
+                importInvRows = [];
+                $.dynamicModal.close();
+                if (inventoryTable) {
+                    inventoryTable.ajax.reload(null, false);
+                }
+            }
+        }
+    });
+}
