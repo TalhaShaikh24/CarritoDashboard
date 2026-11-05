@@ -2040,6 +2040,25 @@ label.checkbox-item {
         transform: translateX(0);
     }
 
+/* Centred large layout for the sliding modal - reusable component.
+   Opt in per modal with the dynamicModal "centered" option; the modal then
+   opens large in the centre of the screen instead of as a right-side panel. */
+.sliding-modal.sliding-modal-centered {
+    left: 50%;
+    right: auto;
+    top: 50%;
+    width: min(1280px, 96vw);
+    height: 92vh;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+    transform: translate(calc(-50% + 100vw), -50%);
+}
+
+    .sliding-modal.sliding-modal-centered.open {
+        transform: translate(-50%, -50%);
+    }
+
 .modal-header {
     display: flex;
     align-items: center;

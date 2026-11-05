@@ -797,28 +797,12 @@ $('#btnImportInventory').click(function () {
 
     const bodyHtml = `
         <style>
-            .import-inv-table { width: 100%; min-width: 1080px; border-collapse: collapse; }
+            .import-inv-table { width: 100%; min-width: 1200px; border-collapse: collapse; }
             .import-inv-table th { text-align: left; font-size: 12px; padding: 8px 6px; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
             .import-inv-table td { padding: 6px; border-bottom: 1px solid #eef1ee; vertical-align: middle; }
             .import-inv-table .form-control { height: 36px; font-size: 13px; padding: 6px 8px; }
             .import-inv-table select.form-control { min-width: 120px; }
             .import-inv-unmatched { border-color: #dc2626 !important; }
-            /* Only the import popup opens large and centred; every other popup
-               keeps the default right-side sliding panel */
-            #dynamicModal.import-modal-full {
-                left: 50%;
-                right: auto;
-                top: 50%;
-                width: min(1280px, 96vw);
-                height: 92vh;
-                border-radius: 20px;
-                overflow: hidden;
-                box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
-                transform: translate(calc(-50% + 100vw), -50%);
-            }
-            #dynamicModal.import-modal-full.open {
-                transform: translate(-50%, -50%);
-            }
         </style>
         <p style="margin: 0 0 14px; color: #6b7280; font-size: 13px;">
             Download the sample file &mdash; it already contains the currently selected
@@ -866,6 +850,8 @@ $('#btnImportInventory').click(function () {
 
     $.dynamicModal({
         title: "Import Inventory Items",
+        // Reusable centred layout from the shared modal component
+        centered: true,
         bodyHtml: bodyHtml,
         buttons: [
             { text: "Cancel", class: "btn-outline", action: "close" },
@@ -876,14 +862,8 @@ $('#btnImportInventory').click(function () {
                 submitImportInventory();
                 return true;
             }
-        },
-        onClose: function () {
-            $('#dynamicModal').removeClass('import-modal-full');
         }
     });
-
-    // Open this popup large and centred (class is removed again on close)
-    $('#dynamicModal').addClass('import-modal-full');
 
     $('#btnDownloadImportSample').on('click', function (e) {
         e.preventDefault();
@@ -1185,7 +1165,7 @@ function renderImportInvPreview() {
         html += `
         <tr data-row-index="${index}">
             <td>${index + 1}</td>
-            <td><input type="text" class="form-control" data-field="title" value="${escapeImportHtml(row.title)}" placeholder="Enter Title"></td>
+            <td><input type="text" class="form-control" data-field="title" value="${escapeImportHtml(row.title)}" placeholder="Enter Title" style="min-width: 220px;"></td>
             <td><select class="form-control ${row.categoryId ? '' : 'import-inv-unmatched'}" data-field="categoryId">${getImportOptionsHtml(categoriesCache, row.categoryId, 'Select Category')}</select></td>
             <td><select class="form-control ${row.brandId ? '' : 'import-inv-unmatched'}" data-field="brandId">${getImportOptionsHtml(brandsCache, row.brandId, 'Select Brand')}</select></td>
             <td>
@@ -1345,7 +1325,6 @@ function submitImportInventory() {
         onSuccess: (response) => {
             if (response.status === 200) {
                 importInvRows = [];
-                $('#dynamicModal').removeClass('import-modal-full');
                 $.dynamicModal.close();
                 if (inventoryTable) {
                     inventoryTable.ajax.reload(null, false);

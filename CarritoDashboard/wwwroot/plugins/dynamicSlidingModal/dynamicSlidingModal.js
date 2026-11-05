@@ -21,6 +21,7 @@
     $.dynamicModal = function(options) {
         const settings = $.extend({
             title: "Modal Title",
+            centered: false,
             bodyHtml: "<p>No content provided.</p>",
             buttons: [
                 { text: "Close", class: "btn-outline", action: "close" },
@@ -43,6 +44,10 @@
         // Content set karo
         $("#modalTitle").text(settings.title);
         $("#modalBody").html(settings.bodyHtml);
+
+        // Optional reusable layout: open large and centred instead of the
+        // default right-side panel (styles: .sliding-modal-centered in site.css)
+        $("#dynamicModal").toggleClass("sliding-modal-centered", !!settings.centered);
 
         // Buttons generate karo
         let buttonsHtml = '<div class="btn-group">';
@@ -80,6 +85,7 @@
         const closeModal = function() {
             $("#modalOverlay").removeClass("open");
             $("#dynamicModal").removeClass("open");
+            $("#dynamicModal").removeClass("sliding-modal-centered");
             $closeElements.off(".dynamicModal");
             $footer.off(".dynamicModal");
             $doc.off(".dynamicModal");
@@ -113,6 +119,7 @@
     $.dynamicModal.close = function() {
         $("#modalOverlay").removeClass("open");
         $("#dynamicModal").removeClass("open");
+        $("#dynamicModal").removeClass("sliding-modal-centered");
         $(document).off(".dynamicModal");
         $("#modalCloseBtn, #modalOverlay").off(".dynamicModal");
         $("#modalFooter").off(".dynamicModal");
