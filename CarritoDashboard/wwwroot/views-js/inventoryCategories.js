@@ -76,13 +76,7 @@ function populateStorekeeperFilter() {
         skSelect.append(new Option(skName, skId, true, true));
         // Hide select container and show a store badge
         skSelect.closest('.custom-select-container, select').hide();
-        if ($('#skpActiveBadge').length === 0) {
-            $(`<div id="skpActiveBadge" class="storekeeper-badge-pill" style="margin-right: 8px;">
-                <i style="width:14px;height:14px;" data-lucide="store"></i>
-                <span>${skName}</span>
-            </div>`).insertBefore(skSelect.parent());
-            if (window.lucide) lucide.createIcons();
-        }
+       
     } else {
         if (storekeepersCache.length === 0) {
             skSelect.append(new Option('No Storekeepers Found', ''));
