@@ -86,6 +86,10 @@ function initializeDataTable() {
                 render: d => d || '---'
             },
             {
+                data: 'riderFullName',
+                render: d => d || '---'
+            },
+            {
                 data: 'createdAt',
                 render: d => new Date(d).toLocaleString([], {
                     year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -94,10 +98,6 @@ function initializeDataTable() {
             {
                 data: 'netPrice',
                 render: d => `<strong>Rs. ${Number(d || 0).toFixed(2)}</strong>`
-            },
-            {
-                data: 'riderFullName',
-                render: d => d || '---'
             },
             {
                 data: 'status',
