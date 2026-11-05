@@ -209,6 +209,7 @@ body {
 }
 
 .sidebar .submenu-item.active {
+    box-shadow: none !important;
     background: #e7f8ef !important;
     color: #0aa64a !important;
     font-weight: 600 !important;
