@@ -166,7 +166,7 @@ function initializeDataTable() {
 
                         if (typeVal === 1) {
                             typeBadge = `
-                                <span class="badge badge-light-secondary badge-type">
+                                <span class="badge badge-light-warning badge-type">
                                     Pack: ${row.packSize ?? ''}
                                 </span>
                                 <span class="badge badge-light-primary badge-type">
