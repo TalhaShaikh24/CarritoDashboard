@@ -30,7 +30,7 @@
     <link href="~/plugins/customdatepicker/date-picker.css" rel="stylesheet" />
     <link href="~/css/site.css" rel="stylesheet" asp-append-version="true" />
     <link href="~/css/dashboard-modern.css" rel="stylesheet" asp-append-version="true" />
-    <link href="~/css/menuoptics-theme.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/freshcart-theme.css" rel="stylesheet" asp-append-version="true" />
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     
@@ -63,6 +63,7 @@
             }
 
             <nav class="sidebar-nav">
+                <div class="nav-section-title">Main</div>
                 <!-- Overview -->
                 <a class="nav-item @Html.IsActive("Home")" data-module="dashboard" data-storekeeper="true" href="@Url.Action("Index", "Home")">
                     <i class="nav-icon" data-lucide="layout-dashboard"></i>
@@ -111,6 +112,7 @@
                     </div>
                 </div>
 
+                <div class="nav-section-title">Other</div>
                 <div class="nav-group @(isSupportActive ? "open" : "")">
                     <div class="nav-item has-submenu @(isSupportActive ? "active-parent" : "")" data-submenu="support">
                         <i class="nav-icon" data-lucide="headset"></i>
@@ -141,27 +143,55 @@
                     <i class="nav-icon" data-lucide="settings"></i>
                     <span class="nav-label">Settings</span>
                 </a>
+
+                <a class="nav-item logout-btn" id="sidebarLogoutBtn" href="javascript:void(0);" title="Sign out of Carrito">
+                    <i class="nav-icon" data-lucide="log-out"></i>
+                    <span class="nav-label">Logout</span>
+                </a>
             </nav>
             <div class="sidebar-footer">
-                <div class="storekeeper-badge-pill" id="headerStoreBadge" style="display: none;">
-                    <i style="width: 15px; height: 15px;" data-lucide="store"></i>
-                    <span id="headerStoreName">My Store</span>
+                <div class="sidebar-help-card">
+                    <h4>Need Help?</h4>
+                    <p>Contact support team</p>
+                    <a class="help-btn" href="@Url.Action("Index", "Ticket")">Get Support</a>
                 </div>
-                <div class="user-profile">
-                    <div class="user-avatar" id="headerAvatar">A</div>
-                    <div class="user-info">
-                        <p class="user-name" id="headerUserName">Admin</p>
-                        <p class="user-role" id="headerUserRole">Administrator</p>
-                    </div>
-                </div>
-                <button class="logout-btn" id="sidebarLogoutBtn" type="button" title="Sign out of Carrito">
-                    <i style="width: 18px;" data-lucide="log-out"></i>
-                    <span class="nav-label">Logout</span>
-                </button>
             </div>
         </aside>
 
         <div class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <h1 class="page-title">@ViewData["Title"]</h1>
+                    @if (ViewBag.PageSubtitle != null)
+                    {
+                        <p class="page-subtitle">@ViewBag.PageSubtitle</p>
+                    }
+                </div>
+                <div class="header-center">
+                    <div class="global-search">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="globalNavSearch" placeholder="Search menu..." autocomplete="off">
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="storekeeper-badge-pill" id="headerStoreBadge" style="display: none;">
+                        <i style="width: 15px; height: 15px;" data-lucide="store"></i>
+                        <span id="headerStoreName">My Store</span>
+                    </div>
+                    <button class="header-icon-btn" type="button">
+                        <i style="width: 20px;" data-lucide="bell"></i>
+                        <span class="notification-dot"></span>
+                    </button>
+                    <div class="user-profile">
+                        <div class="user-avatar" id="headerAvatar">A</div>
+                        <div class="user-info">
+                            <p class="user-name" id="headerUserName">Admin</p>
+                            <p class="user-role" id="headerUserRole">Administrator</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
             <main class="content-area" id="contentArea">
                 <div class="modal" id="confirmDeleteModal" style="display: none;">
                     <div class="modal-content">
@@ -204,6 +234,51 @@
     <script>
         lucide.createIcons();
         AuthHelper.enforceAccessRestrictions();
+    </script>
+    <script>
+        // Topbar search: live-filters the sidebar navigation (hides non-matching
+        // items with a theme class only; never touches other visibility rules)
+        (function () {
+            var input = document.getElementById('globalNavSearch');
+            if (!input) return;
+            input.addEventListener('input', function () {
+                var q = input.value.trim().toLowerCase();
+                var groups = document.querySelectorAll('.sidebar-nav .nav-group');
+                if (!q) {
+                    document.querySelectorAll('.sidebar-nav .fc-hide').forEach(function (e) { e.classList.remove('fc-hide'); });
+                    groups.forEach(function (g) {
+                        if (g.dataset.fcAuto === '1') {
+                            g.classList.remove('open');
+                            var s = g.querySelector('.submenu');
+                            if (s) s.classList.remove('open');
+                            delete g.dataset.fcAuto;
+                        }
+                    });
+                    return;
+                }
+                document.querySelectorAll('.sidebar-nav > .nav-item').forEach(function (it) {
+                    var label = (it.querySelector('.nav-label') || it).textContent.trim().toLowerCase();
+                    it.classList.toggle('fc-hide', label.indexOf(q) === -1);
+                });
+                groups.forEach(function (g) {
+                    var any = false;
+                    g.querySelectorAll('.submenu-item').forEach(function (it) {
+                        var match = it.textContent.trim().toLowerCase().indexOf(q) !== -1;
+                        it.classList.toggle('fc-hide', !match);
+                        if (match) any = true;
+                    });
+                    var toggle = g.querySelector('.nav-item.has-submenu');
+                    var tMatch = toggle && (toggle.querySelector('.nav-label') || toggle).textContent.trim().toLowerCase().indexOf(q) !== -1;
+                    g.classList.toggle('fc-hide', !(any || tMatch));
+                    if (any && !g.classList.contains('open')) {
+                        g.dataset.fcAuto = '1';
+                        g.classList.add('open');
+                        var s = g.querySelector('.submenu');
+                        if (s) s.classList.add('open');
+                    }
+                });
+            });
+        })();
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

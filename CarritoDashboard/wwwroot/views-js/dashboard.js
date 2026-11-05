@@ -197,13 +197,13 @@ $(document).ready(() => {
                 datasets: [{
                     label: 'Gross Revenue',
                     data: values,
-                    borderColor: '#4c9b0e',
+                    borderColor: '#0aa64a',
                     borderWidth: 2,
-                    backgroundColor: 'rgba(76, 155, 14, 0.08)',
+                    backgroundColor: 'rgba(10, 166, 74, 0.08)',
                     fill: true,
                     tension: 0.3,
                     pointRadius: 3,
-                    pointBackgroundColor: '#4c9b0e',
+                    pointBackgroundColor: '#0aa64a',
                     pointBorderColor: '#ffffff',
                     pointBorderWidth: 1.5,
                     pointHoverRadius: 5
@@ -265,7 +265,7 @@ $(document).ready(() => {
 
         const labels = data.map(item => item.CategoryName);
         const values = data.map(item => item.Revenue);
-        const groceryPalette = ['#4c9b0e', '#ff8712', '#60aa27', '#ffa347', '#3d7e0b', '#e67307'];
+        const groceryPalette = ['#0aa64a', '#078a3e', '#3ecf74', '#8fe3b6', '#ff8712', '#ffb25e'];
 
         state.charts.category = new Chart(ctx, {
             type: 'bar',
