@@ -2,6 +2,60 @@
     ViewData["Title"] = "Activity Log";
 }
 
+<style>
+    /* KPI boxes: the shared .dash-kpi-grid is built for the Dashboard's 6
+       cards; this page has 4, so stretch them across the full row */
+    #module-activity-log .dash-kpi-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    @@media (max-width: 1280px) {
+        #module-activity-log .dash-kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 640px) {
+        #module-activity-log .dash-kpi-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Filters: let the row wrap instead of crushing the controls, and give
+       each custom-select a fixed width (the width belongs on the plugin's
+       wrapper, which sits right after the hidden native select) */
+    #module-activity-log .module-header-right {
+        flex-wrap: wrap;
+    }
+
+    #module-activity-log .module-header-right .custom-select-wrapper {
+        flex: 0 0 auto;
+    }
+
+    #filterActivityUser + .custom-select-wrapper {
+        width: 200px;
+    }
+
+    #filterActivityLevel + .custom-select-wrapper {
+        width: 160px;
+    }
+
+    #filterActivityRequestType + .custom-select-wrapper {
+        width: 210px;
+    }
+
+    #module-activity-log .custom-select-trigger,
+    #module-activity-log .custom-select-trigger span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #module-activity-log .datepicker-dropdown-wrapper {
+        flex: 0 0 auto;
+    }
+</style>
+
 <div class="module" id="module-activity-log">
     <div class="module-header">
         <div class="search-bar">
@@ -10,23 +64,25 @@
         </div>
 
         <div class="module-header-right">
-            <select class="form-control" id="filterActivityUser" style="min-width: 180px;">
+            <select class="form-control" id="filterActivityUser">
                 <option value="all">All Users</option>
             </select>
 
-            <select class="form-control" id="filterActivityLevel" style="min-width: 140px;">
+            <select class="form-control" id="filterActivityLevel">
                 <option value="all">All Log Levels</option>
                 <option value="Success">Success</option>
                 <option value="Error">Error</option>
                 <option value="Warning">Warning</option>
             </select>
 
-            <select class="form-control" id="filterActivityRequestType" style="min-width: 180px;">
+            <select class="form-control" id="filterActivityRequestType">
                 <option value="all">All Endpoints</option>
             </select>
 
-            <input type="date" class="form-control" id="filterActivityStartDate" title="Start date" style="min-width: 150px;">
-            <input type="date" class="form-control" id="filterActivityEndDate" title="End date" style="min-width: 150px;">
+            <button id="activityDateRange" class="datepicker-trigger" type="button">
+                <i data-lucide="calendar"></i>
+                <span class="date-text">Select Date Range</span>
+            </button>
 
             <button id="btnClearActivityFilters" class="btn-outline">
                 <i style="width: 16px;" data-lucide="x"></i>

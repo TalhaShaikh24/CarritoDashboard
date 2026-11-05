@@ -6,16 +6,26 @@
 let activityLogTable;
 let activityLogCache = {};
 let activityLogSearchTimer = null;
+// Default date range: last 7 days (same default as MenuOptics)
+let activityRange = getActivityDefaultRange();
 
 $(document).ready(() => {
-    // Default date range: last 7 days (same default as MenuOptics)
-    const def = getActivityDefaultRange();
-    $('#filterActivityStartDate').val(def.start);
-    $('#filterActivityEndDate').val(def.end);
-
     $('#filterActivityUser').customSelect({ placeholder: 'All Users', searchable: true, searchableThreshold: 0 });
     $('#filterActivityLevel').customSelect({ placeholder: 'All Log Levels' });
     $('#filterActivityRequestType').customSelect({ placeholder: 'All Endpoints', searchable: true, searchableThreshold: 0 });
+
+    // Calendar range picker - the same component the Dashboard and
+    // Customers pages use
+    $('#activityDateRange').dateRangePicker({
+        initialStart: activityRange.start,
+        initialEnd: activityRange.end,
+        onSelect: function (range) {
+            activityRange = { start: range.start, end: range.end };
+            if (activityLogTable) {
+                activityLogTable.ajax.reload();
+            }
+        }
+    });
 
     initializeActivityLogTable();
     loadActivityEndpoints();
@@ -32,7 +42,7 @@ $(document).ready(() => {
         }, 350);
     });
 
-    $('#filterActivityUser, #filterActivityLevel, #filterActivityRequestType, #filterActivityStartDate, #filterActivityEndDate').on('change', function () {
+    $('#filterActivityUser, #filterActivityLevel, #filterActivityRequestType').on('change', function () {
         if (activityLogTable) {
             activityLogTable.ajax.reload();
         }
@@ -43,9 +53,8 @@ $(document).ready(() => {
         $('#filterActivityUser').val('all');
         $('#filterActivityLevel').val('all');
         $('#filterActivityRequestType').val('all');
-        const range = getActivityDefaultRange();
-        $('#filterActivityStartDate').val(range.start);
-        $('#filterActivityEndDate').val(range.end);
+        activityRange = getActivityDefaultRange();
+        setActivityRangeTriggerText();
         refreshActivityFilterSelects();
         if (activityLogTable) {
             activityLogTable.search('').draw();
@@ -114,14 +123,12 @@ function initializeActivityLogTable() {
                 params.requestType = requestType;
             }
 
-            const startDate = $('#filterActivityStartDate').val();
-            if (startDate) {
-                params.startDate = `${startDate}T00:00:00`;
+            if (activityRange.start) {
+                params.startDate = formatActivityRangeBoundary(activityRange.start, false);
             }
 
-            const endDate = $('#filterActivityEndDate').val();
-            if (endDate) {
-                params.endDate = `${endDate}T23:59:59`;
+            if (activityRange.end) {
+                params.endDate = formatActivityRangeBoundary(activityRange.end, true);
             }
 
             $.ajax({
@@ -412,14 +419,22 @@ function getActivityDefaultRange() {
     const end = new Date();
     const start = new Date();
     start.setDate(start.getDate() - 6);
-    return { start: toActivityDateInputValue(start), end: toActivityDateInputValue(end) };
+    return { start: start, end: end };
 }
 
-function toActivityDateInputValue(date) {
+function formatActivityRangeBoundary(date, isEnd) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return `${year}-${month}-${day}T${isEnd ? '23:59:59' : '00:00:00'}`;
+}
+
+// The picker has no reset API, so Clear restores its label the same way
+// the picker's own updateTrigger renders it (the Dashboard's Reset keeps
+// its range in its own state the same way)
+function setActivityRangeTriggerText() {
+    const fmt = d => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    $('#activityDateRange').html(`📅 <span class="date-text">${fmt(activityRange.start)} - ${fmt(activityRange.end)}</span>`);
 }
 
 function formatActivityDateTime(dateStr) {
