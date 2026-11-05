@@ -803,12 +803,28 @@ $('#btnImportInventory').click(function () {
             .import-inv-table .form-control { height: 36px; font-size: 13px; padding: 6px 8px; }
             .import-inv-table select.form-control { min-width: 120px; }
             .import-inv-unmatched { border-color: #dc2626 !important; }
+            /* Only the import popup opens large and centred; every other popup
+               keeps the default right-side sliding panel */
+            #dynamicModal.import-modal-full {
+                left: 50%;
+                right: auto;
+                top: 50%;
+                width: min(1280px, 96vw);
+                height: 92vh;
+                border-radius: 20px;
+                overflow: hidden;
+                box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+                transform: translate(calc(-50% + 100vw), -50%);
+            }
+            #dynamicModal.import-modal-full.open {
+                transform: translate(-50%, -50%);
+            }
         </style>
         <p style="margin: 0 0 14px; color: #6b7280; font-size: 13px;">
-            Download the sample file, fill in your inventory items, then upload the
-            Excel (.xlsx) or CSV file here. Every row loads below &mdash; you can edit
-            any value or delete a row before importing. Items are added to the
-            currently selected storekeeper.
+            Download the sample file &mdash; it already contains the currently selected
+            storekeeper's existing inventory items from the system. Edit that file or
+            add new rows, then upload the Excel (.xlsx) or CSV file here. Every row
+            loads below &mdash; you can edit any value or delete a row before importing.
         </p>
         <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px;">
             <button type="button" id="btnDownloadImportSample" class="btn-outline">
@@ -860,8 +876,14 @@ $('#btnImportInventory').click(function () {
                 submitImportInventory();
                 return true;
             }
+        },
+        onClose: function () {
+            $('#dynamicModal').removeClass('import-modal-full');
         }
     });
+
+    // Open this popup large and centred (class is removed again on close)
+    $('#dynamicModal').addClass('import-modal-full');
 
     $('#btnDownloadImportSample').on('click', function (e) {
         e.preventDefault();
@@ -875,16 +897,61 @@ $('#btnImportInventory').click(function () {
     });
 });
 
+// The sample file carries the storekeeper's REAL inventory items from the API
+// (same idea as the MenuOptics sample, which lists the actual menu items), so
+// the user can edit that file and upload it back. When the storekeeper has no
+// items yet, it falls back to a blank template with two example rows.
 function downloadImportSampleFile() {
+    const activeSkpId = getActiveStorekeeperId();
+    if (!activeSkpId) {
+        showNotification('Please select or assign a storekeeper first', 'error');
+        return;
+    }
+
+    ajaxRequest({
+        url: `${baseApiUrl}/api/Inventory/storekeeper/${activeSkpId}`,
+        method: 'GET',
+        data: { PageNumber: 1, PageSize: 1000 },
+        showMessage: false,
+        onSuccess: (response) => {
+            const items = (response && response.status === 200 && response.data && response.data.items) ? response.data.items : [];
+            if (items.length > 0) {
+                const rows = [IMPORT_INV_HEADERS].concat(items.map(item => [
+                    item.title || '',
+                    item.categoryName || '',
+                    item.brandName || '',
+                    Number(item.type) === 2 ? 'Catch Weight Item' : 'Pack Item',
+                    item.unitName || '',
+                    item.price === null || item.price === undefined ? '' : item.price,
+                    item.weight ? item.weight : '',
+                    item.packSize === null || item.packSize === undefined ? '' : item.packSize,
+                    item.minOrderQuantity === null || item.minOrderQuantity === undefined ? '' : item.minOrderQuantity,
+                    item.description || ''
+                ]));
+                generateImportSampleFile(rows);
+            } else {
+                generateImportSampleFile(buildImportTemplateRows());
+            }
+        },
+        onError: () => {
+            showNotification('Failed to download sample file.', 'error');
+        }
+    });
+}
+
+function buildImportTemplateRows() {
     const categoryName = categoriesCache.length ? categoriesCache[0].name : 'Category Name';
     const brandName = brandsCache.length ? brandsCache[0].name : 'Brand Name';
     const unitName = unitsCache.length ? unitsCache[0].name : 'Unit Name';
 
-    const sampleRows = [
+    return [
         IMPORT_INV_HEADERS,
         ['Sample Pack Item', categoryName, brandName, 'Pack Item', unitName, 1200, '', 12, 1, 'Sample pack item - replace with your own data'],
         ['Sample Catch Weight Item', categoryName, brandName, 'Catch Weight Item', unitName, 850, 2.5, '', 0.5, 'Sample catch weight item - replace with your own data']
     ];
+}
+
+function generateImportSampleFile(sampleRows) {
     const fileDate = new Date().toISOString().slice(0, 10);
 
     if (typeof XLSX !== 'undefined') {
@@ -1278,6 +1345,7 @@ function submitImportInventory() {
         onSuccess: (response) => {
             if (response.status === 200) {
                 importInvRows = [];
+                $('#dynamicModal').removeClass('import-modal-full');
                 $.dynamicModal.close();
                 if (inventoryTable) {
                     inventoryTable.ajax.reload(null, false);
