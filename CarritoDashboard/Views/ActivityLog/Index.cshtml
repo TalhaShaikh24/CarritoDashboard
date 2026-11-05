@@ -1,0 +1,104 @@
+@{
+    ViewData["Title"] = "Activity Log";
+}
+
+<div class="module" id="module-activity-log">
+    <div class="module-header">
+        <div class="search-bar">
+            <i style="width: 20px;" data-lucide="search"></i>
+            <input type="text" placeholder="Search by user, IP address..." id="activityLogSearch">
+        </div>
+
+        <div class="module-header-right">
+            <select class="form-control" id="filterActivityUser" style="min-width: 180px;">
+                <option value="all">All Users</option>
+            </select>
+
+            <select class="form-control" id="filterActivityLevel" style="min-width: 140px;">
+                <option value="all">All Log Levels</option>
+                <option value="Success">Success</option>
+                <option value="Error">Error</option>
+                <option value="Warning">Warning</option>
+            </select>
+
+            <select class="form-control" id="filterActivityRequestType" style="min-width: 180px;">
+                <option value="all">All Endpoints</option>
+            </select>
+
+            <input type="date" class="form-control" id="filterActivityStartDate" title="Start date" style="min-width: 150px;">
+            <input type="date" class="form-control" id="filterActivityEndDate" title="End date" style="min-width: 150px;">
+
+            <button id="btnClearActivityFilters" class="btn-outline">
+                <i style="width: 16px;" data-lucide="x"></i>
+                Clear
+            </button>
+        </div>
+    </div>
+
+    <div class="dash-kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-top">
+                <span class="kpi-label">Total Activities</span>
+                <i class="kpi-icon" data-lucide="activity"></i>
+            </div>
+            <div class="kpi-value" id="statTotalLogs">0</div>
+            <div class="kpi-foot">
+                <span>Logged system events</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-top">
+                <span class="kpi-label">Successful</span>
+                <i class="kpi-icon" data-lucide="circle-check"></i>
+            </div>
+            <div class="kpi-value" id="statSuccessLogs">0</div>
+            <div class="kpi-foot">
+                <span>Completed without error</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-top">
+                <span class="kpi-label">Errors</span>
+                <i class="kpi-icon" data-lucide="circle-x"></i>
+            </div>
+            <div class="kpi-value" id="statErrorLogs">0</div>
+            <div class="kpi-foot">
+                <span>Issues requiring attention</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-top">
+                <span class="kpi-label">Warnings</span>
+                <i class="kpi-icon" data-lucide="triangle-alert"></i>
+            </div>
+            <div class="kpi-value" id="statWarningLogs">0</div>
+            <div class="kpi-foot">
+                <span>Warnings requiring attention</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table" id="activityLogTable">
+            <thead>
+                <tr>
+                    <th style="width: 70px;">Log #</th>
+                    <th>User</th>
+                    <th style="width: 130px;">IP Address</th>
+                    <th>Request Type</th>
+                    <th style="width: 120px;">Status</th>
+                    <th style="width: 180px;">Timestamp</th>
+                    <th style="width: 100px;" class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/views-js/activityLog.js"></script>
+}

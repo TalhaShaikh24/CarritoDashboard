@@ -64,7 +64,7 @@
                 var isInventoryActive = Html.IsActive("Inventory") == "active" || Html.IsActive("InventoryBrand") == "active" || Html.IsActive("InventoryCategory") == "active" || Html.IsActive("InventoryUnit") == "active";
                 var isUsersActive = Html.IsActive("Admin") == "active" || Html.IsActive("Customer") == "active" || Html.IsActive("Rider") == "active" || Html.IsActive("Storekeeper") == "active";
                 var isSupportActive = Html.IsActive("Offer") == "active" || Html.IsActive("Ticket") == "active" || Html.IsActive("Faq") == "active";
-                var isAccessActive = Html.IsActive("Role") == "active" || Html.IsActive("Permission") == "active";
+                var isAccessActive = Html.IsActive("Role") == "active" || Html.IsActive("Permission") == "active" || Html.IsActive("ActivityLog") == "active";
             }
 
             <nav class="sidebar-nav">
@@ -141,6 +141,7 @@
                     <div class="submenu @(isAccessActive ? "open" : "")" id="submenu-access">
                         <a class="submenu-item @Html.IsActive("Role")" data-module="roles" href="@Url.Action("Index", "Role")">Roles</a>
                         <a class="submenu-item @Html.IsActive("Permission")" data-module="permissions" href="@Url.Action("Index", "Permission")">Permissions</a>
+                        <a class="submenu-item @Html.IsActive("ActivityLog")" data-module="activityLog" href="@Url.Action("Index", "ActivityLog")">Activity Log</a>
                     </div>
                 </div>
 
