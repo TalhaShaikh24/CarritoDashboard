@@ -351,8 +351,6 @@ function getOptionsHtml(items, selectedId) {
 // --- Edit Logic ---
 function editInventory(id) {
     selectedFiles.editInventory = {}; // Reset file container
-    selectedFiles.quickAddEditCategory = {}; // Reset quick-add photos
-    selectedFiles.quickAddEditBrand = {};
 
     // Fetch Details
     ajaxRequest({
@@ -409,8 +407,6 @@ function editInventory(id) {
 
                 // Init Uploader
                 initUploader('#editInvPhoto', 'editInventory', 'photo', photoUrl);
-                initUploader('#quickAddPhoto-editInvCategory', 'quickAddEditCategory', 'photo');
-                initUploader('#quickAddPhoto-editInvBrand', 'quickAddEditBrand', 'photo');
             }
         }
     });
@@ -553,55 +549,69 @@ function updateInventory(id) {
 }
 
 
-// --- Quick Add Category / Brand (inside the Add & Edit forms) ---
+// --- Quick Add Category / Brand (from the Add & Edit forms) ---
 // The "+ Add New" link beside the Category / Brand labels opens a small
-// inline row; saving creates the record through the same endpoints the
-// Categories / Brands pages use, then selects it in the form automatically.
+// centred popup over the form (its markup lives in Index.cshtml). Saving
+// creates the record through the same endpoints the Categories / Brands
+// pages use, then selects it in the form automatically.
+let quickAddState = null;
+
 $(document).on('click', '.quick-add-link', function (e) {
     e.preventDefault();
-    const $row = $('#quickAdd-' + $(this).data('target'));
-    $row.slideToggle(150, function () {
-        if ($row.is(':visible')) {
-            $row.find('.quick-add-input').focus();
-        }
-    });
+    openQuickAddPopup($(this).data('kind'), $(this).data('target'));
 });
 
-$(document).on('click', '.quick-add-cancel', function () {
-    const $row = $(this).closest('.quick-add-row');
-    $row.find('.quick-add-input').val('');
-    resetQuickAddPhoto($row);
-    $row.slideUp(150);
-});
+function openQuickAddPopup(kind, selectId) {
+    const isCategory = kind === 'category';
+    const label = isCategory ? 'Category' : 'Brand';
+    quickAddState = { isCategory: isCategory, selectId: selectId };
 
-// Clears the optional photo: empties the stored file and rebuilds the
-// uploader UI (re-initializing the uploader removes its previous state)
-function resetQuickAddPhoto($row) {
-    const contextKey = $row.data('context');
-    const photoId = $row.data('photo');
-    if (contextKey) {
-        selectedFiles[contextKey] = {};
-    }
-    if (photoId && document.getElementById(photoId)) {
-        initUploader('#' + photoId, contextKey, 'photo');
-    }
+    $('#quickAddTitle').text(`Add New ${label}`);
+    $('#quickAddNameLabel').text(`${label} Name *`);
+    $('#quickAddName').attr('placeholder', `Enter ${label.toLowerCase()} name`).val('');
+    $('#quickAddSave').text(`Add ${label}`).prop('disabled', false);
+
+    // Fresh uploader each time, so no photo from a previous add carries over
+    selectedFiles.quickAddPopup = {};
+    initUploader('#quickAddPhoto', 'quickAddPopup', 'photo');
+
+    $('#quickAddOverlay').css('display', 'flex');
+    $('#quickAddName').focus();
 }
 
-$(document).on('click', '.quick-add-save', function () {
-    submitQuickAdd($(this).closest('.quick-add-row'));
-});
+function closeQuickAddPopup() {
+    $('#quickAddOverlay').hide();
+    quickAddState = null;
+}
 
-$(document).on('keydown', '.quick-add-input', function (e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        submitQuickAdd($(this).closest('.quick-add-row'));
+$('#quickAddClose, #quickAddCancel').on('click', closeQuickAddPopup);
+
+$('#quickAddOverlay').on('click', function (e) {
+    if (e.target === this) {
+        closeQuickAddPopup();
     }
 });
 
-function submitQuickAdd($row) {
-    const isCategory = $row.data('kind') === 'category';
-    const selectId = $row.data('target');
-    const name = $row.find('.quick-add-input').val().trim();
+$(document).on('keydown', function (e) {
+    if (e.key === 'Escape' && quickAddState) {
+        closeQuickAddPopup();
+    }
+});
+
+$('#quickAddName').on('keydown', function (e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        submitQuickAddPopup();
+    }
+});
+
+$('#quickAddSave').on('click', submitQuickAddPopup);
+
+function submitQuickAddPopup() {
+    if (!quickAddState) return;
+    const isCategory = quickAddState.isCategory;
+    const selectId = quickAddState.selectId;
+    const name = $('#quickAddName').val().trim();
 
     // Same name rule as the API DTOs (3-50 characters)
     if (!name || name.length < 3 || name.length > 50) {
@@ -620,13 +630,12 @@ function submitQuickAdd($row) {
     formData.append('Name', name);
 
     // Photo is optional - sent only when one was chosen
-    const contextKey = $row.data('context');
-    const photoFile = contextKey && selectedFiles[contextKey] ? selectedFiles[contextKey].photo : null;
+    const photoFile = selectedFiles.quickAddPopup ? selectedFiles.quickAddPopup.photo : null;
     if (photoFile) {
         formData.append('Photo', photoFile);
     }
 
-    const $saveBtn = $row.find('.quick-add-save');
+    const $saveBtn = $('#quickAddSave');
     $saveBtn.prop('disabled', true);
 
     ajaxRequest({
@@ -643,14 +652,14 @@ function submitQuickAdd($row) {
                 ? (isCategory ? response.data.categoryId : response.data.brandId)
                 : null;
             if (newId) {
-                finishQuickAdd(selectId, isCategory, { id: newId, name: name }, $row);
+                finishQuickAdd(selectId, isCategory, { id: newId, name: name });
             } else {
                 // Fallback: refresh the list and pick the entry with this name
                 (isCategory ? fetchCategories() : fetchBrands()).then(() => {
                     const cache = isCategory ? categoriesCache : brandsCache;
                     const match = cache.find(x => x.name.toLowerCase() === name.toLowerCase());
                     if (match) {
-                        finishQuickAdd(selectId, isCategory, match, $row);
+                        finishQuickAdd(selectId, isCategory, match);
                     }
                 });
             }
@@ -661,7 +670,7 @@ function submitQuickAdd($row) {
     });
 }
 
-function finishQuickAdd(selectId, isCategory, item, $row) {
+function finishQuickAdd(selectId, isCategory, item) {
     // Keep the caches and the page's filter dropdowns in sync
     const cache = isCategory ? categoriesCache : brandsCache;
     if (!cache.some(x => x.id === item.id)) {
@@ -683,16 +692,12 @@ function finishQuickAdd(selectId, isCategory, item, $row) {
         $select.customSelect('refresh');
     }
 
-    $row.find('.quick-add-input').val('');
-    resetQuickAddPhoto($row);
-    $row.slideUp(150);
+    closeQuickAddPopup();
 }
 
 // Listener for "Add Inventory" button
 $('#btnAddNewInventory').click(function () {
     selectedFiles.newInventory = {}; // Reset files
-    selectedFiles.quickAddNewCategory = {}; // Reset quick-add photos
-    selectedFiles.quickAddNewBrand = {};
 
     // Generate Options from Cache
     const categoryOptions = getOptionsHtml(categoriesCache);
@@ -709,44 +714,18 @@ $('#btnAddNewInventory').click(function () {
             
             <div class="form-row">
                 <div class="form-group col-md-6">
-                    <label>Category * <a href="javascript:void(0);" class="quick-add-link" data-target="newInvCategory">+ Add New</a></label>
+                    <label>Category * <a href="javascript:void(0);" class="quick-add-link" data-kind="category" data-target="newInvCategory">+ Add New</a></label>
                     <select id="newInvCategory" class="form-control" required>
                         <option value="">Select Category</option>
                         ${categoryOptions}
                     </select>
-                    <div class="quick-add-row" id="quickAdd-newInvCategory" data-kind="category" data-target="newInvCategory" data-context="quickAddNewCategory" data-photo="quickAddPhoto-newInvCategory" style="display: none;">
-                        <div class="quick-add-inner">
-                            <div class="quick-add-line">
-                                <input type="text" class="form-control quick-add-input" placeholder="New category name" maxlength="50">
-                                <button type="button" class="btn-primary quick-add-save">Add</button>
-                                <button type="button" class="btn-outline quick-add-cancel">Cancel</button>
-                            </div>
-                            <div class="form-group" style="margin: 4px 0 0;">
-                                <label>Photo (Optional)</label>
-                                <input type="file" id="quickAddPhoto-newInvCategory" accept="image/*">
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 <div class="form-group col-md-6">
-                    <label>Brand * <a href="javascript:void(0);" class="quick-add-link" data-target="newInvBrand">+ Add New</a></label>
+                    <label>Brand * <a href="javascript:void(0);" class="quick-add-link" data-kind="brand" data-target="newInvBrand">+ Add New</a></label>
                     <select id="newInvBrand" class="form-control" required>
                         <option value="">Select Brand</option>
                         ${brandOptions}
                     </select>
-                    <div class="quick-add-row" id="quickAdd-newInvBrand" data-kind="brand" data-target="newInvBrand" data-context="quickAddNewBrand" data-photo="quickAddPhoto-newInvBrand" style="display: none;">
-                        <div class="quick-add-inner">
-                            <div class="quick-add-line">
-                                <input type="text" class="form-control quick-add-input" placeholder="New brand name" maxlength="50">
-                                <button type="button" class="btn-primary quick-add-save">Add</button>
-                                <button type="button" class="btn-outline quick-add-cancel">Cancel</button>
-                            </div>
-                            <div class="form-group" style="margin: 4px 0 0;">
-                                <label>Photo (Optional)</label>
-                                <input type="file" id="quickAddPhoto-newInvBrand" accept="image/*">
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -825,8 +804,6 @@ $('#btnAddNewInventory').click(function () {
 
     
     initUploader('#newInvPhoto', 'newInventory', 'photo');
-    initUploader('#quickAddPhoto-newInvCategory', 'quickAddNewCategory', 'photo');
-    initUploader('#quickAddPhoto-newInvBrand', 'quickAddNewBrand', 'photo');
 });
 // Add Inventory: Pack Item uses Pack Size (Weight disabled); Catch Weight Item uses Weight (Pack Size disabled)
 function applyInventoryTypeState() {

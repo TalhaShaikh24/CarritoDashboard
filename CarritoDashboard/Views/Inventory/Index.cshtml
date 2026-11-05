@@ -69,26 +69,59 @@
             text-decoration: underline;
         }
 
-    .quick-add-inner {
+    /* Centred popup for adding a new Category / Brand over the item form */
+    .quick-add-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.5);
+        z-index: 1000;
         display: flex;
-        flex-direction: column;
-        gap: 6px;
-        margin-top: 8px;
+        align-items: center;
+        justify-content: center;
     }
 
-    .quick-add-line {
-        display: flex;
-        gap: 6px;
+    .quick-add-card {
+        background: #ffffff;
+        border-radius: 16px;
+        width: min(440px, 92vw);
+        max-height: 92vh;
+        overflow: auto;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
     }
 
-        .quick-add-line .quick-add-input {
-            flex: 1;
+    .quick-add-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid #eef1ee;
+    }
+
+        .quick-add-card-header h3 {
+            margin: 0;
+            font-size: 17px;
         }
 
-        .quick-add-line .quick-add-save,
-        .quick-add-line .quick-add-cancel {
-            white-space: nowrap;
-        }
+    .quick-add-close {
+        background: none;
+        border: none;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+        color: #6b7280;
+    }
+
+    .quick-add-card-body {
+        padding: 18px 20px;
+    }
+
+    .quick-add-card-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 14px 20px;
+        border-top: 1px solid #eef1ee;
+    }
 </style>
 
 <template id="inventoryFormTemplate">
@@ -101,42 +134,16 @@
         </div>
         <div class="form-row">
             <div class="form-group col-md-6">
-                <label>Category <a href="javascript:void(0);" class="quick-add-link" data-target="editInvCategory">+ Add New</a></label>
+                <label>Category <a href="javascript:void(0);" class="quick-add-link" data-kind="category" data-target="editInvCategory">+ Add New</a></label>
                 <select id="editInvCategory" class="form-control">
                     <option value="">Select Category</option>
                 </select>
-                <div class="quick-add-row" id="quickAdd-editInvCategory" data-kind="category" data-target="editInvCategory" data-context="quickAddEditCategory" data-photo="quickAddPhoto-editInvCategory" style="display: none;">
-                    <div class="quick-add-inner">
-                        <div class="quick-add-line">
-                            <input type="text" class="form-control quick-add-input" placeholder="New category name" maxlength="50">
-                            <button type="button" class="btn-primary quick-add-save">Add</button>
-                            <button type="button" class="btn-outline quick-add-cancel">Cancel</button>
-                        </div>
-                        <div class="form-group" style="margin: 4px 0 0;">
-                            <label>Photo (Optional)</label>
-                            <input type="file" id="quickAddPhoto-editInvCategory" accept="image/*">
-                        </div>
-                    </div>
-                </div>
             </div>
             <div class="form-group col-md-6">
-                <label>Brand <a href="javascript:void(0);" class="quick-add-link" data-target="editInvBrand">+ Add New</a></label>
+                <label>Brand <a href="javascript:void(0);" class="quick-add-link" data-kind="brand" data-target="editInvBrand">+ Add New</a></label>
                 <select id="editInvBrand" class="form-control">
                     <option value="">Select Brand</option>
                 </select>
-                <div class="quick-add-row" id="quickAdd-editInvBrand" data-kind="brand" data-target="editInvBrand" data-context="quickAddEditBrand" data-photo="quickAddPhoto-editInvBrand" style="display: none;">
-                    <div class="quick-add-inner">
-                        <div class="quick-add-line">
-                            <input type="text" class="form-control quick-add-input" placeholder="New brand name" maxlength="50">
-                            <button type="button" class="btn-primary quick-add-save">Add</button>
-                            <button type="button" class="btn-outline quick-add-cancel">Cancel</button>
-                        </div>
-                        <div class="form-group" style="margin: 4px 0 0;">
-                            <label>Photo (Optional)</label>
-                            <input type="file" id="quickAddPhoto-editInvBrand" accept="image/*">
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -190,6 +197,30 @@
         </div>
     </form>
 </template>
+
+<!-- Quick-add popup: opens in the centre, over the Add / Edit item form -->
+<div class="quick-add-overlay" id="quickAddOverlay" style="display: none;">
+    <div class="quick-add-card">
+        <div class="quick-add-card-header">
+            <h3 id="quickAddTitle">Add New Category</h3>
+            <button type="button" class="quick-add-close" id="quickAddClose">&times;</button>
+        </div>
+        <div class="quick-add-card-body">
+            <div class="form-group">
+                <label id="quickAddNameLabel">Category Name *</label>
+                <input type="text" id="quickAddName" class="form-control" placeholder="Enter name" maxlength="50">
+            </div>
+            <div class="form-group" style="margin: 14px 0 0;">
+                <label>Photo (Optional)</label>
+                <input type="file" id="quickAddPhoto" accept="image/*">
+            </div>
+        </div>
+        <div class="quick-add-card-footer">
+            <button type="button" class="btn-outline" id="quickAddCancel">Cancel</button>
+            <button type="button" class="btn-primary" id="quickAddSave">Add Category</button>
+        </div>
+    </div>
+</div>
 
 @section scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
