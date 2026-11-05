@@ -320,6 +320,34 @@ body {
     color: #0aa64a !important;
 }
 
+/* Logout lives in the header now (right side). The base .logout-btn rule in
+   site.css carries sidebar-era sizing (width: 100%), so the header pill
+   overrides it; the click handler still binds via the .logout-btn class. */
+.header-right .logout-btn {
+    width: auto !important;
+    height: 42px !important;
+    padding: 0 16px !important;
+    border-radius: 999px !important;
+    border: 1px solid #e6eee8 !important;
+    background: #ffffff !important;
+    color: #42534a !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.header-right .logout-btn:hover {
+    background: #fef2f2 !important;
+    border-color: #fecaca !important;
+    color: #dc2626 !important;
+}
+
 .notification-dot {
     background: #ff8712 !important;
 }
