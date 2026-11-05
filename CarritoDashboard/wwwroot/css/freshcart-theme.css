@@ -55,7 +55,9 @@ body {
     border-right: none !important;
     border-right-width: 0 !important;
     border-right-style: none !important;
-    box-shadow: none !important;
+    margin: 12px 0 12px 12px !important;
+    border-radius: 22px !important;
+    box-shadow: 0 12px 32px rgba(16, 40, 24, 0.08) !important;
 }
 
 .sidebar-header {
@@ -214,66 +216,6 @@ body {
 
 .fc-hide {
     display: none !important;
-}
-
-/* --------------------------------------------------------------------------
-   Sidebar Footer: the "Need Help?" mint card
-   -------------------------------------------------------------------------- */
-.sidebar-footer {
-    padding: 16px !important;
-    border-top: none !important;
-}
-
-.sidebar-help-card {
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(150deg, #dcf6e5 0%, #b9edd0 55%, #a2e5c4 100%);
-    border-radius: 18px;
-    padding: 20px;
-}
-
-.sidebar-help-card::after {
-    content: "";
-    position: absolute;
-    width: 130px;
-    height: 130px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.35);
-    top: -55px;
-    right: -35px;
-}
-
-.sidebar-help-card h4 {
-    font-family: "Plus Jakarta Sans", "Inter", sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    color: #123324;
-    margin: 0 0 4px 0;
-}
-
-.sidebar-help-card p {
-    font-size: 12.5px;
-    color: #3c5a48;
-    margin: 0 0 16px 0;
-}
-
-.sidebar-help-card .help-btn {
-    position: relative;
-    z-index: 1;
-    display: block;
-    text-align: center;
-    background: #0aa64a;
-    color: #ffffff;
-    font-size: 13.5px;
-    font-weight: 600;
-    padding: 11px 16px;
-    border-radius: 10px;
-    text-decoration: none;
-    transition: background 0.2s ease;
-}
-
-.sidebar-help-card .help-btn:hover {
-    background: #078a3e;
 }
 
 /* --------------------------------------------------------------------------
@@ -929,4 +871,232 @@ table.dataTable tbody tr:hover {
 
 .modal-close:hover {
     color: #16241b !important;
+}
+
+/* ================================================================
+   ROUND 2 — user feedback fixes
+   ================================================================ */
+
+/* Open/active group parent: NO filled block, NO left bar — green text only.
+   (dashboard-modern painted it pale with a 3px olive bar, which collided
+   with the active child's mint pill) */
+.sidebar .nav-item.has-submenu.active,
+.sidebar .nav-item.has-submenu.active-parent,
+.sidebar .nav-group.open > .nav-item.has-submenu.active-parent {
+    background: transparent !important;
+    border-left: none !important;
+    border-left-width: 0 !important;
+    border-left-style: none !important;
+    box-shadow: none !important;
+    color: #0aa64a !important;
+    font-weight: 600 !important;
+}
+
+    .sidebar .nav-item.has-submenu.active .nav-icon,
+    .sidebar .nav-item.has-submenu.active-parent .nav-icon,
+    .sidebar .nav-item.has-submenu.active .chevron,
+    .sidebar .nav-item.has-submenu.active-parent .chevron {
+        color: #0aa64a !important;
+    }
+
+/* ---------- Pagination: rounded squares, equal size & spacing ---------- */
+.dataTables_paginate {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.paginate_button {
+    min-width: 38px !important;
+    height: 38px !important;
+    padding: 0 10px !important;
+    margin: 0 !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+    .paginate_button.previous,
+    .paginate_button.next {
+        padding: 0 16px !important;
+    }
+
+/* ---------- Buttons: one consistent system ---------- */
+.btn-primary,
+.btn-submit,
+.btn-save,
+.btn-primary.btn-emerald,
+.btn-compact-apply {
+    background: #0aa64a !important;
+    border: 1px solid #0aa64a !important;
+    color: #ffffff !important;
+    border-radius: 999px !important;
+    box-shadow: 0 6px 16px rgba(10, 166, 74, 0.25) !important;
+    font-weight: 600 !important;
+}
+
+    .btn-primary:hover,
+    .btn-submit:hover,
+    .btn-save:hover,
+    .btn-primary.btn-emerald:hover,
+    .btn-compact-apply:hover {
+        background: #078a3e !important;
+        border-color: #078a3e !important;
+        color: #ffffff !important;
+    }
+
+.btn-outline,
+.btn-compact-clear {
+    background: #ffffff !important;
+    border: 1px solid #e0e7e1 !important;
+    color: #22312a !important;
+    border-radius: 999px !important;
+    box-shadow: none !important;
+    font-weight: 600 !important;
+}
+
+    .btn-outline:hover,
+    .btn-compact-clear:hover {
+        background: #f2f7f3 !important;
+        border-color: #cfdcd2 !important;
+        color: #22312a !important;
+    }
+
+.btn-danger {
+    background: #e5484d !important;
+    border: 1px solid #e5484d !important;
+    color: #ffffff !important;
+    border-radius: 999px !important;
+    font-weight: 600 !important;
+}
+
+    .btn-danger:hover {
+        background: #d13438 !important;
+        border-color: #d13438 !important;
+        color: #ffffff !important;
+    }
+
+.btn-sm {
+    padding: 7px 16px !important;
+    font-size: 12.5px !important;
+    border-radius: 999px !important;
+}
+
+/* Table action buttons — same shape everywhere, soft tint per action */
+.action-btn {
+    border-radius: 9px !important;
+    padding: 6px 13px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+    .action-btn.edit {
+        background: #e7f8ef !important;
+        color: #078a3e !important;
+    }
+
+    .action-btn.view {
+        background: #e3f0ff !important;
+        color: #2f7de1 !important;
+    }
+
+    .action-btn.delete {
+        background: #fdecec !important;
+        color: #d13438 !important;
+    }
+
+    .action-btn:hover {
+        filter: brightness(0.97) !important;
+    }
+
+/* ---------- Badges: one global design ---------- */
+.badge,
+.badge-pill,
+.badge-type {
+    border-radius: 999px !important;
+    padding: 4px 11px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    background: #eef2ef !important;
+    color: #44564b !important;
+    box-shadow: none !important;
+}
+
+.badge-light-primary,
+.badge-green,
+.status-badge.active,
+.status-badge.completed {
+    background: #e7f8ef !important;
+    color: #078a3e !important;
+}
+
+.badge-light-warning,
+.badge-orange,
+.status-badge.preparing {
+    background: #fff4e0 !important;
+    color: #b97e10 !important;
+}
+
+.badge-light-info,
+.badge-info,
+.status-badge.new {
+    background: #e3f0ff !important;
+    color: #2f7de1 !important;
+}
+
+.badge-light-secondary,
+.badge-neutral {
+    background: #eef2ef !important;
+    color: #5a6d61 !important;
+}
+
+.status-badge.inactive {
+    background: #fdecec !important;
+    color: #d13438 !important;
+}
+
+.status-badge {
+    border-radius: 999px !important;
+    padding: 4px 11px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* ---------- Sidebar toggle: collapsed icon rail (desktop) ---------- */
+@media (min-width: 861px) {
+    .sidebar.collapsed {
+        width: 84px !important;
+        min-width: 84px !important;
+    }
+
+        .sidebar.collapsed .nav-label,
+        .sidebar.collapsed .logo-text,
+        .sidebar.collapsed .chevron,
+        .sidebar.collapsed .nav-section-title {
+            display: none !important;
+        }
+
+        .sidebar.collapsed .sidebar-nav {
+            padding: 14px 12px !important;
+        }
+
+        .sidebar.collapsed .nav-item {
+            justify-content: center !important;
+            padding: 12px 0 !important;
+        }
+
+        .sidebar.collapsed .submenu {
+            display: none !important;
+        }
+
+        .sidebar.collapsed .sidebar-header {
+            justify-content: center !important;
+            padding: 20px 8px 14px !important;
+        }
 }
