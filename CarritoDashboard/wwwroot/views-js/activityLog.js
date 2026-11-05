@@ -167,12 +167,6 @@ function initializeActivityLogTable() {
         },
         columns: [
             {
-                data: 'logId',
-                render: function (data) {
-                    return `<span style="font-weight: 600; color: #64748b;">#${data}</span>`;
-                }
-            },
-            {
                 data: null,
                 render: function (data, type, row) {
                     const name = escapeActivityHtml(row.fullName || 'Unknown');
@@ -183,6 +177,14 @@ function initializeActivityLogTable() {
             },
             {
                 data: 'ipAddress',
+                render: function (data) {
+                    return data
+                        ? `<code style="font-size: 11px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #334155;">${escapeActivityHtml(data)}</code>`
+                        : 'N/A';
+                }
+            },
+            {
+                data: 'deviceId',
                 render: function (data) {
                     return data
                         ? `<code style="font-size: 11px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #334155;">${escapeActivityHtml(data)}</code>`
