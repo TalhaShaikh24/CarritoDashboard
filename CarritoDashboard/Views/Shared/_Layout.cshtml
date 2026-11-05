@@ -54,6 +54,11 @@
                 </button>
             </div>
 
+            <div class="global-search">
+                <i data-lucide="search"></i>
+                <input type="text" id="globalNavSearch" placeholder="Search menu..." autocomplete="off">
+            </div>
+
             @{
                 var isOperationsActive = Html.IsActive("Order") == "active" || Html.IsActive("Settlement") == "active";
                 var isInventoryActive = Html.IsActive("Inventory") == "active" || Html.IsActive("InventoryBrand") == "active" || Html.IsActive("InventoryCategory") == "active" || Html.IsActive("InventoryUnit") == "active";
@@ -159,12 +164,6 @@
                     {
                         <p class="page-subtitle">@ViewBag.PageSubtitle</p>
                     }
-                </div>
-                <div class="header-center">
-                    <div class="global-search">
-                        <i data-lucide="search"></i>
-                        <input type="text" id="globalNavSearch" placeholder="Search menu..." autocomplete="off">
-                    </div>
                 </div>
                 <div class="header-right">
                     <div class="storekeeper-badge-pill" id="headerStoreBadge" style="display: none;">
