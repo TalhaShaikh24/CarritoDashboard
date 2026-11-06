@@ -144,7 +144,7 @@ function initializeActivityLogTable() {
                         // Users filter with the users seen in the results
                         // (same approach as MenuOptics)
                         logs.forEach(log => {
-                            activityLogCache[log.logId] = log;
+                            activityLogCache[log.id] = log;
                             addActivityUserOption(log);
                         });
 
@@ -223,7 +223,7 @@ function initializeActivityLogTable() {
                 render: function (data, type, row) {
                     return `
                         <div class="action-btns">
-                            <button class="action-btn view activity-log-details" data-id="${row.logId}" title="View details">
+                            <button class="action-btn view activity-log-details" data-id="${row.id}" title="View details">
                                 <i style="width: 18px;" data-lucide="eye"></i>
                             </button>
                         </div>
@@ -310,7 +310,7 @@ function viewActivityLogDetails(logId) {
     const parsed = parseActivityRequestType(log.requestType);
 
     const chips = [
-        `<span class="activity-chip"><strong>Log:</strong> #${log.logId}</span>`,
+        `<span class="activity-chip"><strong>Log:</strong> #${log.id}</span>`,
         `<span class="activity-chip"><strong>User:</strong> ${escapeActivityHtml(log.fullName || '')} (${escapeActivityHtml(log.username || '')})</span>`
     ];
     if (log.email) {
