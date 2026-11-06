@@ -221,7 +221,10 @@ function initializeDataTable() {
                     debugger
                     return `
                         <div class="action-btns">
-                            <button class="action-btn edit" ${AuthHelper.isStorekeeper() ? '' : 'disabled'} data-id="${row.id}">
+                            <a href="/InventoryTransaction" class="action-btn" title="View Stock Transactions" style="display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">
+                                <i style="width: 18px;" data-lucide="history"></i>
+                            </a>
+                            <button class="action-btn edit" ${AuthHelper.isStorekeeper() ? '' : 'disabled'} data-id="${row.id}" title="Edit Item">
                                 <i style="width: 18px;" data-lucide="square-pen"></i>
                             </button>
                         </div>

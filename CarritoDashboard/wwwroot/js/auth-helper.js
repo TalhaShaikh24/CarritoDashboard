@@ -105,6 +105,7 @@ const AuthHelper = (function () {
                 '/inventory', '/inventory/index',
                 '/inventorycategory', '/inventorycategory/index',
                 '/inventorybrand', '/inventorybrand/index',
+                '/inventorytransaction', '/inventorytransaction/index',
                 '/order', '/order/index'
             ];
 

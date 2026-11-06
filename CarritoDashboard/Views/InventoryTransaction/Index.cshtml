@@ -1,0 +1,74 @@
+@{
+    ViewData["Title"] = "Inventory Stock Transactions";
+}
+
+<style>
+    .reference-badge {
+        font-family: monospace;
+        font-size: 12px;
+        background: #f3f4f6;
+        color: #374151;
+        padding: 3px 7px;
+        border-radius: 4px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .qty-positive {
+        color: #16a34a;
+        font-weight: 700;
+    }
+
+    .qty-negative {
+        color: #dc2626;
+        font-weight: 700;
+    }
+
+    .module-header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+</style>
+
+<div class="module" id="module-inventory-transactions">
+    <!-- Filter & Action Header -->
+    <div class="module-header">
+        <div class="search-bar">
+            <i style="width: 20px;" data-lucide="search"></i>
+            <input type="text" placeholder="Search transactions..." id="transactionSearch">
+        </div>
+
+        <div class="module-header-right">
+            <!-- Storekeeper Filter (Admin only, first selected by default) -->
+            <select class="form-control" id="filterStorekeeper" data-search="true" style="min-width: 170px;">
+                <option value="">Loading Storekeepers...</option>
+            </select>
+
+            <button id="btnRefreshTransactions" class="btn-outline" title="Refresh">
+                <i style="width: 18px;" data-lucide="rotate-cw"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-container">
+        <table class="data-table" id="transactionsTable">
+            <thead>
+                <tr>
+                    <th>Product Title</th>
+                    <th>Reference Id</th>
+                    <th>Type</th>
+                    <th class="text-right" style="width: 110px;">Quantity</th>
+                    <th class="text-right" style="width: 120px;">Stock After</th>
+                    <th style="width: 180px;">Date & Time</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/views-js/inventoryTransactions.js"></script>
+}
