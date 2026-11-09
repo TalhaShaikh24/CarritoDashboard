@@ -13,20 +13,17 @@
         </div>
 
         <div class="dash-filters">
-            <select id="cityFilter" class="chart-select" data-custom-select style="width: 130px;">
+            <select id="cityFilter" class="chart-select" data-custom-select data-placeholder="All Cities" style="width: 130px;">
                 <option value="">All Cities</option>
-                <option value="Hyderabad">Hyderabad</option>
-                <option value="Karachi">Karachi</option>
-                <option value="Lahore">Lahore</option>
             </select>
 
-            <button id="dashboardDateRange" class="datepicker-trigger">
+            <button id="dashboardDateRange" class="datepicker-trigger" type="button">
                 <i data-lucide="calendar"></i>
                 <span class="date-text">Select Date Range</span>
             </button>
 
-            <button id="btnApply" class="btn-compact-apply">Apply</button>
-            <button id="btnClear" class="btn-compact-clear">Reset</button>
+            <button id="btnApply" class="btn-compact-apply" type="button">Apply</button>
+            <button id="btnClear" class="btn-compact-clear" type="button">Reset</button>
         </div>
     </div>
 
@@ -88,7 +85,7 @@
             </div>
             <div class="kpi-value" id="stat-storekeepers">0</div>
             <div class="kpi-foot">
-                <span class="kpi-trend">Vendors</span>
+                <span class="kpi-badge-green" id="stat-online-storekeepers-label">0 Online</span>
             </div>
         </div>
 
@@ -100,7 +97,7 @@
             </div>
             <div class="kpi-value" id="stat-riders">0</div>
             <div class="kpi-foot">
-                <span class="kpi-trend">Fleet online</span>
+                <span class="kpi-badge-green" id="stat-online-riders-label">0 Online</span>
             </div>
         </div>
     </div>
@@ -109,7 +106,7 @@
     <div class="dash-block">
         <div class="dash-block-head">
             <span class="dash-block-title">Revenue Analytics</span>
-            <span class="dash-badge-neutral">Monthly Trajectory</span>
+            <span class="dash-badge-neutral" id="revenueChartBadge">Daily Trajectory</span>
         </div>
         <div class="dash-chart-box" style="height: 240px;">
             <canvas id="revenueChart"></canvas>
@@ -139,14 +136,14 @@
         </div>
     </div>
 
-    <!-- Sales by Category (Compact) -->
-    <div class="dash-block" style="margin-top: 16px;">
+    <!-- Top Riders -->
+    <div class="dash-block" id="topRidersBlock" style="margin-top: 16px;">
         <div class="dash-block-head">
-            <span class="dash-block-title">Sales by Category</span>
-            <span class="dash-badge-neutral">Distribution</span>
+            <span class="dash-block-title">Top Riders</span>
+            <span class="dash-badge-neutral">By Orders Delivered</span>
         </div>
-        <div class="dash-chart-box" style="height: 210px;">
-            <canvas id="categoryChart"></canvas>
+        <div class="compact-list" id="topRidersList">
+            <div class="empty-state">Loading riders...</div>
         </div>
     </div>
 </div>

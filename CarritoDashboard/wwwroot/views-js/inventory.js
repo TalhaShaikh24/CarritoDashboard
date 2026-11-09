@@ -203,7 +203,7 @@ function initializeDataTable() {
                 render: function (data, type, row) {
                     const unit = (row && row.unitName ? row.unitName : 'UNIT').toUpperCase();
                     const weight = row.weight;
-                    return row.type == 2 ? `<span>${row.price} / ${weight} ${unit}</span>` : `<span>${row.price} / CASE</span>`;
+                    return row.type == 2 ? `<span>Rs. ${row.price} / ${weight} ${unit}</span>` : `<span>Rs. ${row.price} / CASE</span>`;
                 }
             },
             {

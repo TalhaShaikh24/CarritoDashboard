@@ -25,12 +25,36 @@
             // Store original button text/content
             const originalContent = $trigger.html();
 
-            let currentMonth = new Date();
-            currentMonth.setDate(1);
-
+            const today = new Date();
             let startDate = settings.initialStart ? new Date(settings.initialStart) : null;
             let endDate = settings.initialEnd ? new Date(settings.initialEnd) : null;
             let activePreset = "Custom";
+
+            if (startDate && endDate) {
+                const diffDays = Math.round((today - startDate) / (1000 * 60 * 60 * 24));
+                if (diffDays >= 28 && diffDays <= 31) {
+                    activePreset = "Last 30 Days";
+                }
+            }
+
+            // Independent month state for each calendar side
+            let leftMonth, rightMonth;
+            function syncMonthsFromDates() {
+                if (startDate && endDate) {
+                    leftMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+                    rightMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+                    if (leftMonth.getTime() === rightMonth.getTime()) {
+                        leftMonth = addMonths(rightMonth, -1);
+                    }
+                } else if (startDate) {
+                    leftMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+                    rightMonth = addMonths(leftMonth, 1);
+                } else {
+                    rightMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                    leftMonth = addMonths(rightMonth, -1);
+                }
+            }
+            syncMonthsFromDates();
 
             // Create wrapper for positioning
             $trigger.wrap('<div class="datepicker-dropdown-wrapper"></div>');
@@ -64,20 +88,29 @@
             }
 
             function addMonths(d, m) {
-                const x = new Date(d);
-                x.setMonth(x.getMonth() + m);
-                return x;
+                const day = d.getDate();
+                const target = new Date(d.getFullYear(), d.getMonth() + m, 1);
+                const maxDaysInTarget = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+                target.setDate(Math.min(day, maxDaysInTarget));
+                return target;
             }
 
             function updateTrigger() {
                 if (startDate && endDate) {
-                    $trigger.html(`📅 <span class="date-text">${format(startDate)} - ${format(endDate)}</span>`);
+                    const $text = $trigger.find('.date-text');
+                    if ($text.length) {
+                        $text.text(`${format(startDate)} - ${format(endDate)}`);
+                    } else {
+                        $trigger.html(`📅 <span class="date-text">${format(startDate)} - ${format(endDate)}</span>`);
+                    }
                 } else {
                     $trigger.html(originalContent);
                 }
             }
 
             function openPicker() {
+                syncMonthsFromDates();
+                render();
                 $popup.fadeIn(150);
             }
 
@@ -99,9 +132,9 @@
 
                 let html = `
           <div class="calendar-header">
-            <button class="nav-button prev">&#8249;</button>
+            <button type="button" class="nav-button prev">&#8249;</button>
             <span class="month-year">${MONTHS[month.getMonth()]} ${month.getFullYear()}</span>
-            <button class="nav-button next">&#8250;</button>
+            <button type="button" class="nav-button next">&#8250;</button>
           </div>
 
           <div class="days-grid">
@@ -164,8 +197,8 @@
                 </div>
 
                 <div class="footer-actions">
-                  <button class="btn-cancel">Cancel</button>
-                  <button class="btn-set">Set Date</button>
+                  <button type="button" class="btn-cancel">Cancel</button>
+                  <button type="button" class="btn-set">Set Date</button>
                 </div>
               </div>
 
@@ -173,13 +206,19 @@
           </div>
         `);
 
-                $pickerContainer.find(".calendar-section.left").html(buildCalendar(currentMonth));
-                $pickerContainer.find(".calendar-section.right").html(buildCalendar(addMonths(currentMonth, 1)));
+                $pickerContainer.find(".calendar-section.left").html(buildCalendar(leftMonth));
+                $pickerContainer.find(".calendar-section.right").html(buildCalendar(rightMonth));
             }
 
             /* ---------- Events ---------- */
 
+            // Prevent clicks inside popup content from bubbling to document (which closes the picker)
+            $popup.find('.datepicker-content').on("click", function (e) {
+                e.stopPropagation();
+            });
+
             $pickerContainer.on("click", ".day-cell", function (e) {
+                e.preventDefault();
                 e.stopPropagation();
                 const d = new Date($(this).data("date"));
 
@@ -196,60 +235,81 @@
                 render();
             });
 
-            $pickerContainer.on("click", ".sidebar-item", function (e) {  // <-- e add کیا
-                e.stopPropagation();  // <-- یہ لائن شامل کریں
+            $pickerContainer.on("click", ".sidebar-item", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
                 activePreset = $(this).data("preset");
-                const today = new Date();
+                const now = new Date();
 
-                if (activePreset === "Today") startDate = endDate = today;
+                if (activePreset === "Today") {
+                    startDate = new Date(now);
+                    endDate = new Date(now);
+                    rightMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                    leftMonth = addMonths(rightMonth, -1);
+                }
                 if (activePreset === "Last 30 Days") {
-                    startDate = new Date(today);
-                    startDate.setDate(today.getDate() - 30);
-                    endDate = today;
+                    startDate = new Date(now);
+                    startDate.setDate(now.getDate() - 30);
+                    endDate = new Date(now);
+                    rightMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                    leftMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+                    if (leftMonth.getTime() === rightMonth.getTime()) {
+                        leftMonth = addMonths(rightMonth, -1);
+                    }
                 }
                 if (activePreset === "Last 3 Months") {
-                    startDate = addMonths(today, -3);
-                    endDate = today;
+                    startDate = addMonths(now, -3);
+                    endDate = new Date(now);
+                    rightMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                    leftMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
                 }
                 if (activePreset === "Last Year") {
-                    startDate = addMonths(today, -12);
-                    endDate = today;
+                    startDate = addMonths(now, -12);
+                    endDate = new Date(now);
+                    rightMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                    leftMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
                 }
                 render();
             });
 
-            $pickerContainer.on("click", ".prev", () => {
-                currentMonth = addMonths(currentMonth, -1);
+            // Month navigation: moves ONLY the clicked calendar by 1 month
+            $pickerContainer.on("click", ".calendar-section.left .prev", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                leftMonth = addMonths(leftMonth, -1);
                 render();
             });
 
-            $pickerContainer.on("click", ".next", () => {
-                currentMonth = addMonths(currentMonth, 1);
-                render();
-            });
-
-            $pickerContainer.on("click", ".sidebar-item", function () {
-                activePreset = $(this).data("preset");
-                const today = new Date();
-
-                if (activePreset === "Today") startDate = endDate = today;
-                if (activePreset === "Last 30 Days") {
-                    startDate = new Date(today);
-                    startDate.setDate(today.getDate() - 30);
-                    endDate = today;
-                }
-                if (activePreset === "Last 3 Months") {
-                    startDate = addMonths(today, -3);
-                    endDate = today;
-                }
-                if (activePreset === "Last Year") {
-                    startDate = addMonths(today, -12);
-                    endDate = today;
+            $pickerContainer.on("click", ".calendar-section.left .next", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                leftMonth = addMonths(leftMonth, 1);
+                if (leftMonth.getTime() >= rightMonth.getTime()) {
+                    rightMonth = addMonths(leftMonth, 1);
                 }
                 render();
             });
 
-            $pickerContainer.on("click", ".btn-set", function () {
+            $pickerContainer.on("click", ".calendar-section.right .prev", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                rightMonth = addMonths(rightMonth, -1);
+                if (rightMonth.getTime() <= leftMonth.getTime()) {
+                    leftMonth = addMonths(rightMonth, -1);
+                }
+                render();
+            });
+
+            $pickerContainer.on("click", ".calendar-section.right .next", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                rightMonth = addMonths(rightMonth, 1);
+                render();
+            });
+
+            $pickerContainer.on("click", ".btn-set", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
                 if (startDate && endDate) {
                     updateTrigger();
                     settings.onSelect({ start: startDate, end: endDate });
@@ -257,23 +317,31 @@
                 }
             });
 
-            $pickerContainer.on("click", ".btn-cancel", function () {
+            $pickerContainer.on("click", ".btn-cancel", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
                 settings.onCancel();
                 closePicker();
             });
 
             // Trigger button click
             $trigger.on("click", function (e) {
+                e.preventDefault();
                 e.stopPropagation();
                 $popup.is(":visible") ? closePicker() : openPicker();
             });
 
             // Close on overlay click
-            $popup.find('.datepicker-overlay').on("click", closePicker);
+            $popup.find('.datepicker-overlay').on("click", function (e) {
+                e.stopPropagation();
+                closePicker();
+            });
 
             // Close on outside click
             $(document).on("click", function (e) {
-                if (!$(e.target).closest($popup).length && !$(e.target).is($trigger)) {
+                // If the target element was detached/re-rendered during event dispatch, ignore
+                if (!document.body.contains(e.target)) return;
+                if (!$(e.target).closest($popup).length && !$(e.target).closest($trigger).length) {
                     closePicker();
                 }
             });
@@ -283,6 +351,5 @@
             updateTrigger();
         });
     };
-
 
 })(jQuery);

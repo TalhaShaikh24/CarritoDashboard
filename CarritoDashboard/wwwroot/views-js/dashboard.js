@@ -4,7 +4,8 @@ $(document).ready(() => {
     if (AuthHelper.isStorekeeper()) {
         const storeName = AuthHelper.getStoreName() || 'My Store';
         $('.dash-page-heading').text(`${storeName} Overview`);
-        $('#cityFilter').closest('.custom-select-container, select').hide();
+        $('#cityFilter').hide().next('.custom-select-wrapper').hide();
+        $('#topRidersBlock').hide();
     }
 
     const state = {
@@ -12,19 +13,19 @@ $(document).ready(() => {
         toDate: null,
         city: null,
         charts: {
-            revenue: null,
-            category: null
+            revenue: null
         }
     };
-
-    // --- Initialization ---
-    initDatePicker();
-    initFilterButtons();
 
     // Set default range (Last 30 Days)
     const today = new Date();
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(today.getDate() - 30);
+
+    // --- Initialization ---
+    initDatePicker(thirtyDaysAgo, today);
+    initFilterButtons();
+    loadCities();
 
     updateStateDates(thirtyDaysAgo, today);
     refreshDashboard();
@@ -35,11 +36,15 @@ $(document).ready(() => {
         if (skp.storeName) {
             $('.dash-page-heading').text(`${skp.storeName} Overview`);
         }
+        $('#cityFilter').hide().next('.custom-select-wrapper').hide();
+        $('#topRidersBlock').hide();
         refreshDashboard();
     });
 
-    function initDatePicker() {
+    function initDatePicker(start, end) {
         $('#dashboardDateRange').dateRangePicker({
+            initialStart: start,
+            initialEnd: end,
             onSelect: function (range) {
                 updateStateDates(range.start, range.end);
             }
@@ -57,6 +62,9 @@ $(document).ready(() => {
 
         $('#btnClear').on('click', function () {
             $('#cityFilter').val('').trigger('change');
+            if ($('#cityFilter').data('customSelect')) {
+                $('#cityFilter').customSelect('refresh');
+            }
             state.city = null;
 
             const t = new Date();
@@ -65,6 +73,52 @@ $(document).ready(() => {
             updateStateDates(start, t);
 
             refreshDashboard();
+        });
+    }
+
+    function loadCities() {
+        ajaxRequest({
+            url: `${baseApiUrl}/api/Dashboard/GetCities`,
+            method: 'GET',
+            showMessage: false,
+            onSuccess: (res) => {
+                const rawCities = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : []);
+                const $cityFilter = $('#cityFilter');
+                const currentCity = state.city || $cityFilter.val() || '';
+
+                $cityFilter.empty().append('<option value="">All Cities</option>');
+
+                const cities = Array.from(new Set(
+                    rawCities
+                        .filter(c => c && typeof c === 'string' && c.trim().length > 0)
+                        .map(c => c.trim())
+                )).sort((a, b) => a.localeCompare(b));
+
+                cities.forEach(city => {
+                    const isSelected = city === currentCity;
+                    $cityFilter.append(new Option(city, city, isSelected, isSelected));
+                });
+
+                if (currentCity && cities.includes(currentCity)) {
+                    $cityFilter.val(currentCity);
+                } else {
+                    $cityFilter.val('');
+                    state.city = null;
+                }
+
+                if ($cityFilter.data('customSelect')) {
+                    $cityFilter.customSelect('refresh');
+                } else {
+                    $cityFilter.customSelect({ placeholder: 'All Cities' });
+                }
+
+                if (AuthHelper.isStorekeeper()) {
+                    $cityFilter.hide().next('.custom-select-wrapper').hide();
+                }
+            },
+            onError: (err) => {
+                console.error('Failed to load cities:', err);
+            }
         });
     }
 
@@ -88,9 +142,9 @@ $(document).ready(() => {
         }
         loadStats();
         loadRevenueChart();
-        loadCategoryChart();
         loadTopProducts();
         loadTopSellers();
+        loadTopRiders();
     }
 
     // --- Data Loading ---
@@ -106,13 +160,18 @@ $(document).ready(() => {
                     const d = res.data;
 
                     // --- UPDATED STATS MAPPING ---
-                    $('#stat-revenue').text(formatCurrency(d.Revenue || 0));
-                    $('#stat-commission').text(formatCurrency(d.CommissionCollected || 0));
-                    $('#stat-customers').text(d.ActiveCustomers || 0);
-                    $('#stat-orders').text(d.OrdersDelivered || 0);
-                    $('#stat-canceled-label').text(`${d.OrdersCanceled || 0} Canceled`);
-                    $('#stat-storekeepers').text(d.ActiveStorekeepers || 0);
-                    $('#stat-riders').text(d.ActiveRiders || 0);
+                    const rev = d.Revenue || d.revenue || 0;
+                    const comm = d.CommissionCollected || d.commissionCollected || 0;
+
+                    $('#stat-revenue').text(formatCompactCurrency(rev)).attr('title', formatCurrency(rev));
+                    $('#stat-commission').text(formatCompactCurrency(comm)).attr('title', formatCurrency(comm));
+                    $('#stat-customers').text(d.ActiveCustomers ?? d.activeCustomers ?? 0);
+                    $('#stat-orders').text(d.OrdersDelivered ?? d.ordersDelivered ?? 0);
+                    $('#stat-canceled-label').text(`${d.OrdersCanceled ?? d.ordersCanceled ?? 0} Canceled`);
+                    $('#stat-storekeepers').text(d.ActiveStorekeepers ?? d.activeStorekeepers ?? 0);
+                    $('#stat-online-storekeepers-label').text(`${d.OnlineStorekeepers ?? d.onlineStorekeepers ?? 0} Online`);
+                    $('#stat-riders').text(d.ActiveRiders ?? d.activeRiders ?? 0);
+                    $('#stat-online-riders-label').text(`${d.OnlineRiders ?? d.onlineRiders ?? 0} Online`);
                 }
             }
         });
@@ -128,19 +187,6 @@ $(document).ready(() => {
             showMessage: false,
             onSuccess: (res) => {
                 renderRevenueChart(res.data || []);
-            }
-        });
-    }
-
-    function loadCategoryChart() {
-        ajaxRequest({
-            url: `${baseApiUrl}/api/Dashboard/GetRevenueByCategory`,
-            method: 'GET',
-            data: { fromDate: state.fromDate, toDate: state.toDate, city: state.city },
-            isQuery: true,
-            showMessage: false,
-            onSuccess: (res) => {
-                renderCategoryChart(res.data || []);
             }
         });
     }
@@ -171,6 +217,19 @@ $(document).ready(() => {
         });
     }
 
+    function loadTopRiders() {
+        ajaxRequest({
+            url: `${baseApiUrl}/api/Dashboard/GetTopRiders`,
+            method: 'GET',
+            data: { fromDate: state.fromDate, toDate: state.toDate, city: state.city },
+            isQuery: true,
+            showMessage: false,
+            onSuccess: (res) => {
+                renderTopRiders(res.data || []);
+            }
+        });
+    }
+
     // --- Render Functions ---
 
     function renderRevenueChart(data) {
@@ -179,34 +238,112 @@ $(document).ready(() => {
         const ctx = canvas.getContext('2d');
         if (state.charts.revenue) state.charts.revenue.destroy();
 
-        const groupedData = data.reduce((acc, curr) => {
-            const dateObj = new Date(curr.Date);
-            const monthKey = dateObj.toLocaleString('default', { month: 'short', year: 'numeric' });
-            if (!acc[monthKey]) acc[monthKey] = 0;
-            acc[monthKey] += curr.Revenue;
-            return acc;
-        }, {});
+        const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-        const labels = Object.keys(groupedData);
-        const values = Object.values(groupedData);
+        const fromDate = state.fromDate ? new Date(state.fromDate) : new Date();
+        const toDate = state.toDate ? new Date(state.toDate) : new Date();
+        const spanMonths = (toDate.getFullYear() - fromDate.getFullYear()) * 12 + (toDate.getMonth() - fromDate.getMonth());
+
+        // Decide granularity
+        // ≤ 1 month  → daily
+        // 1–12 months → monthly
+        // > 12 months → yearly
+        let mode;
+        if (spanMonths <= 1) {
+            mode = 'daily';
+        } else if (spanMonths <= 12) {
+            mode = 'monthly';
+        } else {
+            mode = 'yearly';
+        }
+
+        // Update badge label
+        const badgeLabels = { daily: 'Daily Trajectory', monthly: 'Monthly Trajectory', yearly: 'Yearly Trajectory' };
+        $('#revenueChartBadge').text(badgeLabels[mode]);
+
+        let labels, values;
+
+        if (mode === 'yearly') {
+            // Aggregate by year
+            const buckets = {};
+            data.forEach(item => {
+                const d = new Date(item.Date ?? item.date);
+                if (isNaN(d)) return;
+                const key = String(d.getFullYear());
+                buckets[key] = (buckets[key] || 0) + (item.Revenue ?? item.revenue ?? 0);
+            });
+
+            // Walk year-by-year from fromDate to toDate
+            const allKeys = [];
+            for (let y = fromDate.getFullYear(); y <= toDate.getFullYear(); y++) {
+                allKeys.push(String(y));
+            }
+
+            labels = allKeys;
+            values = allKeys.map(k => buckets[k] || 0);
+
+        } else if (mode === 'monthly') {
+            // Aggregate by month
+            const buckets = {};
+            data.forEach(item => {
+                const d = new Date(item.Date ?? item.date);
+                if (isNaN(d)) return;
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                buckets[key] = (buckets[key] || 0) + (item.Revenue ?? item.revenue ?? 0);
+            });
+
+            // Walk month-by-month from fromDate to toDate
+            const allKeys = [];
+            const cursor = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
+            const endMonth = new Date(toDate.getFullYear(), toDate.getMonth(), 1);
+            while (cursor <= endMonth) {
+                allKeys.push(`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`);
+                cursor.setMonth(cursor.getMonth() + 1);
+            }
+
+            labels = allKeys.map(k => {
+                const [y, m] = k.split('-');
+                return `${MONTH_NAMES[parseInt(m, 10) - 1]} ${y}`;
+            });
+            values = allKeys.map(k => buckets[k] || 0);
+
+        } else {
+            // Daily — build complete day-by-day list
+            const buckets = {};
+            data.forEach(item => {
+                const d = new Date(item.Date ?? item.date);
+                if (isNaN(d)) return;
+                const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
+                buckets[key] = (buckets[key] || 0) + (item.Revenue ?? item.revenue ?? 0);
+            });
+
+            const allKeys = [];
+            const cursor = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+            const endDay = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+            while (cursor <= endDay) {
+                allKeys.push(cursor.toISOString().slice(0, 10));
+                cursor.setDate(cursor.getDate() + 1);
+            }
+
+            labels = allKeys.map(k => {
+                const d = new Date(k);
+                return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+            });
+            values = allKeys.map(k => buckets[k] || 0);
+        }
 
         state.charts.revenue = new Chart(ctx, {
-            type: 'line',
+            type: 'bar',
             data: {
                 labels: labels,
                 datasets: [{
                     label: 'Gross Revenue',
                     data: values,
-                    borderColor: '#0aa64a',
-                    borderWidth: 2,
-                    backgroundColor: 'rgba(10, 166, 74, 0.08)',
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#0aa64a',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 1.5,
-                    pointHoverRadius: 5
+                    backgroundColor: 'rgba(10, 166, 74, 0.75)',
+                    hoverBackgroundColor: '#0aa64a',
+                    borderRadius: 4,
+                    borderSkipped: false,
+                    maxBarThickness: 40
                 }]
             },
             options: {
@@ -257,76 +394,6 @@ $(document).ready(() => {
         });
     }
 
-    function renderCategoryChart(data) {
-        const canvas = document.getElementById('categoryChart');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (state.charts.category) state.charts.category.destroy();
-
-        const labels = data.map(item => item.CategoryName);
-        const values = data.map(item => item.Revenue);
-        const groceryPalette = ['#0aa64a', '#078a3e', '#3ecf74', '#8fe3b6', '#ff8712', '#ffb25e'];
-
-        state.charts.category = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Category Revenue',
-                    data: values,
-                    backgroundColor: labels.map((_, i) => groceryPalette[i % groceryPalette.length]),
-                    borderRadius: 4,
-                    borderSkipped: false,
-                    maxBarThickness: 36
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#0f172a',
-                        titleFont: { size: 11, family: "'Inter', sans-serif" },
-                        bodyFont: { size: 12, family: "'Inter', sans-serif", weight: 'bold' },
-                        padding: 8,
-                        cornerRadius: 4,
-                        displayColors: false,
-                        callbacks: {
-                            label: function (context) {
-                                return 'Revenue: ' + formatCurrency(context.parsed.y);
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: '#f1f5f9',
-                            drawBorder: false
-                        },
-                        ticks: {
-                            font: { family: "'Inter', sans-serif", size: 10.5 },
-                            color: '#94a3b8',
-                            callback: function (val) {
-                                if (val >= 1000) return 'Rs ' + (val / 1000).toFixed(0) + 'k';
-                                return 'Rs ' + val;
-                            }
-                        }
-                    },
-                    x: {
-                        grid: { display: false, drawBorder: false },
-                        ticks: {
-                            font: { family: "'Inter', sans-serif", size: 11 },
-                            color: '#64748b'
-                        }
-                    }
-                }
-            }
-        });
-    }
-
     function renderTopProducts(items) {
         const $container = $('#topProductsList');
         $container.empty();
@@ -338,17 +405,23 @@ $(document).ready(() => {
         items.forEach((item, index) => {
             const rank = index + 1;
             const rankClass = rank === 1 ? 'rank-1' : 'rank-other';
-            const totalRevenue = (item.Price || 0) * (item.TotalSold || 0);
+            const imgPath = item.PhotoFilePath || '';
+            const totalSold = item.TotalSold ?? item.totalSold ?? 0;
+
+            const avatarHtml = imgPath
+                ? `<img src="${imgPath}" class="compact-avatar" alt="${item.Title}">`
+                : `<div class="compact-avatar-fallback">${initial}</div>`;
 
             const html = `
                 <div class="compact-item">
                     <span class="compact-rank ${rankClass}">#${rank}</span>
+                    ${avatarHtml}
                     <div class="compact-info">
                         <p class="compact-name" title="${item.Title}">${item.Title}</p>
-                        <p class="compact-sub">${item.TotalSold} sold · Rs ${new Intl.NumberFormat('en-IN').format(item.Price || 0)}/unit</p>
+                        <p class="compact-sub">Rs ${new Intl.NumberFormat('en-IN').format(item.Price || 0)} / ${item.type == 2 ? weight + ` ` + unit : `CASE`}</p>
                     </div>
                     <div class="compact-metric">
-                        <p class="compact-val">${formatCurrency(totalRevenue)}</p>
+                        <p class="compact-val">${new Intl.NumberFormat('en-IN').format(totalSold)} sold</p>
                     </div>
                 </div>
             `;
@@ -369,7 +442,10 @@ $(document).ready(() => {
             const rankClass = rank === 1 ? 'rank-1' : 'rank-other';
             const imgPath = item.ProfilePhotoFilePath || '';
             const initial = item.StoreName ? item.StoreName.charAt(0).toUpperCase() : 'S';
-            
+
+            const address = item.Address || item.address || '';
+            const addressHtml = `<p class="compact-sub store-address" title="${address}" data-address="${address}" style="max-width:50%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;">${address}</p>`;
+
             const avatarHtml = imgPath
                 ? `<img src="${imgPath}" class="compact-avatar" alt="${item.StoreName}">`
                 : `<div class="compact-avatar-fallback">${initial}</div>`;
@@ -380,10 +456,47 @@ $(document).ready(() => {
                     ${avatarHtml}
                     <div class="compact-info">
                         <p class="compact-name" title="${item.StoreName}">${item.StoreName}</p>
-                        <p class="compact-sub">Store #${item.StorekeeperId}</p>
+                        ${addressHtml}
                     </div>
                     <div class="compact-metric">
                         <p class="compact-val">${formatCurrency(item.Revenue)}</p>
+                    </div>
+                </div>
+            `;
+            $container.append(html);
+        });
+    }
+
+    function renderTopRiders(items) {
+        const $container = $('#topRidersList');
+        $container.empty();
+        if (!items || items.length === 0) {
+            $container.html('<div class="empty-state">No rider data found.</div>');
+            return;
+        }
+
+        items.forEach((item, index) => {
+            const rank = index + 1;
+            const rankClass = rank === 1 ? 'rank-1' : 'rank-other';
+            const name = item.FullName ?? item.fullName ?? 'Rider';
+            const imgPath = item.ProfilePhotoFilePath ?? item.profilePhotoFilePath ?? '';
+            const delivered = item.OrdersDelivered ?? item.ordersDelivered ?? 0;
+            const initial = name.charAt(0).toUpperCase();
+
+            const avatarHtml = imgPath
+                ? `<img src="${imgPath}" class="compact-avatar" alt="${name}">`
+                : `<div class="compact-avatar-fallback">${initial}</div>`;
+
+            const html = `
+                <div class="compact-item">
+                    <span class="compact-rank ${rankClass}">#${rank}</span>
+                    ${avatarHtml}
+                    <div class="compact-info">
+                        <p class="compact-name" title="${name}">${name}</p>
+                        <p class="compact-sub">Rider</p>
+                    </div>
+                    <div class="compact-metric">
+                        <p class="compact-val">${delivered} delivered</p>
                     </div>
                 </div>
             `;
@@ -405,10 +518,12 @@ $(document).ready(() => {
                     const d = res.data;
 
                     // 1. Total Revenue
-                    $('#stat-revenue').text(formatCurrency(d.TotalRevenue || 0));
+                    const skpRev = d.TotalRevenue || 0;
+                    const skpAov = d.AverageOrderValue || 0;
+                    $('#stat-revenue').text(formatCompactCurrency(skpRev)).attr('title', formatCurrency(skpRev));
 
                     // 2. Average Order Value (Replaces Commission)
-                    $('#stat-commission').text(formatCurrency(d.AverageOrderValue || 0));
+                    $('#stat-commission').text(formatCompactCurrency(skpAov)).attr('title', formatCurrency(skpAov));
                     $('#stat-commission').closest('.kpi-card').find('.kpi-label').text('Avg Order Value');
                     $('#stat-commission').closest('.kpi-card').find('.kpi-foot span').text('Per order');
 
@@ -459,9 +574,6 @@ $(document).ready(() => {
                 }
             }
         });
-
-        // 4. Load Category distribution
-        loadCategoryChart();
     }
 
     function renderStorekeeperRecentOrders(orders) {
@@ -549,5 +661,24 @@ $(document).ready(() => {
 
     function formatCurrency(amount) {
         return 'Rs ' + new Intl.NumberFormat('en-IN').format(amount);
+    }
+
+    function formatCompactCurrency(amount) {
+        const num = Number(amount) || 0;
+        const abs = Math.abs(num);
+        const sign = num < 0 ? '-' : '';
+
+        let formatted;
+        if (abs >= 1e9) {
+            formatted = (abs / 1e9).toFixed(1).replace(/\.?0+$/, '') + ' B';
+        } else if (abs >= 1e6) {
+            formatted = (abs / 1e6).toFixed(1).replace(/\.?0+$/, '') + ' M';
+        } else if (abs >= 1e3) {
+            formatted = (abs / 1e3).toFixed(1).replace(/\.?0+$/, '') + ' K';
+        } else {
+            formatted = new Intl.NumberFormat('en-IN').format(abs);
+        }
+
+        return `Rs ${sign}${formatted}`;
     }
 });
