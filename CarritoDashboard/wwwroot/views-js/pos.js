@@ -5,371 +5,35 @@
 
 const PosApp = (function () {
     // -------------------------------------------------------------------------
-    // 1. DUMMY DATA REPOSITORY
+    // 1. HELPERS & COLOR GENERATOR
     // -------------------------------------------------------------------------
-    const DUMMY_PRODUCTS = [
-        // Fruits & Vegetables
-        {
-            id: 1,
-            title: "Gala Red Apples",
-            category: "Fruits & Vegetables",
-            brand: "Fresh Farm",
-            price: 240,
-            unit: "1 kg",
-            sku: "FRU-APP-01",
-            barcode: "8901001",
-            stock: 45,
-            image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 2,
-            title: "Farm Fresh Bananas",
-            category: "Fruits & Vegetables",
-            brand: "Fresh Farm",
-            price: 160,
-            unit: "1 Dozen",
-            sku: "FRU-BAN-02",
-            barcode: "8901002",
-            stock: 60,
-            image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 3,
-            title: "Imported Juicy Oranges",
-            category: "Fruits & Vegetables",
-            brand: "Citrus Orchard",
-            price: 190,
-            unit: "1 kg",
-            sku: "FRU-ORA-03",
-            barcode: "8901003",
-            stock: 35,
-            image: "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 4,
-            title: "Organic Red Tomatoes",
-            category: "Fruits & Vegetables",
-            brand: "Green Valley",
-            price: 120,
-            unit: "1 kg",
-            sku: "VEG-TOM-04",
-            barcode: "8901004",
-            stock: 28,
-            image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 5,
-            title: "Fresh Red Onions",
-            category: "Fruits & Vegetables",
-            brand: "Green Valley",
-            price: 140,
-            unit: "1 kg",
-            sku: "VEG-ONI-05",
-            barcode: "8901005",
-            stock: 50,
-            image: "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 6,
-            title: "Golden Fresh Potatoes",
-            category: "Fruits & Vegetables",
-            brand: "Green Valley",
-            price: 90,
-            unit: "1 kg",
-            sku: "VEG-POT-06",
-            barcode: "8901006",
-            stock: 80,
-            image: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&auto=format&fit=crop&q=80"
-        },
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
 
-        // Dairy & Bakery
-        {
-            id: 7,
-            title: "Olper's Full Cream Milk 1L",
-            category: "Dairy & Bakery",
-            brand: "Olper's",
-            price: 290,
-            unit: "1 Tetra Pack",
-            sku: "DAI-OLP-07",
-            barcode: "8901007",
-            stock: 45,
-            image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 8,
-            title: "Nurpur Pure Butter 200g",
-            category: "Dairy & Bakery",
-            brand: "Nurpur",
-            price: 380,
-            unit: "1 Pack",
-            sku: "DAI-BUT-08",
-            barcode: "8901008",
-            stock: 22,
-            image: "https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 9,
-            title: "Golden Farm Brown Eggs",
-            category: "Dairy & Bakery",
-            brand: "Eggland",
-            price: 320,
-            unit: "1 Dozen",
-            sku: "DAI-EGG-09",
-            barcode: "8901009",
-            stock: 35,
-            image: "https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 10,
-            title: "Dawn Plain White Bread Large",
-            category: "Dairy & Bakery",
-            brand: "Dawn",
-            price: 150,
-            unit: "1 Loaf",
-            sku: "BAK-BRD-10",
-            barcode: "8901010",
-            stock: 18,
-            image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 11,
-            title: "Adams Premium Cheddar Cheese",
-            category: "Dairy & Bakery",
-            brand: "Adams",
-            price: 540,
-            unit: "200g Pack",
-            sku: "DAI-CHS-11",
-            barcode: "8901011",
-            stock: 14,
-            image: "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=400&auto=format&fit=crop&q=80"
-        },
-
-        // Beverages
-        {
-            id: 12,
-            title: "Coca-Cola Original 1.5L",
-            category: "Beverages",
-            brand: "Coca-Cola",
-            price: 170,
-            unit: "1 Bottle",
-            sku: "BEV-COK-12",
-            barcode: "8901012",
-            stock: 65,
-            image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 13,
-            title: "Sprite Refreshing Lime 1.5L",
-            category: "Beverages",
-            brand: "Coca-Cola",
-            price: 170,
-            unit: "1 Bottle",
-            sku: "BEV-SPR-13",
-            barcode: "8901013",
-            stock: 50,
-            image: "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 14,
-            title: "Nestle Pure Life Water 1.5L",
-            category: "Beverages",
-            brand: "Nestle",
-            price: 90,
-            unit: "1 Bottle",
-            sku: "BEV-WAT-14",
-            barcode: "8901014",
-            stock: 95,
-            image: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 15,
-            title: "Tapal Danedar Black Tea 400g",
-            category: "Beverages",
-            brand: "Tapal",
-            price: 620,
-            unit: "1 Pack",
-            sku: "BEV-TEA-15",
-            barcode: "8901015",
-            stock: 30,
-            image: "https://images.unsplash.com/photo-1597481499750-3e6b22637e12?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 16,
-            title: "Nescafe Classic Instant Coffee 100g",
-            category: "Beverages",
-            brand: "Nestle",
-            price: 890,
-            unit: "1 Jar",
-            sku: "BEV-COF-16",
-            barcode: "8901016",
-            stock: 12,
-            image: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&auto=format&fit=crop&q=80"
-        },
-
-        // Snacks & Confectionery
-        {
-            id: 17,
-            title: "Lays French Cheese 55g",
-            category: "Snacks",
-            brand: "Lays",
-            price: 80,
-            unit: "1 Pack",
-            sku: "SNK-LAY-17",
-            barcode: "8901017",
-            stock: 75,
-            image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 18,
-            title: "Kurkure Red Chilli Chatpata 60g",
-            category: "Snacks",
-            brand: "Kurkure",
-            price: 60,
-            unit: "1 Pack",
-            sku: "SNK-KUR-18",
-            barcode: "8901018",
-            stock: 90,
-            image: "https://images.unsplash.com/photo-1528750997573-59b89d56f4f7?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 19,
-            title: "Cadbury Dairy Milk Silk 90g",
-            category: "Snacks",
-            brand: "Cadbury",
-            price: 260,
-            unit: "1 Bar",
-            sku: "SNK-CAD-19",
-            barcode: "8901019",
-            stock: 38,
-            image: "https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 20,
-            title: "LU Oreo Vanilla Biscuits Family Pack",
-            category: "Snacks",
-            brand: "LU",
-            price: 140,
-            unit: "1 Pack",
-            sku: "SNK-ORE-20",
-            barcode: "8901020",
-            stock: 45,
-            image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400&auto=format&fit=crop&q=80"
-        },
-
-        // Cooking & Staples
-        {
-            id: 21,
-            title: "Guard Supreme Basmati Rice 1 kg",
-            category: "Staples",
-            brand: "Guard",
-            price: 380,
-            unit: "1 kg Pack",
-            sku: "STP-RIC-21",
-            barcode: "8901021",
-            stock: 40,
-            image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 22,
-            title: "Dalda Premium Cooking Oil 1L",
-            category: "Staples",
-            brand: "Dalda",
-            price: 510,
-            unit: "1 Litre Pouch",
-            sku: "STP-OIL-22",
-            barcode: "8901022",
-            stock: 26,
-            image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 23,
-            title: "National Iodized Pink Salt 800g",
-            category: "Staples",
-            brand: "National",
-            price: 80,
-            unit: "1 Pack",
-            sku: "STP-SLT-23",
-            barcode: "8901023",
-            stock: 60,
-            image: "https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 24,
-            title: "Shan Special Bombay Biryani Masala 50g",
-            category: "Staples",
-            brand: "Shan",
-            price: 110,
-            unit: "1 Box",
-            sku: "STP-SHA-24",
-            barcode: "8901024",
-            stock: 85,
-            image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&auto=format&fit=crop&q=80"
-        },
-
-        // Meat & Seafood
-        {
-            id: 25,
-            title: "Fresh Chicken Boneless Breast",
-            category: "Meat & Seafood",
-            brand: "K&Ns / Fresh",
-            price: 850,
-            unit: "1 kg",
-            sku: "MEA-CHK-25",
-            barcode: "8901025",
-            stock: 15,
-            image: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 26,
-            title: "Premium Mutton Mix Cut",
-            category: "Meat & Seafood",
-            brand: "Meat One",
-            price: 1950,
-            unit: "1 kg",
-            sku: "MEA-MUT-26",
-            barcode: "8901026",
-            stock: 8,
-            image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400&auto=format&fit=crop&q=80"
-        },
-
-        // Household & Personal Care
-        {
-            id: 27,
-            title: "Ariel Deep Clean Detergent 1 kg",
-            category: "Household",
-            brand: "Ariel",
-            price: 580,
-            unit: "1 Pack",
-            sku: "HOU-ARI-27",
-            barcode: "8901027",
-            stock: 25,
-            image: "https://images.unsplash.com/photo-1585421514738-01798e348b17?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 28,
-            title: "Dettol Original Soap 3-Pack (3x100g)",
-            category: "Household",
-            brand: "Dettol",
-            price: 330,
-            unit: "3x100g Pack",
-            sku: "HOU-DET-28",
-            barcode: "8901028",
-            stock: 32,
-            image: "https://images.unsplash.com/photo-1607006314798-e7d4ee712d96?w=400&auto=format&fit=crop&q=80"
-        },
-        {
-            id: 29,
-            title: "Colgate Total Clean Mint Toothpaste 100g",
-            category: "Household",
-            brand: "Colgate",
-            price: 240,
-            unit: "1 Tube",
-            sku: "HOU-COL-29",
-            barcode: "8901029",
-            stock: 29,
-            image: "https://images.unsplash.com/photo-1559591937-e1032c589f7a?w=400&auto=format&fit=crop&q=80"
+    function getAvatarColor(str) {
+        const palette = [
+            { bg: '#e0f2fe', text: '#0284c7' }, // Blue
+            { bg: '#dcfce7', text: '#15803d' }, // Green
+            { bg: '#fef3c7', text: '#b45309' }, // Amber
+            { bg: '#f3e8ff', text: '#7e22ce' }, // Purple
+            { bg: '#fee2e2', text: '#b91c1c' }, // Rose
+            { bg: '#ffedd5', text: '#c2410c' }, // Orange
+            { bg: '#ccfbf1', text: '#0f766e' }, // Teal
+            { bg: '#f1f5f9', text: '#475569' }  // Slate
+        ];
+        let hash = 0;
+        for (let i = 0; i < (str || '').length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
         }
-    ];
+        return palette[Math.abs(hash) % palette.length];
+    }
 
     const DUMMY_CUSTOMERS = [
         { id: 0, name: "Walk-in Customer", phone: "N/A", email: "", points: 0, credit: 0, address: "" },
@@ -386,11 +50,21 @@ const PosApp = (function () {
     let cart = []; // [{ id, product, qty, lineDiscount, note }]
     let selectedCustomer = DUMMY_CUSTOMERS[0];
     let orderType = "Walk-in"; // Walk-in, Takeaway, Delivery
-    let selectedCategory = "All";
+
+    // Live Inventory & Catalog state
+    let realProducts = [];
+    let productsCache = {};
+    let realCategories = [];
+    let realBrands = [];
+    let selectedCategoryId = null; // null represents "All"
     let selectedBrand = "";
     let searchTerm = "";
+    let searchTimeout = null;
     let sortBy = "popular";
     let viewMode = "grid"; // 'grid' or 'list'
+    let isLoadingProducts = false;
+    let activeStorekeeperId = null;
+    let storekeepersCache = [];
 
     // Order calculation state
     let cartDiscount = { type: 'none', value: 0 }; // type: 'none' | 'percent' | 'fixed'
@@ -474,23 +148,72 @@ const PosApp = (function () {
     }
 
     // -------------------------------------------------------------------------
-    // 4. INITIALIZATION
+    // 4. INITIALIZATION & STOREKEEPER SETUP
     // -------------------------------------------------------------------------
     function init() {
         loadPersistedState();
         setupClock();
-        populateBrandsFilter();
-        renderCategoryPills();
-        renderCatalog();
+        initCashierProfile();
         updateCartUI();
         bindEvents();
         updateHeldOrdersBadge();
-        initCashierProfile();
+
+        // Initialize Storekeeper, then load Categories, Brands, and Inventory from API
+        initStorekeeper().then(() => {
+            return Promise.all([fetchCategories(), fetchBrands()]);
+        }).then(() => {
+            fetchInventory();
+        });
 
         // Render Lucide icons
         if (window.lucide) {
             lucide.createIcons();
         }
+    }
+
+    function getActiveStorekeeperId() {
+        if (typeof AuthHelper !== 'undefined' && AuthHelper.isStorekeeper()) {
+            return AuthHelper.getStorekeeperId();
+        }
+        const selected = $('#posStorekeeperSelect').val();
+        if (selected) return parseInt(selected, 10);
+        return activeStorekeeperId || (storekeepersCache[0] ? storekeepersCache[0].id : 1);
+    }
+
+    function initStorekeeper() {
+        if (typeof AuthHelper !== 'undefined' && AuthHelper.isStorekeeper()) {
+            activeStorekeeperId = AuthHelper.getStorekeeperId();
+            const storeName = AuthHelper.getStoreName() || 'My Store';
+            $('#posStoreNameLabel').text(`Store: ${storeName}`);
+            $('#posStorekeeperSelect').hide();
+            return Promise.resolve(activeStorekeeperId);
+        }
+
+        // For Admin: fetch storekeepers from API
+        return new Promise(resolve => {
+            $.get(`${baseApiUrl}/api/Storekeeper`, { PageNumber: 1, PageSize: 50 }, res => {
+                if (res && res.status === 200 && res.data && res.data.items && res.data.items.length > 0) {
+                    storekeepersCache = res.data.items;
+                    const $sel = $('#posStorekeeperSelect');
+                    $sel.empty();
+                    storekeepersCache.forEach((sk, idx) => {
+                        const name = sk.storeName || sk.fullName || `Store #${sk.id}`;
+                        $sel.append(new Option(name, sk.id, idx === 0, idx === 0));
+                    });
+                    activeStorekeeperId = storekeepersCache[0].id;
+                    $('#posStoreNameLabel').text(`Store: ${storekeepersCache[0].storeName || 'Selected'}`);
+                    $sel.show();
+                } else {
+                    activeStorekeeperId = 1;
+                    $('#posStoreNameLabel').text('Store #1');
+                }
+                resolve(activeStorekeeperId);
+            }).fail(() => {
+                activeStorekeeperId = 1;
+                $('#posStoreNameLabel').text('Store #1');
+                resolve(activeStorekeeperId);
+            });
+        });
     }
 
     function loadPersistedState() {
@@ -550,66 +273,209 @@ const PosApp = (function () {
     }
 
     // -------------------------------------------------------------------------
-    // 5. CATALOG RENDERING & FILTERING
+    // 5. CATEGORIES & BRANDS API FETCHING
     // -------------------------------------------------------------------------
-    function populateBrandsFilter() {
-        const brands = [...new Set(DUMMY_PRODUCTS.map(p => p.brand))].sort();
-        const $brandSelect = $('#posFilterBrand');
-        brands.forEach(b => {
-            $brandSelect.append(`<option value="${b}">${b}</option>`);
+    function fetchCategories() {
+        const skId = getActiveStorekeeperId();
+        if (!skId) return Promise.resolve();
+
+        return new Promise(resolve => {
+            $.ajax({
+                url: `${baseApiUrl}/api/InventoryCategory`,
+                type: 'GET',
+                data: {
+                    PageNumber: 1,
+                    PageSize: 100,
+                    Search: '',
+                    storekeeperId: skId
+                },
+                success: function (res) {
+                    if (res && res.status === 200 && res.data && res.data.items) {
+                        realCategories = res.data.items;
+                        renderCategoryPills();
+                    }
+                    resolve();
+                },
+                error: function () {
+                    resolve();
+                }
+            });
         });
     }
 
     function renderCategoryPills() {
-        const categories = ["All", ...new Set(DUMMY_PRODUCTS.map(p => p.category))];
         const $container = $('#posCategoryPills');
         $container.empty();
 
-        categories.forEach(cat => {
-            const count = cat === "All" ? DUMMY_PRODUCTS.length : DUMMY_PRODUCTS.filter(p => p.category === cat).length;
-            const isActive = cat === selectedCategory ? "active" : "";
-            const pillHtml = `
-                <button type="button" class="pos-cat-pill ${isActive}" data-category="${cat}">
-                    <span>${cat}</span>
-                    <span class="cat-count">${count}</span>
+        // 1. "All" Pill
+        const isAllActive = (selectedCategoryId === null) ? 'active' : '';
+        $container.append(`
+            <button type="button" class="pos-cat-pill ${isAllActive}" data-category-id="">
+                <span>All</span>
+            </button>
+        `);
+
+        // 2. Each Category Pill
+        realCategories.forEach(cat => {
+            const isActive = (selectedCategoryId == cat.id) ? 'active' : '';
+            $container.append(`
+                <button type="button" class="pos-cat-pill ${isActive}" data-category-id="${cat.id}">
+                    <span>${escapeHtml(cat.name)}</span>
                 </button>
-            `;
-            $container.append(pillHtml);
+            `);
         });
     }
 
-    function getFilteredProducts() {
-        return DUMMY_PRODUCTS.filter(p => {
-            // Category filter
-            if (selectedCategory !== "All" && p.category !== selectedCategory) {
-                return false;
-            }
-            // Brand filter
-            if (selectedBrand && p.brand !== selectedBrand) {
-                return false;
-            }
-            // Search keyword
-            if (searchTerm) {
-                const term = searchTerm.toLowerCase();
-                const matchTitle = p.title.toLowerCase().includes(term);
-                const matchSku = p.sku.toLowerCase().includes(term);
-                const matchBarcode = p.barcode.includes(term);
-                const matchBrand = p.brand.toLowerCase().includes(term);
-                if (!matchTitle && !matchSku && !matchBarcode && !matchBrand) {
-                    return false;
+    function fetchBrands() {
+        const skId = getActiveStorekeeperId();
+        if (!skId) return Promise.resolve();
+
+        return new Promise(resolve => {
+            $.ajax({
+                url: `${baseApiUrl}/api/InventoryBrand`,
+                type: 'GET',
+                data: {
+                    PageNumber: 1,
+                    PageSize: 100,
+                    Search: '',
+                    storekeeperId: skId
+                },
+                success: function (res) {
+                    if (res && res.status === 200 && res.data && res.data.items) {
+                        realBrands = res.data.items;
+                        populateBrandsFilter();
+                    }
+                    resolve();
+                },
+                error: function () {
+                    resolve();
                 }
+            });
+        });
+    }
+
+    function populateBrandsFilter() {
+        const $brandSelect = $('#posFilterBrand');
+        $brandSelect.find('option:not(:first)').remove();
+        realBrands.forEach(b => {
+            $brandSelect.append(new Option(b.name, b.id));
+        });
+    }
+
+    // -------------------------------------------------------------------------
+    // 6. REAL INVENTORY FETCHING & CATALOG RENDERING
+    // -------------------------------------------------------------------------
+    function mapApiProduct(item) {
+        let photoUrl = null;
+        if (item.photoFilePath && typeof item.photoFilePath === 'string' && item.photoFilePath.trim() !== '') {
+            photoUrl = item.photoFilePath.startsWith('http')
+                ? item.photoFilePath
+                : `${baseApiUrl}/${item.photoFilePath.replace(/^\/+/, '')}`;
+        }
+
+        let unitStr = '1 pc';
+        if (item.unitName) {
+            unitStr = (item.weight && item.weight > 0) ? `${item.weight} ${item.unitName}` : item.unitName;
+        } else if (item.packSize) {
+            unitStr = `Pack of ${item.packSize}`;
+        }
+
+        return {
+            id: item.id,
+            title: item.title || 'Untitled Item',
+            category: item.categoryName || 'General',
+            categoryId: item.categoryId,
+            brand: item.brandName || 'Generic',
+            brandId: item.brandId,
+            price: parseFloat(item.price) || 0,
+            unit: unitStr,
+            sku: item.barcode || `INV-${item.id}`,
+            barcode: item.barcode || '',
+            stock: parseFloat(item.stock) || 0,
+            image: photoUrl,
+            raw: item
+        };
+    }
+
+    function fetchInventory() {
+        const skId = getActiveStorekeeperId();
+        if (!skId) return;
+
+        isLoadingProducts = true;
+        renderLoadingState();
+
+        const queryData = {
+            PageNumber: 1,
+            PageSize: 100,
+            Search: searchTerm || ''
+        };
+
+        if (selectedCategoryId) {
+            queryData.CategoryIds = selectedCategoryId;
+        }
+        if (selectedBrand) {
+            queryData.BrandIds = selectedBrand;
+        }
+
+        $.ajax({
+            url: `${baseApiUrl}/api/Inventory/storekeeper/${skId}`,
+            type: 'GET',
+            data: queryData,
+            success: function (res) {
+                isLoadingProducts = false;
+                if (res && res.status === 200 && res.data && res.data.items) {
+                    realProducts = res.data.items.map(mapApiProduct);
+                    realProducts.forEach(p => {
+                        productsCache[p.id] = p;
+                    });
+                } else {
+                    realProducts = [];
+                }
+                renderCatalog();
+            },
+            error: function (xhr) {
+                isLoadingProducts = false;
+                realProducts = [];
+                renderCatalog();
+                console.error("Error fetching inventory for POS:", xhr);
             }
-            return true;
-        }).sort((a, b) => {
-            if (sortBy === 'name_asc') return a.title.localeCompare(b.title);
+        });
+    }
+
+    function renderLoadingState() {
+        const $grid = $('#posProductsGrid');
+        const $list = $('#posProductsList');
+        const $empty = $('#posEmptyCatalog');
+
+        $empty.hide();
+        const loadingHtml = `
+            <div class="pos-loading-state">
+                <div class="pos-loading-spinner"></div>
+                <span>Loading store inventory...</span>
+            </div>
+        `;
+        if (viewMode === 'grid') {
+            $grid.html(loadingHtml).show();
+            $list.hide();
+        } else {
+            $list.html(loadingHtml).show();
+            $grid.hide();
+        }
+    }
+
+    function getSortedProducts() {
+        return [...realProducts].sort((a, b) => {
+            if (sortBy === 'name_asc') return (a.title || '').localeCompare(b.title || '');
             if (sortBy === 'price_asc') return a.price - b.price;
             if (sortBy === 'price_desc') return b.price - a.price;
-            return a.id - b.id; // 'popular'
+            return a.id - b.id; // 'popular' / default
         });
     }
 
     function renderCatalog() {
-        const products = getFilteredProducts();
+        if (isLoadingProducts) return;
+
+        const products = getSortedProducts();
         const $grid = $('#posProductsGrid');
         const $list = $('#posProductsList');
         const $empty = $('#posEmptyCatalog');
@@ -644,17 +510,26 @@ const PosApp = (function () {
                     stockLabel = "Out of Stock";
                 }
 
+                const initial = (p.title || 'P').trim().charAt(0).toUpperCase();
+                const color = getAvatarColor(p.title);
+                const hasImage = Boolean(p.image && p.image.trim().length > 0);
+
+                const thumbHtml = hasImage
+                    ? `<img src="${p.image}" alt="${escapeHtml(p.title)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                       <div class="pos-card-initial-fallback" style="display: none; background: ${color.bg}; color: ${color.text};">${initial}</div>`
+                    : `<div class="pos-card-initial-fallback" style="display: flex; background: ${color.bg}; color: ${color.text};">${initial}</div>`;
+
                 const cardHtml = `
-                    <div class="pos-product-card ${isOut ? 'out-of-stock' : ''}" data-id="${p.id}" title="${p.title}">
+                    <div class="pos-product-card ${isOut ? 'out-of-stock' : ''}" data-id="${p.id}" title="${escapeHtml(p.title)}">
                         <div class="pos-card-thumb-wrap">
-                            <img src="${p.image}" alt="${p.title}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&auto=format&fit=crop&q=80'">
+                            ${thumbHtml}
                             <span class="pos-stock-tag ${stockClass}">${stockLabel}</span>
-                            <span class="pos-card-cat-badge">${p.category.split(' ')[0]}</span>
+                            <span class="pos-card-cat-badge">${escapeHtml((p.category || 'Item').split(' ')[0])}</span>
                         </div>
                         <div class="pos-card-info">
-                            <span class="pos-card-sku">${p.sku}</span>
-                            <h4 class="pos-card-title">${p.title}</h4>
-                            <span class="pos-card-unit">${p.unit} &bull; ${p.brand}</span>
+                            <span class="pos-card-sku">${escapeHtml(p.sku)}</span>
+                            <h4 class="pos-card-title">${escapeHtml(p.title)}</h4>
+                            <span class="pos-card-unit">${escapeHtml(p.unit)} &bull; ${escapeHtml(p.brand)}</span>
                         </div>
                         <div class="pos-card-bottom">
                             <div class="pos-card-price">
@@ -674,15 +549,24 @@ const PosApp = (function () {
 
             products.forEach(p => {
                 const isOut = p.stock <= 0;
+                const initial = (p.title || 'P').trim().charAt(0).toUpperCase();
+                const color = getAvatarColor(p.title);
+                const hasImage = Boolean(p.image && p.image.trim().length > 0);
+
+                const rowThumbHtml = hasImage
+                    ? `<img class="pos-row-thumb" src="${p.image}" alt="${escapeHtml(p.title)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                       <div class="pos-row-initial-fallback" style="display: none; background: ${color.bg}; color: ${color.text};">${initial}</div>`
+                    : `<div class="pos-row-initial-fallback" style="display: flex; background: ${color.bg}; color: ${color.text};">${initial}</div>`;
+
                 const rowHtml = `
                     <div class="pos-product-row ${isOut ? 'out-of-stock' : ''}" data-id="${p.id}">
-                        <img class="pos-row-thumb" src="${p.image}" alt="${p.title}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&auto=format&fit=crop&q=80'">
+                        ${rowThumbHtml}
                         <div class="pos-row-details">
-                            <div class="pos-row-title">${p.title}</div>
+                            <div class="pos-row-title">${escapeHtml(p.title)}</div>
                             <div class="pos-row-meta">
-                                <span>${p.sku}</span>
+                                <span>${escapeHtml(p.sku)}</span>
                                 <span>&bull;</span>
-                                <span>${p.unit}</span>
+                                <span>${escapeHtml(p.unit)}</span>
                                 <span>&bull;</span>
                                 <span style="color: ${p.stock <= 5 ? '#f59e0b' : '#10b981'}; font-weight: 600;">${p.stock} in stock</span>
                             </div>
@@ -703,10 +587,10 @@ const PosApp = (function () {
     }
 
     // -------------------------------------------------------------------------
-    // 6. CART MANAGEMENT & CALCULATIONS
+    // 7. CART MANAGEMENT & CALCULATIONS
     // -------------------------------------------------------------------------
     function addToCart(productId, quantity = 1) {
-        const product = DUMMY_PRODUCTS.find(p => p.id === productId);
+        const product = productsCache[productId] || realProducts.find(p => p.id === productId);
         if (!product) return;
 
         if (product.stock <= 0) {
@@ -834,15 +718,23 @@ const PosApp = (function () {
 
             cart.forEach(item => {
                 const lineTotal = Math.max(0, (item.product.price * item.qty) - (item.lineDiscount || 0));
+                const initial = (item.product.title || 'P').trim().charAt(0).toUpperCase();
+                const color = getAvatarColor(item.product.title);
+                const hasImage = Boolean(item.product.image && item.product.image.trim().length > 0);
+                const cartThumbHtml = hasImage
+                    ? `<img class="pos-cart-item-thumb" src="${item.product.image}" alt="${escapeHtml(item.product.title)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                       <div class="pos-cart-initial-fallback" style="display: none; background: ${color.bg}; color: ${color.text};">${initial}</div>`
+                    : `<div class="pos-cart-initial-fallback" style="display: flex; background: ${color.bg}; color: ${color.text};">${initial}</div>`;
+
                 const itemHtml = `
                     <div class="pos-cart-item" data-id="${item.id}">
-                        <img class="pos-cart-item-thumb" src="${item.product.image}" alt="${item.product.title}" onerror="this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&auto=format&fit=crop&q=80'">
+                        ${cartThumbHtml}
                         <div class="pos-cart-item-details">
-                            <div class="pos-cart-item-name" title="${item.product.title}">${item.product.title}</div>
+                            <div class="pos-cart-item-name" title="${escapeHtml(item.product.title)}">${escapeHtml(item.product.title)}</div>
                             <div class="pos-cart-item-meta">
                                 <span>Rs. ${item.product.price.toFixed(2)}</span>
                                 ${item.lineDiscount > 0 ? `<span class="pos-cart-item-discount-tag">-Rs. ${item.lineDiscount}</span>` : ''}
-                                ${item.note ? `<span title="${item.note}" style="color: #0aa64a;"><i data-lucide="file-text" style="width: 12px; height: 12px; vertical-align: -2px;"></i></span>` : ''}
+                                ${item.note ? `<span title="${escapeHtml(item.note)}" style="color: #0aa64a;"><i data-lucide="file-text" style="width: 12px; height: 12px; vertical-align: -2px;"></i></span>` : ''}
                             </div>
                         </div>
                         <div class="pos-cart-qty-ctrl">
@@ -906,10 +798,11 @@ const PosApp = (function () {
         const code = inputCode.trim();
         if (!code) return;
 
-        // Search by barcode or SKU
-        const product = DUMMY_PRODUCTS.find(p => 
-            p.barcode === code || 
-            p.sku.toLowerCase() === code.toLowerCase()
+        // Search in memory by barcode, SKU, or ID
+        const product = realProducts.find(p => 
+            (p.barcode && p.barcode.toLowerCase() === code.toLowerCase()) || 
+            (p.sku && p.sku.toLowerCase() === code.toLowerCase()) ||
+            String(p.id) === code
         );
 
         if (product) {
@@ -918,12 +811,41 @@ const PosApp = (function () {
             if (typeof showNotification === 'function') {
                 showNotification(`Scanned: ${product.title}`, "success");
             }
-        } else {
-            playWarningBeep();
-            if (typeof showNotification === 'function') {
-                showNotification(`Barcode/SKU "${code}" not found!`, "error");
-            }
-            $('#posBarcodeInput').select();
+            return;
+        }
+
+        // If not in current view, query backend API
+        const skId = getActiveStorekeeperId();
+        if (skId) {
+            $.ajax({
+                url: `${baseApiUrl}/api/Inventory/storekeeper/${skId}`,
+                type: 'GET',
+                data: { PageNumber: 1, PageSize: 1, Search: code },
+                success: function (res) {
+                    if (res && res.status === 200 && res.data && res.data.items && res.data.items.length > 0) {
+                        const mapped = mapApiProduct(res.data.items[0]);
+                        productsCache[mapped.id] = mapped;
+                        addToCart(mapped.id, 1);
+                        $('#posBarcodeInput').val('').focus();
+                        if (typeof showNotification === 'function') {
+                            showNotification(`Scanned: ${mapped.title}`, "success");
+                        }
+                    } else {
+                        playWarningBeep();
+                        if (typeof showNotification === 'function') {
+                            showNotification(`Barcode/SKU "${code}" not found!`, "error");
+                        }
+                        $('#posBarcodeInput').select();
+                    }
+                },
+                error: function () {
+                    playWarningBeep();
+                    if (typeof showNotification === 'function') {
+                        showNotification(`Barcode/SKU "${code}" not found!`, "error");
+                    }
+                    $('#posBarcodeInput').select();
+                }
+            });
         }
     }
 
@@ -1343,7 +1265,7 @@ const PosApp = (function () {
 
         // Decrement local inventory stock
         cart.forEach(item => {
-            const prod = DUMMY_PRODUCTS.find(p => p.id === item.id);
+            const prod = productsCache[item.id] || realProducts.find(p => p.id === item.id);
             if (prod) {
                 prod.stock = Math.max(0, prod.stock - item.qty);
             }
@@ -1542,34 +1464,54 @@ const PosApp = (function () {
             processBarcodeScan($('#posBarcodeInput').val());
         });
 
-        // Search in catalog
+        // Search in catalog (debounced for API)
         $('#posSearchProduct').on('input', function () {
-            searchTerm = $(this).val();
-            $('#btnClearSearch').toggle(searchTerm.length > 0);
-            renderCatalog();
+            const val = $(this).val();
+            $('#btnClearSearch').toggle(val.length > 0);
+            if (searchTimeout) clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchTerm = val.trim();
+                fetchInventory();
+            }, 300);
         });
         $('#btnClearSearch').on('click', function () {
+            if (searchTimeout) clearTimeout(searchTimeout);
             searchTerm = '';
             $('#posSearchProduct').val('').focus();
             $(this).hide();
-            renderCatalog();
+            fetchInventory();
         });
 
-        // Category pills click
-        $(document).on('click', '.pos-cat-pill', function () {
-            const cat = $(this).data('category');
-            if (cat) {
-                selectedCategory = cat;
-                $('.pos-cat-pill').removeClass('active');
-                $(this).addClass('active');
-                renderCatalog();
+        // Storekeeper selector change (for Admin)
+        $('#posStorekeeperSelect').on('change', function () {
+            activeStorekeeperId = parseInt($(this).val(), 10);
+            const selectedSk = storekeepersCache.find(s => s.id === activeStorekeeperId);
+            if (selectedSk) {
+                $('#posStoreNameLabel').text(`Store: ${selectedSk.storeName || selectedSk.fullName || 'Selected'}`);
             }
+            selectedCategoryId = null;
+            selectedBrand = '';
+            searchTerm = '';
+            $('#posSearchProduct').val('');
+            $('#posFilterBrand').val('');
+            fetchCategories();
+            fetchBrands();
+            fetchInventory();
+        });
+
+        // Category pills click (filters live inventory by categoryId)
+        $(document).on('click', '.pos-cat-pill', function () {
+            const catId = $(this).data('category-id');
+            selectedCategoryId = (catId === '' || catId === undefined || catId === null) ? null : parseInt(catId, 10);
+            $('.pos-cat-pill').removeClass('active');
+            $(this).addClass('active');
+            fetchInventory();
         });
 
         // Brand filter & sort
         $('#posFilterBrand').on('change', function () {
             selectedBrand = $(this).val();
-            renderCatalog();
+            fetchInventory();
         });
         $('#posSortBy').on('change', function () {
             sortBy = $(this).val();
@@ -1592,13 +1534,13 @@ const PosApp = (function () {
 
         // Reset catalog filter button
         $('#btnResetCatalogFilters').on('click', function () {
-            selectedCategory = 'All';
+            selectedCategoryId = null;
             selectedBrand = '';
             searchTerm = '';
             $('#posSearchProduct').val('');
             $('#posFilterBrand').val('');
             renderCategoryPills();
-            renderCatalog();
+            fetchInventory();
         });
 
         // Product click in grid or list

@@ -8,10 +8,13 @@
     <!-- Top Control Bar -->
     <div class="pos-top-bar">
         <div class="pos-bar-left">
-            <div class="pos-register-pill">
+            <div class="pos-register-pill" id="posStorePill">
                 <span class="status-dot"></span>
-                <span>Terminal #01 &bull; Active</span>
+                <span id="posStoreNameLabel">Loading Store...</span>
             </div>
+            <select id="posStorekeeperSelect" class="pos-select-pill" style="display: none; height: 32px; padding: 2px 10px; font-size: 12px; margin-left: 2px;">
+                <option value="">Select Store...</option>
+            </select>
             <div class="pos-cashier-info">
                 <i data-lucide="user-check" style="width: 16px; height: 16px;"></i>
                 <span>Cashier: <strong id="posCashierName">Admin</strong></span>
