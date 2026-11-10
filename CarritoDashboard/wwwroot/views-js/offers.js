@@ -466,11 +466,25 @@ function openCreateCouponModal() {
 
     // Set default dates (Today and 30 days from today)
     const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
     const expiry = new Date();
     expiry.setDate(today.getDate() + 30);
+    const expiryStr = expiry.toISOString().split('T')[0];
 
-    $('#modalStartDate').val(today.toISOString().split('T')[0]);
-    $('#modalExpiryDate').val(expiry.toISOString().split('T')[0]);
+    // Enforce Expiry Date and Start Date cannot be before today
+    $('#modalStartDate').attr('min', todayStr).val(todayStr);
+    $('#modalExpiryDate').attr('min', todayStr).val(expiryStr);
+
+    // Keep Expiry Date min in sync with Start Date
+    $('#modalStartDate').on('change', function () {
+        const startVal = $(this).val();
+        const currentExp = $('#modalExpiryDate').val();
+        const minDate = (startVal && startVal > todayStr) ? startVal : todayStr;
+        $('#modalExpiryDate').attr('min', minDate);
+        if (currentExp && currentExp < minDate) {
+            $('#modalExpiryDate').val(minDate);
+        }
+    });
 
     // Setup Discount Type Switcher inside modal
     let selectedType = 1; // 1 = Percentage, 2 = Amount
@@ -539,7 +553,19 @@ function submitCreateCoupon() {
         return;
     }
 
-    if (new Date(expiryDate) < new Date(startDate)) {
+    // Expiry date must not be before today
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+
+    const expiryMidnight = new Date(expiryDate + "T00:00:00");
+    if (expiryMidnight < todayMidnight) {
+        showNotification("Expiry date cannot be a date before today.", "error");
+        $('#modalExpiryDate').focus();
+        return;
+    }
+
+    const startMidnight = new Date(startDate + "T00:00:00");
+    if (expiryMidnight < startMidnight) {
         showNotification("Expiry date must be on or after the start date.", "error");
         $('#modalExpiryDate').focus();
         return;
@@ -645,6 +671,20 @@ function openEditCouponModal(coupon) {
         $('#groupMaxDiscount').hide();
     });
 
+    const todayStr = new Date().toISOString().split('T')[0];
+    $('#modalExpiryDate').attr('min', todayStr);
+
+    // Keep Expiry Date min in sync with Start Date
+    $('#modalStartDate').on('change', function () {
+        const startVal = $(this).val();
+        const currentExp = $('#modalExpiryDate').val();
+        const minDate = (startVal && startVal > todayStr) ? startVal : todayStr;
+        $('#modalExpiryDate').attr('min', minDate);
+        if (currentExp && currentExp < minDate) {
+            $('#modalExpiryDate').val(minDate);
+        }
+    });
+
     if (coupon.minOrderValue > 0) $('#modalMinOrderValue').val(coupon.minOrderValue);
     if (coupon.maxOrderAmount > 0) $('#modalMaxDiscount').val(coupon.maxOrderAmount);
     $('#modalUsageLimit').val(coupon.usageLimit || 100);
@@ -691,8 +731,21 @@ function submitUpdateCoupon(couponId) {
         return;
     }
 
-    if (new Date(expiryDate) < new Date(startDate)) {
-        showNotification("Expiry date must be on or after start date.", "error");
+    // Expiry date must not be before today
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+
+    const expiryMidnight = new Date(expiryDate + "T00:00:00");
+    if (expiryMidnight < todayMidnight) {
+        showNotification("Expiry date cannot be a date before today.", "error");
+        $('#modalExpiryDate').focus();
+        return;
+    }
+
+    const startMidnight = new Date(startDate + "T00:00:00");
+    if (expiryMidnight < startMidnight) {
+        showNotification("Expiry date must be on or after the start date.", "error");
+        $('#modalExpiryDate').focus();
         return;
     }
 
