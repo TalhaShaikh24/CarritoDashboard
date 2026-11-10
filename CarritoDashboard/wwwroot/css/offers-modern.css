@@ -78,139 +78,206 @@
 
 /* Toolbar Controls */
 .offers-toolbar {
-    background: #ffffff;
-    border: 1px solid #e3ece6;
-    border-radius: 16px;
-    padding: 14px 18px;
-    margin-bottom: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    flex-wrap: wrap;
-    box-shadow: 0 4px 14px rgba(18, 54, 36, 0.03);
+    background: #ffffff !important;
+    border: 1px solid #e3ece6 !important;
+    border-radius: 20px !important;
+    padding: 12px 20px !important;
+    margin-bottom: 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    flex-wrap: wrap !important;
+    box-shadow: 0 4px 14px rgba(18, 54, 36, 0.03) !important;
 }
 
 .offers-toolbar-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    min-width: 280px;
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    flex-wrap: wrap !important;
 }
 
 .offers-search-box {
-    position: relative;
-    flex: 1;
-    max-width: 380px;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 290px !important;
+    min-width: 220px !important;
+    height: 42px !important;
 }
 
+.offers-search-box svg,
 .offers-search-box i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 17px;
-    height: 17px;
-    color: #92a298;
+    position: absolute !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 17px !important;
+    height: 17px !important;
+    color: #92a298 !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    margin: 0 !important;
 }
 
 .offers-search-box input {
-    width: 100%;
-    height: 40px;
-    padding: 6px 36px 6px 38px;
-    border: 1px solid #e2ece5;
-    border-radius: 10px;
-    background: #f8faf9;
-    font-size: 13.5px;
-    color: #16241b;
-    transition: all 0.2s ease;
+    width: 100% !important;
+    height: 42px !important;
+    padding: 0 34px 0 40px !important;
+    border: 1px solid #e2ece5 !important;
+    border-radius: 999px !important;
+    background: #f8faf9 !important;
+    font-size: 13.5px !important;
+    color: #16241b !important;
+    outline: none !important;
+    transition: all 0.2s ease !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    line-height: 40px !important;
 }
 
 .offers-search-box input:focus {
-    outline: none;
-    border-color: #0aa64a;
-    background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(10, 166, 74, 0.12);
+    background: #ffffff !important;
+    border-color: #0aa64a !important;
+    box-shadow: 0 0 0 3px rgba(10, 166, 74, 0.12) !important;
 }
 
 .offers-search-clear {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: #94a3b8;
-    cursor: pointer;
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: none !important;
+    border: none !important;
+    color: #94a3b8 !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
     display: none;
-    padding: 4px;
+    z-index: 2 !important;
 }
 
 .offers-toolbar-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
 }
 
 .offers-filter-tabs {
-    display: flex;
-    background: #f0f5f2;
-    border-radius: 10px;
-    padding: 3px;
-    gap: 3px;
+    display: inline-flex !important;
+    align-items: center !important;
+    background: #edf4ef !important;
+    border-radius: 999px !important;
+    padding: 4px !important;
+    gap: 2px !important;
+    height: 42px !important;
+    box-sizing: border-box !important;
 }
 
 .offers-tab-btn {
-    border: none;
-    background: none;
-    font-size: 12.5px;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 7px;
-    color: #6b7d72;
-    cursor: pointer;
-    transition: all 0.18s ease;
+    border: none !important;
+    background: transparent !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 0 16px !important;
+    height: 34px !important;
+    line-height: 34px !important;
+    border-radius: 999px !important;
+    color: #55675c !important;
+    cursor: pointer !important;
+    transition: all 0.18s ease !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 .offers-tab-btn:hover {
-    color: #16241b;
+    color: #16241b !important;
+    background: rgba(255, 255, 255, 0.6) !important;
 }
 
 .offers-tab-btn.active {
-    background: #ffffff;
-    color: #0aa64a;
-    font-weight: 700;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    background: #ffffff !important;
+    color: #0aa64a !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 6px rgba(10, 166, 74, 0.12) !important;
 }
 
 .offers-view-toggle {
-    display: flex;
-    background: #f0f5f2;
-    border-radius: 8px;
-    padding: 3px;
-    gap: 2px;
+    display: inline-flex !important;
+    align-items: center !important;
+    background: #edf4ef !important;
+    border-radius: 999px !important;
+    padding: 4px !important;
+    gap: 2px !important;
+    height: 42px !important;
+    box-sizing: border-box !important;
 }
 
 .offers-view-btn {
-    background: none;
-    border: none;
-    width: 34px;
-    height: 34px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    color: #6b7d72;
-    cursor: pointer;
-    transition: all 0.2s;
+    background: transparent !important;
+    border: none !important;
+    width: 34px !important;
+    height: 34px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    color: #6b7d72 !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    padding: 0 !important;
+}
+
+.offers-view-btn svg {
+    width: 16px !important;
+    height: 16px !important;
 }
 
 .offers-view-btn.active {
-    background: #ffffff;
-    color: #0aa64a;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+    background: #ffffff !important;
+    color: #0aa64a !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.06) !important;
+}
+
+#btnRefreshCoupons {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid #e0e9e1 !important;
+    background: #ffffff !important;
+    color: #2c3e33 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+#btnRefreshCoupons:hover {
+    background: #f1f7f2 !important;
+    color: #0aa64a !important;
+    border-color: #cfe0d2 !important;
+}
+
+#btnRefreshCoupons svg {
+    width: 17px !important;
+    height: 17px !important;
+}
+
+#btnAddNewOffer {
+    height: 42px !important;
+    padding: 0 20px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    border-radius: 999px !important;
 }
 
 /* ==========================================================================
@@ -621,3 +688,4 @@
     background: #e2ece5;
     color: #0aa64a;
 }
+
