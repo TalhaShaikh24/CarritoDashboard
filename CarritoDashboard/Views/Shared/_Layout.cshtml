@@ -61,7 +61,7 @@
 
             @{
                 var isOperationsActive = Html.IsActive("Order") == "active" || Html.IsActive("Settlement") == "active";
-                var isInventoryActive = Html.IsActive("Inventory") == "active" || Html.IsActive("InventoryBrand") == "active" || Html.IsActive("InventoryCategory") == "active" || Html.IsActive("InventoryUnit") == "active" || Html.IsActive("InventoryTransaction") == "active";
+                var isInventoryActive = Html.IsActive("Inventory") == "active" || Html.IsActive("InventoryBrand") == "active" || Html.IsActive("InventoryCategory") == "active" || Html.IsActive("Supplier") == "active" || Html.IsActive("InventoryUnit") == "active" || Html.IsActive("InventoryTransaction") == "active";
                 var isUsersActive = Html.IsActive("Admin") == "active" || Html.IsActive("Customer") == "active" || Html.IsActive("Rider") == "active" || Html.IsActive("Storekeeper") == "active";
                 var isSupportActive = Html.IsActive("Offer") == "active" || Html.IsActive("Ticket") == "active" || Html.IsActive("Faq") == "active";
                 var isAccessActive = Html.IsActive("Role") == "active" || Html.IsActive("Permission") == "active" || Html.IsActive("ActivityLog") == "active";
@@ -105,6 +105,7 @@
                         <a class="submenu-item @Html.IsActive("Inventory")" data-module="inventory" data-storekeeper="true" href="@Url.Action("Index", "Inventory")">Items</a>
                         <a class="submenu-item @Html.IsActive("InventoryBrand")" data-module="inventoryBrand" data-storekeeper="true" href="@Url.Action("Index", "InventoryBrand")">Brands</a>
                         <a class="submenu-item @Html.IsActive("InventoryCategory")" data-module="inventoryCategory" data-storekeeper="true" href="@Url.Action("Index", "InventoryCategory")">Categories</a>
+                        <a class="submenu-item @Html.IsActive("Supplier")" data-module="supplier" data-storekeeper="true" href="@Url.Action("Index", "Supplier")">Suppliers</a>
                         <a class="submenu-item @Html.IsActive("InventoryUnit")" data-module="inventoryUnit" href="@Url.Action("Index", "InventoryUnit")">Units</a>
                         <a class="submenu-item @Html.IsActive("InventoryTransaction")" data-module="inventoryTransaction" data-storekeeper="true" href="@Url.Action("Index", "InventoryTransaction")">Stock Transactions</a>
                     </div>
