@@ -1,0 +1,623 @@
+/* ==========================================================================
+   Carrito Dashboard - Offers & Coupons Modern Module Styling
+   Matches FreshCart theme: Mint #f4f8f5, Green #0aa64a, Orange #ff8712
+   ========================================================================== */
+
+/* Summary Metrics Row */
+.offers-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+@media (max-width: 1024px) {
+    .offers-stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .offers-stats-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.offer-stat-card {
+    background: #ffffff;
+    border: 1px solid #e3ece6;
+    border-radius: 16px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 4px 14px rgba(18, 54, 36, 0.04);
+    transition: all 0.2s ease;
+}
+
+.offer-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(18, 54, 36, 0.08);
+}
+
+.offer-stat-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.offer-stat-icon.total { background: #eaf6ee; color: #0aa64a; }
+.offer-stat-icon.active { background: #e0f2fe; color: #0284c7; }
+.offer-stat-icon.expired { background: #fee2e2; color: #dc2626; }
+.offer-stat-icon.redemptions { background: #fef3c7; color: #d97706; }
+
+.offer-stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.offer-stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7d72;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.offer-stat-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: #16241b;
+    line-height: 1.2;
+    margin-top: 2px;
+}
+
+/* Toolbar Controls */
+.offers-toolbar {
+    background: #ffffff;
+    border: 1px solid #e3ece6;
+    border-radius: 16px;
+    padding: 14px 18px;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    box-shadow: 0 4px 14px rgba(18, 54, 36, 0.03);
+}
+
+.offers-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 280px;
+}
+
+.offers-search-box {
+    position: relative;
+    flex: 1;
+    max-width: 380px;
+}
+
+.offers-search-box i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 17px;
+    height: 17px;
+    color: #92a298;
+}
+
+.offers-search-box input {
+    width: 100%;
+    height: 40px;
+    padding: 6px 36px 6px 38px;
+    border: 1px solid #e2ece5;
+    border-radius: 10px;
+    background: #f8faf9;
+    font-size: 13.5px;
+    color: #16241b;
+    transition: all 0.2s ease;
+}
+
+.offers-search-box input:focus {
+    outline: none;
+    border-color: #0aa64a;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(10, 166, 74, 0.12);
+}
+
+.offers-search-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    display: none;
+    padding: 4px;
+}
+
+.offers-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.offers-filter-tabs {
+    display: flex;
+    background: #f0f5f2;
+    border-radius: 10px;
+    padding: 3px;
+    gap: 3px;
+}
+
+.offers-tab-btn {
+    border: none;
+    background: none;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 7px;
+    color: #6b7d72;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.offers-tab-btn:hover {
+    color: #16241b;
+}
+
+.offers-tab-btn.active {
+    background: #ffffff;
+    color: #0aa64a;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.offers-view-toggle {
+    display: flex;
+    background: #f0f5f2;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.offers-view-btn {
+    background: none;
+    border: none;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: #6b7d72;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.offers-view-btn.active {
+    background: #ffffff;
+    color: #0aa64a;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+}
+
+/* ==========================================================================
+   Voucher / Card Grid View
+   ========================================================================== */
+.offers-vouchers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+@media (min-width: 1500px) {
+    .offers-vouchers-grid {
+        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    }
+}
+
+.coupon-voucher-card {
+    background: #ffffff;
+    border-radius: 18px;
+    border: 1px solid #e3ece6;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(18, 54, 36, 0.04);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.coupon-voucher-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(18, 54, 36, 0.1);
+    border-color: #bedbc7;
+}
+
+/* Header Banner of Voucher */
+.voucher-head {
+    padding: 18px 20px 14px;
+    background: linear-gradient(135deg, #0aa64a 0%, #078239 100%);
+    color: #ffffff;
+    position: relative;
+}
+
+.voucher-head.expired {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+}
+
+.voucher-head.scheduled {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+}
+
+.voucher-head-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.voucher-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+}
+
+.voucher-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.voucher-action-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s;
+}
+
+.voucher-action-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(1.08);
+}
+
+/* Coupon Code Box with Copy Button */
+.voucher-code-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0, 0, 0, 0.18);
+    border: 1px dashed rgba(255, 255, 255, 0.4);
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+}
+
+.voucher-code-text {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.voucher-copy-btn {
+    border: none;
+    background: #ffffff;
+    color: #0aa64a;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.voucher-copy-btn:hover {
+    background: #eef8f2;
+}
+
+.voucher-copy-btn.copied {
+    background: #ff8712;
+    color: #ffffff;
+}
+
+/* Big Discount Text */
+.voucher-discount-val {
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.voucher-discount-val small {
+    font-size: 14px;
+    font-weight: 700;
+    opacity: 0.9;
+}
+
+/* Scalloped Perforation Notch Divider */
+.voucher-perforation {
+    position: relative;
+    height: 16px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.voucher-perforation::before,
+.voucher-perforation::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #f4f8f5;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.voucher-perforation::before { left: -8px; }
+.voucher-perforation::after { right: -8px; }
+
+.voucher-perforation-line {
+    position: absolute;
+    top: 7px;
+    left: 14px;
+    right: 14px;
+    border-top: 1.5px dashed #cbd5e1;
+}
+
+/* Body Details of Voucher */
+.voucher-body {
+    padding: 16px 20px;
+    background: #ffffff;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.voucher-specs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+    font-size: 12px;
+}
+
+.voucher-spec-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.voucher-spec-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #6b7d72;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.voucher-spec-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: #16241b;
+    margin-top: 1px;
+}
+
+/* Progress Usage Meter */
+.voucher-usage-wrap {
+    margin-top: 4px;
+}
+
+.voucher-usage-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 4px;
+}
+
+.voucher-progress-bar {
+    height: 7px;
+    background: #eef3f0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.voucher-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #0aa64a 0%, #10b981 100%);
+    border-radius: 6px;
+    transition: width 0.4s ease;
+}
+
+.voucher-progress-fill.near-limit {
+    background: linear-gradient(90deg, #f59e0b 0%, #ea580c 100%);
+}
+
+.voucher-progress-fill.full {
+    background: #dc2626;
+}
+
+/* Voucher Footer */
+.voucher-footer {
+    padding-top: 10px;
+    border-top: 1px solid #edf2ee;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: #64748b;
+}
+
+.voucher-expiry-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+}
+
+.voucher-expiry-chip.expiring-soon {
+    color: #ea580c;
+    font-weight: 700;
+}
+
+/* Customer Target Tag */
+.voucher-target-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #475569;
+    padding: 2px 7px;
+    border-radius: 6px;
+}
+
+/* Table View Overrides for Offers */
+.offers-table-view {
+    display: none;
+    background: #ffffff;
+    border: 1px solid #e3ece6;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 4px 14px rgba(18, 54, 36, 0.03);
+    overflow-x: auto;
+}
+
+/* Empty State */
+.offers-empty-state {
+    background: #ffffff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 18px;
+    padding: 60px 20px;
+    text-align: center;
+    color: #64748b;
+}
+
+.offers-empty-state i {
+    width: 54px;
+    height: 54px;
+    color: #94a3b8;
+    margin-bottom: 14px;
+}
+
+.offers-empty-state h3 {
+    font-size: 17px;
+    font-weight: 800;
+    color: #16241b;
+    margin-bottom: 6px;
+}
+
+.offers-empty-state p {
+    font-size: 13px;
+    max-width: 380px;
+    margin: 0 auto 16px;
+}
+
+/* Modal Form Specific Styles */
+.disc-type-pills {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.disc-type-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 44px;
+    border: 1.5px solid #e2ece5;
+    border-radius: 10px;
+    background: #f8faf9;
+    font-size: 13px;
+    font-weight: 700;
+    color: #16241b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.disc-type-btn:hover {
+    background: #eef6f0;
+    border-color: #bedbc7;
+}
+
+.disc-type-btn.active {
+    background: #eaf6ee;
+    border-color: #0aa64a;
+    color: #0aa64a;
+    box-shadow: 0 2px 8px rgba(10, 166, 74, 0.15);
+}
+
+.code-generator-wrap {
+    display: flex;
+    gap: 8px;
+}
+
+.code-generator-wrap input {
+    flex: 1;
+    text-transform: uppercase;
+    font-family: monospace;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+}
+
+.btn-generate-code {
+    border: 1px solid #c9ded0;
+    background: #f0f5f2;
+    color: #16241b;
+    padding: 0 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.18s;
+}
+
+.btn-generate-code:hover {
+    background: #e2ece5;
+    color: #0aa64a;
+}

@@ -1973,3 +1973,4 @@ $(document).ready(function () {
         PosApp.init();
     }
 });
+
