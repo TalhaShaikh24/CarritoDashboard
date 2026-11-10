@@ -158,9 +158,9 @@ const PosApp = (function () {
         bindEvents();
         updateHeldOrdersBadge();
 
-        // Initialize Storekeeper, then load Categories, Brands, and Inventory from API
+        // Initialize Storekeeper, then load Categories and Inventory from API
         initStorekeeper().then(() => {
-            return Promise.all([fetchCategories(), fetchBrands()]);
+            return fetchCategories();
         }).then(() => {
             fetchInventory();
         });
@@ -326,42 +326,6 @@ const PosApp = (function () {
         });
     }
 
-    function fetchBrands() {
-        const skId = getActiveStorekeeperId();
-        if (!skId) return Promise.resolve();
-
-        return new Promise(resolve => {
-            $.ajax({
-                url: `${baseApiUrl}/api/InventoryBrand`,
-                type: 'GET',
-                data: {
-                    PageNumber: 1,
-                    PageSize: 100,
-                    Search: '',
-                    storekeeperId: skId
-                },
-                success: function (res) {
-                    if (res && res.status === 200 && res.data && res.data.items) {
-                        realBrands = res.data.items;
-                        populateBrandsFilter();
-                    }
-                    resolve();
-                },
-                error: function () {
-                    resolve();
-                }
-            });
-        });
-    }
-
-    function populateBrandsFilter() {
-        const $brandSelect = $('#posFilterBrand');
-        $brandSelect.find('option:not(:first)').remove();
-        realBrands.forEach(b => {
-            $brandSelect.append(new Option(b.name, b.id));
-        });
-    }
-
     // -------------------------------------------------------------------------
     // 6. REAL INVENTORY FETCHING & CATALOG RENDERING
     // -------------------------------------------------------------------------
@@ -412,9 +376,6 @@ const PosApp = (function () {
 
         if (selectedCategoryId) {
             queryData.CategoryIds = selectedCategoryId;
-        }
-        if (selectedBrand) {
-            queryData.BrandIds = selectedBrand;
         }
 
         $.ajax({
@@ -1490,12 +1451,9 @@ const PosApp = (function () {
                 $('#posStoreNameLabel').text(`Store: ${selectedSk.storeName || selectedSk.fullName || 'Selected'}`);
             }
             selectedCategoryId = null;
-            selectedBrand = '';
             searchTerm = '';
             $('#posSearchProduct').val('');
-            $('#posFilterBrand').val('');
             fetchCategories();
-            fetchBrands();
             fetchInventory();
         });
 
@@ -1506,16 +1464,6 @@ const PosApp = (function () {
             $('.pos-cat-pill').removeClass('active');
             $(this).addClass('active');
             fetchInventory();
-        });
-
-        // Brand filter & sort
-        $('#posFilterBrand').on('change', function () {
-            selectedBrand = $(this).val();
-            fetchInventory();
-        });
-        $('#posSortBy').on('change', function () {
-            sortBy = $(this).val();
-            renderCatalog();
         });
 
         // View mode toggle
@@ -1535,10 +1483,8 @@ const PosApp = (function () {
         // Reset catalog filter button
         $('#btnResetCatalogFilters').on('click', function () {
             selectedCategoryId = null;
-            selectedBrand = '';
             searchTerm = '';
             $('#posSearchProduct').val('');
-            $('#posFilterBrand').val('');
             renderCategoryPills();
             fetchInventory();
         });
