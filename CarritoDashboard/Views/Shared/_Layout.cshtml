@@ -75,6 +75,13 @@
                     <span class="nav-label">Dashboard</span>
                 </a>
 
+                <!-- POS Terminal -->
+                <a class="nav-item @Html.IsActive("Pos")" data-module="pos" data-storekeeper="true" href="@Url.Action("Index", "Pos")">
+                    <i class="nav-icon" data-lucide="scan-barcode"></i>
+                    <span class="nav-label">Point of Sale (POS)</span>
+                    <span class="nav-badge" style="margin-left: auto; background: rgba(10, 166, 74, 0.15); color: #0aa64a; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 12px;">ACTIVE</span>
+                </a>
+
                 <!-- Operations -->
                 <div class="nav-group @(isOperationsActive ? "open" : "")" data-storekeeper="true">
                     <div class="nav-item has-submenu @(isOperationsActive ? "active-parent" : "")" data-submenu="operations" data-storekeeper="true">

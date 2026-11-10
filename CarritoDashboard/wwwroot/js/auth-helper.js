@@ -102,6 +102,7 @@ const AuthHelper = (function () {
             const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
             const allowedPaths = [
                 '', '/', '/home', '/home/index',
+                '/pos', '/pos/index',
                 '/inventory', '/inventory/index',
                 '/inventorycategory', '/inventorycategory/index',
                 '/inventorybrand', '/inventorybrand/index',

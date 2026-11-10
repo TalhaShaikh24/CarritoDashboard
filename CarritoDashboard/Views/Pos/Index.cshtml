@@ -1,0 +1,794 @@
+@{
+    ViewData["Title"] = "Point of Sale (POS)";
+}
+
+<link href="~/css/pos-modern.css" rel="stylesheet" asp-append-version="true" />
+
+<div class="pos-module" id="posModule">
+    <!-- Top Control Bar -->
+    <div class="pos-top-bar">
+        <div class="pos-bar-left">
+            <div class="pos-register-pill">
+                <span class="status-dot"></span>
+                <span>Terminal #01 &bull; Active</span>
+            </div>
+            <div class="pos-cashier-info">
+                <i data-lucide="user-check" style="width: 16px; height: 16px;"></i>
+                <span>Cashier: <strong id="posCashierName">Admin</strong></span>
+            </div>
+            <div class="pos-clock" id="posClock">
+                <i data-lucide="clock" style="width: 15px; height: 15px;"></i>
+                <span id="posClockTime">--:--:--</span>
+            </div>
+        </div>
+
+        <div class="pos-bar-center">
+            <div class="pos-barcode-input-wrap">
+                <i class="scan-icon" data-lucide="scan-barcode"></i>
+                <input type="text" id="posBarcodeInput" placeholder="Scan barcode or enter SKU & press Enter... (F1)" autocomplete="off">
+                <button type="button" class="barcode-submit-btn" id="btnSubmitBarcode" title="Scan / Add">
+                    <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="pos-bar-actions">
+            <button type="button" class="pos-tool-btn" id="btnToggleSound" title="Toggle audio feedback">
+                <i data-lucide="volume-2" id="soundIcon" style="width: 16px; height: 16px;"></i>
+                <span id="soundLabel">Sound</span>
+            </button>
+            <button type="button" class="pos-tool-btn" id="btnHeldOrders" title="View held/suspended orders (F4)">
+                <i data-lucide="pause-circle" style="width: 16px; height: 16px;"></i>
+                <span>Held</span>
+                <span class="pos-badge-count" id="heldOrdersCount">0</span>
+            </button>
+            <button type="button" class="pos-tool-btn" id="btnSalesHistory" title="Recent transactions">
+                <i data-lucide="history" style="width: 16px; height: 16px;"></i>
+                <span>History</span>
+            </button>
+            <button type="button" class="pos-tool-btn" id="btnRegisterSummary" title="Cash drawer & shift report">
+                <i data-lucide="wallet-cards" style="width: 16px; height: 16px;"></i>
+                <span>Register</span>
+            </button>
+            <button type="button" class="pos-tool-btn" id="btnShortcutsHelp" title="Keyboard shortcuts cheat sheet">
+                <i data-lucide="keyboard" style="width: 16px; height: 16px;"></i>
+                <span class="kbd-badge-dark">?</span>
+            </button>
+            <button type="button" class="pos-tool-btn" id="btnToggleFullscreen" title="Toggle POS fullscreen mode (F11)">
+                <i data-lucide="maximize" id="fullscreenIcon" style="width: 16px; height: 16px;"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Workspace Grid -->
+    <div class="pos-main-grid">
+        <!-- Left Panel: Product Catalog -->
+        <div class="pos-catalog-panel">
+            <!-- Filter Header -->
+            <div class="pos-catalog-header">
+                <div class="pos-search-row">
+                    <div class="pos-search-wrap">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="posSearchProduct" placeholder="Search products by title, SKU, brand, tags... (/)" autocomplete="off">
+                        <button type="button" class="search-clear-btn" id="btnClearSearch">&times;</button>
+                    </div>
+
+                    <div class="pos-filter-dropdowns">
+                        <select class="pos-select-pill" id="posFilterBrand">
+                            <option value="">All Brands</option>
+                        </select>
+                        <select class="pos-select-pill" id="posSortBy">
+                            <option value="popular">Most Popular</option>
+                            <option value="name_asc">Name: A to Z</option>
+                            <option value="price_asc">Price: Low to High</option>
+                            <option value="price_desc">Price: High to Low</option>
+                        </select>
+                        <div class="pos-view-mode-toggle">
+                            <button type="button" class="pos-view-btn active" id="viewModeGrid" title="Grid View">
+                                <i data-lucide="grid" style="width: 16px; height: 16px;"></i>
+                            </button>
+                            <button type="button" class="pos-view-btn" id="viewModeList" title="List View">
+                                <i data-lucide="list" style="width: 16px; height: 16px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Pills Bar -->
+                <div class="pos-categories-scroller" id="posCategoryPills">
+                    <!-- Dynamic Category Pills -->
+                </div>
+            </div>
+
+            <!-- Products Content Area -->
+            <div class="pos-products-body" id="posProductsBody">
+                <div class="pos-products-grid" id="posProductsGrid">
+                    <!-- Dynamic Product Cards -->
+                </div>
+                <div class="pos-products-list" id="posProductsList" style="display: none;">
+                    <!-- Dynamic Product List Rows -->
+                </div>
+                <div class="pos-empty-catalog" id="posEmptyCatalog" style="display: none;">
+                    <i data-lucide="package-search"></i>
+                    <h4>No products found</h4>
+                    <p>Try searching with another keyword or change your category filter.</p>
+                    <button type="button" class="btn btn-outline" style="margin-top: 12px; font-size: 12px; border-radius: 8px;" id="btnResetCatalogFilters">
+                        Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Order Ticket / Cart -->
+        <div class="pos-cart-panel">
+            <!-- Cart Header -->
+            <div class="pos-cart-header">
+                <div class="pos-order-id-row">
+                    <div class="pos-order-tag">
+                        <i data-lucide="receipt"></i>
+                        <span id="posCurrentOrderNum">#ORD-1001</span>
+                    </div>
+                    <div class="pos-order-type-tabs">
+                        <button type="button" class="pos-order-type-btn active" data-type="Walk-in">Walk-in</button>
+                        <button type="button" class="pos-order-type-btn" data-type="Takeaway">Takeaway</button>
+                        <button type="button" class="pos-order-type-btn" data-type="Delivery">Delivery</button>
+                    </div>
+                </div>
+
+                <!-- Customer Selection -->
+                <div class="pos-customer-row">
+                    <div class="pos-customer-select-wrap">
+                        <button type="button" class="pos-customer-select-btn" id="btnOpenCustomerModal" title="Select Customer (F2)">
+                            <div class="cust-info">
+                                <i data-lucide="user" style="width: 15px; height: 15px; color: var(--pos-primary);"></i>
+                                <span id="posCurrentCustomerLabel">Walk-in Customer</span>
+                            </div>
+                            <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #94a3b8;"></i>
+                        </button>
+                    </div>
+                    <button type="button" class="pos-quick-add-cust-btn" id="btnQuickAddCustomer" title="Add New Customer">
+                        <i data-lucide="user-plus" style="width: 17px; height: 17px;"></i>
+                    </button>
+                </div>
+
+                <!-- Customer Loyalty & Credit Info (hidden when Walk-in) -->
+                <div class="pos-cust-loyalty-pill" id="posCustLoyaltyPill" style="display: none;">
+                    <span><i data-lucide="award" style="width: 13px; height: 13px; vertical-align: -2px;"></i> <strong id="posCustPoints">0</strong> Loyalty Pts</span>
+                    <span>Store Credit: <strong id="posCustCredit">Rs. 0</strong></span>
+                </div>
+            </div>
+
+            <!-- Cart Items Scroll Area -->
+            <div class="pos-cart-items-body" id="posCartItemsBody">
+                <!-- Cart Items Rendered Here -->
+                <div class="pos-empty-cart" id="posEmptyCart">
+                    <div class="pos-empty-cart-icon">
+                        <i data-lucide="shopping-cart" style="width: 26px; height: 26px;"></i>
+                    </div>
+                    <h4>Your Cart is Empty</h4>
+                    <p>Click on any product or scan a barcode to add it to this order ticket.</p>
+                </div>
+            </div>
+
+            <!-- Cart Summary & Checkout Footer -->
+            <div class="pos-cart-footer">
+                <div class="pos-summary-table">
+                    <div class="pos-summary-row">
+                        <span>Items Subtotal (<span id="posSummaryItemCount">0</span> items)</span>
+                        <strong id="posSummarySubtotal">Rs. 0.00</strong>
+                    </div>
+                    <div class="pos-summary-row">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span>Discount</span>
+                            <button type="button" class="pos-summary-pill-btn" id="btnApplyCartDiscount">+ Add</button>
+                        </div>
+                        <span style="color: #b91c1c; font-weight: 700;" id="posSummaryDiscount">- Rs. 0.00</span>
+                    </div>
+                    <div class="pos-summary-row">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span>Tax (GST)</span>
+                            <button type="button" class="pos-summary-pill-btn" id="btnToggleTax">GST 5%</button>
+                        </div>
+                        <strong id="posSummaryTax">Rs. 0.00</strong>
+                    </div>
+                    <div class="pos-summary-row" id="posDeliveryFeeRow" style="display: none;">
+                        <span>Delivery / Packing Fee</span>
+                        <strong id="posSummaryDeliveryFee">Rs. 100.00</strong>
+                    </div>
+                    <div class="pos-summary-total-row">
+                        <div class="pos-total-label">Grand Total</div>
+                        <div class="pos-total-val" id="posSummaryGrandTotal">Rs. 0.00</div>
+                    </div>
+                </div>
+
+                <!-- Bottom Action Buttons -->
+                <div class="pos-cart-actions">
+                    <button type="button" class="pos-btn-hold" id="btnHoldOrder" title="Hold / Park this order (F3)">
+                        <i data-lucide="pause" style="width: 16px; height: 16px;"></i>
+                        <span>Hold <span class="kbd-badge">F3</span></span>
+                    </button>
+                    <button type="button" class="pos-btn-clear" id="btnClearCart" title="Clear current cart (F8)">
+                        <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                        <span>Clear <span class="kbd-badge">F8</span></span>
+                    </button>
+                    <button type="button" class="pos-btn-pay" id="btnOpenPaymentModal" title="Charge / Pay (F9)" disabled>
+                        <i data-lucide="credit-card" style="width: 18px; height: 18px;"></i>
+                        <span>PAY <strong id="btnPayTotalText">Rs. 0.00</strong></span>
+                        <span class="kbd-badge">F9</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     MODAL: Payment / Checkout
+     ========================================================================= -->
+<div class="pos-modal-overlay" id="paymentModal" style="display: none;">
+    <div class="pos-modal-card pos-modal-lg">
+        <div class="pos-modal-header">
+            <div class="pos-modal-title">
+                <i data-lucide="circle-dollar-sign" style="color: var(--pos-primary);"></i>
+                <span>Complete Payment & Checkout</span>
+            </div>
+            <button type="button" class="pos-modal-close-btn" onclick="PosApp.closeModal('paymentModal')">&times;</button>
+        </div>
+
+        <div class="pos-modal-body">
+            <!-- Total Due Banner -->
+            <div class="pos-pay-due-banner">
+                <div>
+                    <div class="label">Total Amount Payable</div>
+                    <div class="amount" id="payModalDueAmount">Rs. 0.00</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="label">Customer</div>
+                    <div style="font-weight: 700; font-size: 15px;" id="payModalCustomerName">Walk-in Customer</div>
+                </div>
+            </div>
+
+            <!-- Payment Method Tabs -->
+            <div class="pos-pay-methods-grid">
+                <div class="pos-pay-tab active" data-method="Cash">
+                    <i data-lucide="banknote"></i>
+                    <span>Cash</span>
+                </div>
+                <div class="pos-pay-tab" data-method="Card">
+                    <i data-lucide="credit-card"></i>
+                    <span>Debit/Credit Card</span>
+                </div>
+                <div class="pos-pay-tab" data-method="DigitalWallet">
+                    <i data-lucide="qr-code"></i>
+                    <span>QR / Wallet</span>
+                </div>
+                <div class="pos-pay-tab" data-method="Split">
+                    <i data-lucide="split"></i>
+                    <span>Split Payment</span>
+                </div>
+            </div>
+
+            <!-- Cash Payment Details -->
+            <div class="pos-method-pane" id="paneMethodCash">
+                <label style="font-size: 12.5px; font-weight: 700; color: var(--pos-dark); margin-bottom: 6px; display: block;">
+                    Quick Cash Presets:
+                </label>
+                <div class="pos-quick-cash-row" id="quickCashRow">
+                    <!-- Quick cash buttons rendered dynamically -->
+                </div>
+
+                <div class="form-group" style="margin-top: 10px;">
+                    <label for="cashTenderedInput">Amount Received / Tendered (Rs.)</label>
+                    <input type="number" id="cashTenderedInput" class="form-control" style="font-size: 18px; font-weight: 800; height: 46px;" placeholder="0.00" min="0" step="any">
+                </div>
+
+                <div class="pos-change-banner" id="cashChangeBanner">
+                    <div class="label" id="changeLabel">Change Due:</div>
+                    <div class="amount" id="changeAmount">Rs. 0.00</div>
+                </div>
+            </div>
+
+            <!-- Card Payment Details -->
+            <div class="pos-method-pane" id="paneMethodCard" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Card Type</label>
+                        <select class="form-control" id="cardTypeSelect">
+                            <option value="Visa">Visa Card</option>
+                            <option value="Mastercard">Mastercard</option>
+                            <option value="UnionPay">UnionPay</option>
+                            <option value="PayPak">PayPak</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Last 4 Digits</label>
+                        <input type="text" class="form-control" id="cardLast4Input" placeholder="e.g. 4242" maxlength="4">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Bank Auth / Approval Code / Slip #</label>
+                    <input type="text" class="form-control" id="cardAuthCodeInput" placeholder="e.g. AUTH-83910">
+                </div>
+            </div>
+
+            <!-- Digital Wallet Details -->
+            <div class="pos-method-pane" id="paneMethodDigitalWallet" style="display: none;">
+                <div style="display: flex; gap: 20px; align-items: center; background: #f8faf9; padding: 16px; border-radius: 12px; border: 1px solid var(--pos-border);">
+                    <div style="width: 110px; height: 110px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                        <i data-lucide="qr-code" style="width: 72px; height: 72px; color: var(--pos-primary);"></i>
+                        <span style="font-size: 10px; font-weight: 700; color: #64748b; margin-top: 2px;">SCAN TO PAY</span>
+                    </div>
+                    <div style="flex: 1;">
+                        <div class="form-group">
+                            <label>Provider</label>
+                            <select class="form-control" id="walletProviderSelect">
+                                <option value="Easypaisa">Easypaisa</option>
+                                <option value="JazzCash">JazzCash</option>
+                                <option value="Raast">Raast Instant Payment</option>
+                                <option value="SadaPay">SadaPay</option>
+                                <option value="NayaPay">NayaPay</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Customer Mobile / Transaction Reference ID</label>
+                            <input type="text" class="form-control" id="walletRefInput" placeholder="e.g. 0300-1234567 or TXN-4928">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Split Payment Details -->
+            <div class="pos-method-pane" id="paneMethodSplit" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cash Portion (Rs.)</label>
+                        <input type="number" class="form-control" id="splitCashInput" placeholder="0.00" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Card / Online Portion (Rs.)</label>
+                        <input type="number" class="form-control" id="splitCardInput" placeholder="0.00" min="0">
+                    </div>
+                </div>
+                <div class="pos-change-banner" id="splitStatusBanner">
+                    <div class="label" id="splitStatusLabel">Split Balance:</div>
+                    <div class="amount" id="splitStatusAmount">Rs. 0.00</div>
+                </div>
+            </div>
+
+            <!-- Order / Receipt Note -->
+            <div class="form-group" style="margin-top: 14px;">
+                <label for="orderNoteInput">Order Note / Cashier Remarks (Optional)</label>
+                <input type="text" id="orderNoteInput" class="form-control" placeholder="e.g. Customer requested fragile packing">
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                <input type="checkbox" id="chkAutoPrintReceipt" checked style="accent-color: var(--pos-primary); width: 16px; height: 16px;">
+                <label for="chkAutoPrintReceipt" style="font-size: 13px; font-weight: 500; cursor: pointer; margin-bottom: 0;">
+                    Show printable thermal receipt on completion
+                </label>
+            </div>
+        </div>
+
+        <div class="pos-modal-footer">
+            <button type="button" class="btn btn-outline" onclick="PosApp.closeModal('paymentModal')">Cancel</button>
+            <button type="button" class="btn btn-primary" id="btnFinalizeSale" style="padding: 10px 24px; font-weight: 800; background: var(--pos-primary); border: none;">
+                <i data-lucide="check" style="width: 17px; height: 17px; vertical-align: -2px;"></i>
+                Complete Sale
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     MODAL: Printable Thermal Receipt
+     ========================================================================= -->
+<div class="pos-modal-overlay" id="receiptModal" style="display: none;">
+    <div class="pos-modal-card pos-modal-sm">
+        <div class="pos-modal-header">
+            <div class="pos-modal-title">
+                <i data-lucide="printer" style="color: var(--pos-primary);"></i>
+                <span>Sale Receipt</span>
+            </div>
+            <button type="button" class="pos-modal-close-btn" onclick="PosApp.closeModal('receiptModal')">&times;</button>
+        </div>
+
+        <div class="pos-modal-body" style="background: #f4f7f5; padding: 16px;">
+            <!-- Printable Receipt Layout -->
+            <div class="pos-receipt-paper" id="posPrintArea">
+                <div class="receipt-header">
+                    <h3>CARRITO SUPERMARKET</h3>
+                    <p>DHA Phase 5 Commercial, Lahore</p>
+                    <p>Tel: +92 42 111-227-748</p>
+                    <p>GST NTN: 8294719-3</p>
+                </div>
+
+                <div class="receipt-divider"></div>
+
+                <div class="receipt-meta-grid">
+                    <div>Receipt: <strong id="recOrderNum">#ORD-1001</strong></div>
+                    <div style="text-align: right;">Date: <span id="recDate">01-Jan-2026</span></div>
+                    <div>Time: <span id="recTime">12:00 PM</span></div>
+                    <div style="text-align: right;">Cashier: <span id="recCashier">Admin</span></div>
+                    <div style="grid-column: span 2;">Customer: <strong id="recCustomer">Walk-in Customer</strong></div>
+                    <div style="grid-column: span 2;">Order Type: <strong id="recOrderType">In-Store Walk-in</strong></div>
+                </div>
+
+                <div class="receipt-divider"></div>
+
+                <table class="receipt-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th class="text-right">Qty</th>
+                            <th class="text-right">Price</th>
+                            <th class="text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recItemsTbody">
+                        <!-- Dynamic items -->
+                    </tbody>
+                </table>
+
+                <div class="receipt-divider"></div>
+
+                <div class="receipt-calc-row">
+                    <span>Subtotal:</span>
+                    <strong id="recSubtotal">Rs. 0.00</strong>
+                </div>
+                <div class="receipt-calc-row" id="recDiscountRow" style="display: none;">
+                    <span>Discount:</span>
+                    <strong id="recDiscount" style="color: #b91c1c;">- Rs. 0.00</strong>
+                </div>
+                <div class="receipt-calc-row" id="recTaxRow">
+                    <span>GST (5%):</span>
+                    <strong id="recTax">Rs. 0.00</strong>
+                </div>
+                <div class="receipt-calc-row" id="recFeeRow" style="display: none;">
+                    <span>Delivery / Fee:</span>
+                    <strong id="recFee">Rs. 0.00</strong>
+                </div>
+                <div class="receipt-calc-row total">
+                    <span>GRAND TOTAL:</span>
+                    <span id="recGrandTotal">Rs. 0.00</span>
+                </div>
+
+                <div class="receipt-calc-row">
+                    <span>Payment Method:</span>
+                    <strong id="recPayMethod">Cash</strong>
+                </div>
+                <div class="receipt-calc-row" id="recTenderedRow">
+                    <span>Amount Paid:</span>
+                    <strong id="recTendered">Rs. 0.00</strong>
+                </div>
+                <div class="receipt-calc-row" id="recChangeRow">
+                    <span>Change Returned:</span>
+                    <strong id="recChange">Rs. 0.00</strong>
+                </div>
+
+                <div class="receipt-barcode-wrap">
+                    <div class="receipt-barcode-lines"></div>
+                    <div style="font-size: 10px; letter-spacing: 2px; font-weight: 700; margin-top: 3px;" id="recBarcodeDigits">
+                        *ORD-1001*
+                    </div>
+                </div>
+
+                <div class="receipt-divider"></div>
+
+                <div class="receipt-footer">
+                    <p>*** THANK YOU FOR SHOPPING! ***</p>
+                    <p>Items returnable within 7 days with original invoice.</p>
+                    <p>www.carrito.pk</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="pos-modal-footer">
+            <button type="button" class="btn btn-outline" id="btnPrintReceiptBtn">
+                <i data-lucide="printer" style="width: 16px; height: 16px; vertical-align: -2px;"></i>
+                Print
+            </button>
+            <button type="button" class="btn btn-primary" id="btnReceiptNewSale" style="background: var(--pos-primary); border: none;">
+                <i data-lucide="plus" style="width: 16px; height: 16px; vertical-align: -2px;"></i>
+                Next Sale
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     MODAL: Select Customer
+     ========================================================================= -->
+<div class="pos-modal-overlay" id="customerSelectModal" style="display: none;">
+    <div class="pos-modal-card">
+        <div class="pos-modal-header">
+            <div class="pos-modal-title">
+                <i data-lucide="users" style="color: var(--pos-primary);"></i>
+                <span>Select Customer</span>
+            </div>
+            <button type="button" class="pos-modal-close-btn" onclick="PosApp.closeModal('customerSelectModal')">&times;</button>
+        </div>
+        <div class="pos-modal-body">
+            <div class="pos-search-wrap" style="margin-bottom: 14px;">
+                <i data-lucide="search"></i>
+                <input type="text" id="custSearchInput" placeholder="Search by customer name, phone, or email...">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto;" id="customerListContainer">
+                <!-- Customer items -->
+            </div>
+        </div>
+        <div class="pos-modal-footer">
+            <button type="button" class="btn btn-outline" onclick="PosApp.selectWalkInCustomer()">Reset to Walk-in</button>
+            <button type="button" class="btn btn-primary" id="btnOpenNewCustFromSelect">Add New Customer</button>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     MODAL: Add New Customer
+     ========================================================================= -->
+<div class="pos-modal-overlay" id="newCustomerModal" style="display: none;">
+    <div class="pos-modal-card">
+        <div class="pos-modal-header">
+            <div class="pos-modal-title">
+                <i data-lucide="user-plus" style="color: var(--pos-primary);"></i>
+                <span>Add New Customer</span>
+            </div>
+            <button type="button" class="pos-modal-close-btn" onclick="PosApp.closeModal('newCustomerModal')">&times;</button>
+        </div>
+        <div class="pos-modal-body">
+            <form id="newCustomerForm" onsubmit="return false;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="newCustFullName" class="form-control" placeholder="e.g. Bilal Tariq" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number *</label>
+                        <input type="tel" id="newCustPhone" class="form-control" placeholder="e.g. 0300-1234567" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="newCustEmail" class="form-control" placeholder="e.g. bilal@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Store Credit Limit (Rs.)</label>
+                        <input type="number" id="newCustCredit" class="form-control" value="5000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Delivery / Billing Address</label>
+                    <input type="text" id="newCustAddress" class="form-control" placeholder="House / Flat #, Street, City">
+                </div>
+            </form>
+        </div>
+        <div class="pos-modal-footer">
+            <button type="button" class="btn btn-outline" onclick="PosApp.closeModal('newCustomerModal')">Cancel</button>
+            <button type="button" class="btn btn-primary" id="btnSaveNewCustomer">Save & Select</button>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     MODAL: Cart Discount
+     ========================================================================= -->
+<div class="pos-modal-overlay" id="discountModal" style="display: none;">
+    <div class="pos-modal-card pos-modal-sm">
+        <div class="pos-modal-header">
+            <div class="pos-modal-title">
+                <i data-lucide="tag" style="color: var(--pos-primary);"></i>
+                <span>Apply Order Discount</span>
+            </div>
+            <button type="button" class="pos-modal-close-btn" onclick="PosApp.closeModal('discountModal')">&times;</button>
+        </div>
+        <div class="pos-modal-body">
+            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                <button type="button" class="pos-cat-pill active flex-1" id="btnDiscTypePercent" style="justify-content: center;">Percentage (%)</button>
+                <button type="button" class="pos-cat-pill flex-1" id="btnDiscTypeFixed" style="justify-content: center;">Fixed Amount (Rs.)</button>
+            </div>
+            <div class="form-group">
+                <label id="discValueLabel">Discount Percentage (%)</label>
+                <input type="number" id="discValueInput" class="form-control" placeholder="e.g. 10" min="0" step="any">
+            </div>
+            <label style="font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; display: block;">Quick Promo Codes:</label>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button type="button" class="pos-quick-cash-chip promo-chip" data-code="WELCOME10" data-pct="10">WELCOME10 (10%)</button>
+                <button type="button" class="pos-quick-cash-chip promo-chip" data-code="SAVE50" data-fixed="50">SAVE50 (Rs. 50)</button>
+                <button type="button" class="pos-quick-cash-chip promo-chip" data-code="FLAT100" data-fixed="100">FLAT100 (Rs. 100)</button>
+            </div>
+        </div>
+        <div class="pos-modal-footer">
+            <button type="button" class="btn btn-outline" id="btnRemoveDiscount">Remove Discount</button>
+            <button type="button" class="btn btn-primary" id="btnApplyDiscountSubmit">Apply</button>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     MODAL: Held / Parked Orders
+     ========================================================================= -->
+<div class="pos-modal-overlay" id="heldOrdersModal" style="display: none;">
+    <div class="pos-modal-card">
+        <div class="pos-modal-header">
+            <div class="pos-modal-title">
+                <i data-lucide="pause-circle" style="color: var(--pos-accent);"></i>
+                <span>Held / Parked Orders</span>
+            </div>
+            <button type="button" class="pos-modal-close-btn" onclick="PosApp.closeModal('heldOrdersModal')">&times;</button>
+        </div>
+        <div class="pos-modal-body">
+            <div id="heldOrdersListContainer" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Dynamic Held Orders -->
+            </div>
+        </div>
+        <div class="pos-modal-footer">
+            <button type="button" class="btn btn-outline" onclick="PosApp.closeModal('heldOrdersModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     MODAL: Sales History
+     ========================================================================= -->
+<div class="pos-modal-overlay" id="salesHistoryModal" style="display: none;">
+    <div class="pos-modal-card pos-modal-lg">
+        <div class="pos-modal-header">
+            <div class="pos-modal-title">
+                <i data-lucide="history" style="color: var(--pos-primary);"></i>
+                <span>Today's POS Sales History</span>
+            </div>
+            <button type="button" class="pos-modal-close-btn" onclick="PosApp.closeModal('salesHistoryModal')">&times;</button>
+        </div>
+        <div class="pos-modal-body">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px;">
+                <div class="pos-search-wrap" style="flex: 1;">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="historySearchInput" placeholder="Filter by receipt # or customer...">
+                </div>
+                <select class="pos-select-pill" id="historyMethodFilter">
+                    <option value="">All Payment Methods</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="DigitalWallet">Digital Wallet</option>
+                    <option value="Split">Split</option>
+                </select>
+            </div>
+            <div style="max-height: 380px; overflow-y: auto;">
+                <table class="data-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Receipt</th>
+                            <th>Time</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Method</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableTbody">
+                        <!-- Dynamic sales history rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="pos-modal-footer">
+            <button type="button" class="btn btn-outline" onclick="PosApp.closeModal('salesHistoryModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     MODAL: Cash Register & Shift Summary
+     ========================================================================= -->
+<div class="pos-modal-overlay" id="registerSummaryModal" style="display: none;">
+    <div class="pos-modal-card">
+        <div class="pos-modal-header">
+            <div class="pos-modal-title">
+                <i data-lucide="wallet-cards" style="color: var(--pos-primary);"></i>
+                <span>Register & Shift Summary</span>
+            </div>
+            <button type="button" class="pos-modal-close-btn" onclick="PosApp.closeModal('registerSummaryModal')">&times;</button>
+        </div>
+        <div class="pos-modal-body">
+            <div style="background: #f8fbf9; border: 1px solid var(--pos-border); border-radius: 12px; padding: 16px; margin-bottom: 14px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--pos-muted);">Cash Drawer Float:</span>
+                    <strong id="shiftOpeningFloat">Rs. 10,000.00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--pos-muted);">Cash Sales:</span>
+                    <strong id="shiftCashSales">Rs. 0.00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--pos-muted);">Card Sales:</span>
+                    <strong id="shiftCardSales">Rs. 0.00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--pos-muted);">Wallet / Online Sales:</span>
+                    <strong id="shiftWalletSales">Rs. 0.00</strong>
+                </div>
+                <div style="border-top: 1px dashed var(--pos-border); margin: 8px 0;"></div>
+                <div style="display: flex; justify-content: space-between; font-size: 15px; font-weight: 800; color: var(--pos-dark);">
+                    <span>Total Cash in Drawer:</span>
+                    <span style="color: var(--pos-primary);" id="shiftTotalDrawerCash">Rs. 10,000.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--pos-muted); margin-top: 6px;">
+                    <span>Completed Invoices:</span>
+                    <span id="shiftOrdersCount">0 orders</span>
+                </div>
+            </div>
+        </div>
+        <div class="pos-modal-footer">
+            <button type="button" class="btn btn-outline" id="btnPrintShiftReport">Print Report</button>
+            <button type="button" class="btn btn-primary" onclick="PosApp.closeModal('registerSummaryModal')">Done</button>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     MODAL: Keyboard Shortcuts Cheat Sheet
+     ========================================================================= -->
+<div class="pos-modal-overlay" id="shortcutsModal" style="display: none;">
+    <div class="pos-modal-card pos-modal-sm">
+        <div class="pos-modal-header">
+            <div class="pos-modal-title">
+                <i data-lucide="keyboard" style="color: var(--pos-primary);"></i>
+                <span>Keyboard Shortcuts</span>
+            </div>
+            <button type="button" class="pos-modal-close-btn" onclick="PosApp.closeModal('shortcutsModal')">&times;</button>
+        </div>
+        <div class="pos-modal-body">
+            <table class="data-table" style="width: 100%;">
+                <tbody>
+                    <tr><td><span class="kbd-badge-dark">F1</span> or <span class="kbd-badge-dark">/</span></td><td>Focus Barcode / Search Box</td></tr>
+                    <tr><td><span class="kbd-badge-dark">F2</span></td><td>Select Customer</td></tr>
+                    <tr><td><span class="kbd-badge-dark">F3</span></td><td>Hold / Park Active Order</td></tr>
+                    <tr><td><span class="kbd-badge-dark">F4</span></td><td>Open Held Orders List</td></tr>
+                    <tr><td><span class="kbd-badge-dark">F8</span></td><td>Clear Current Cart</td></tr>
+                    <tr><td><span class="kbd-badge-dark">F9</span></td><td>Open Checkout / Payment</td></tr>
+                    <tr><td><span class="kbd-badge-dark">F11</span></td><td>Toggle Fullscreen Mode</td></tr>
+                    <tr><td><span class="kbd-badge-dark">Esc</span></td><td>Close Modals</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pos-modal-footer">
+            <button type="button" class="btn btn-primary" onclick="PosApp.closeModal('shortcutsModal')">Got It</button>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     MODAL: Line Item Edit / Discount / Note
+     ========================================================================= -->
+<div class="pos-modal-overlay" id="lineItemModal" style="display: none;">
+    <div class="pos-modal-card pos-modal-sm">
+        <div class="pos-modal-header">
+            <div class="pos-modal-title">
+                <i data-lucide="edit-3" style="color: var(--pos-primary);"></i>
+                <span>Item Options</span>
+            </div>
+            <button type="button" class="pos-modal-close-btn" onclick="PosApp.closeModal('lineItemModal')">&times;</button>
+        </div>
+        <div class="pos-modal-body">
+            <h4 id="lineItemTitle" style="font-size: 14px; font-weight: 700; color: var(--pos-dark); margin-bottom: 12px;">Product</h4>
+            <div class="form-group">
+                <label>Line Discount (Rs.)</label>
+                <input type="number" id="lineItemDiscountInput" class="form-control" placeholder="0.00" min="0">
+            </div>
+            <div class="form-group">
+                <label>Item Note / Instructions</label>
+                <input type="text" id="lineItemNoteInput" class="form-control" placeholder="e.g. Extra fresh, sliced, no plastic bag">
+            </div>
+        </div>
+        <div class="pos-modal-footer">
+            <button type="button" class="btn btn-outline" onclick="PosApp.closeModal('lineItemModal')">Cancel</button>
+            <button type="button" class="btn btn-primary" id="btnSaveLineItemOptions">Save</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/views-js/pos.js" asp-append-version="true"></script>
+}
