@@ -165,6 +165,11 @@ function saveUnit(method, id = null) {
                 $.dynamicModal.close();
                 unitsTable.ajax.reload(null, false);
             }
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to save unit.";
+            showNotification(msg, "error");
         }
     });
 }

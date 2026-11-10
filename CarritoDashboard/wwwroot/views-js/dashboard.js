@@ -53,7 +53,7 @@ $(document).ready(() => {
 
     function initFilterButtons() {
         $('#cityFilter').on('change', function () {
-            state.city = $(this).val() || null;
+            state.city = !$(this).val() || $(this).val() == 'All Cities' ? null : $(this).val();
         });
 
         $('#btnApply').on('click', function () {
@@ -86,7 +86,7 @@ $(document).ready(() => {
                 const $cityFilter = $('#cityFilter');
                 const currentCity = state.city || $cityFilter.val() || '';
 
-                $cityFilter.empty().append('<option value="">All Cities</option>');
+                $cityFilter.empty().append('<option value="All Cities">All Cities</option>');
 
                 const cities = Array.from(new Set(
                     rawCities
@@ -117,6 +117,7 @@ $(document).ready(() => {
                 }
             },
             onError: (err) => {
+                $('#popup-overlay').remove();
                 console.error('Failed to load cities:', err);
             }
         });

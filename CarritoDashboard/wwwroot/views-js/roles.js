@@ -352,6 +352,11 @@ function createRoleWithPermissions() {
                     $.dynamicModal.close();
                 }
             }
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to create role.";
+            showNotification(msg, "error");
         }
     });
 }
@@ -457,6 +462,11 @@ function updateRoleAndPermissions(roleId) {
         showMessage: false,
         onSuccess: (res) => {
             assignPermissions(roleId, permissionIds, "Permissions assigned successfully!");
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to update role.";
+            showNotification(msg, "error");
         }
     });
 }
@@ -471,6 +481,11 @@ function assignPermissions(roleId, permIds, customSuccessMsg) {
             showNotification(customSuccessMsg || "Permissions assigned successfully!", "success");
             loadRoles();
             $.dynamicModal.close();
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to assign permissions.";
+            showNotification(msg, "error");
         }
     });
 }
@@ -507,6 +522,11 @@ $(document).on('click', '.action-btn.delete', function () {
                     } else {
                         showNotification("Unable to delete role", "error");
                     }
+                },
+                onError: (xhr) => {
+                    $('#popup-overlay').remove();
+                    const msg = xhr.responseJSON?.responseMsg || "Failed to delete role.";
+                    showNotification(msg, "error");
                 }
             });
         }

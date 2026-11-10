@@ -245,6 +245,11 @@ function saveSetting(key) {
     ajaxRequest({
         url: url,
         method: 'PUT',
-        showMessage: true
+        showMessage: true,
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to update setting.";
+            showNotification(msg, "error");
+        }
     });
 }

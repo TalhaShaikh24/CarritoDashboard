@@ -18,9 +18,10 @@ function ajaxRequest({
     responseType = 'json',
     isQuery = false,
     onSuccess = () => { },
-    onError = () => { },
+    onError = null,
     onComplete = () => { },
     showMessage = true,
+    showErrorModal = true,
     confirmMessage = 'Are you sure you want to delete this item?'
 }) {
     const upperMethod = method.toUpperCase();
@@ -40,8 +41,10 @@ function ajaxRequest({
                 isQuery,
                 onSuccess,
                 onError,
+                hasCustomOnError: typeof onError === 'function',
                 onComplete,
-                showMessage
+                showMessage,
+                showErrorModal
             });
         });
         return; // Exit to wait for confirmation
@@ -59,8 +62,10 @@ function ajaxRequest({
         isQuery,
         onSuccess,
         onError,
+        hasCustomOnError: typeof onError === 'function',
         onComplete,
-        showMessage
+        showMessage,
+        showErrorModal
     });
 }
 
@@ -76,8 +81,10 @@ function executeAjaxRequest({
     isQuery,
     onSuccess,
     onError,
+    hasCustomOnError = false,
     onComplete,
-    showMessage
+    showMessage,
+    showErrorModal = true
 }) {
     const upperMethod = method.toUpperCase();
     
@@ -210,21 +217,27 @@ function executeAjaxRequest({
 
             // Trigger global popup if status is 500
             if (statusCode === 500) {
-                $.showCustomPopup({
-                    title: "Server Error (500)",
-                    iconClass: "fas fa-exclamation-triangle",
-                    message: `
-                    <p>Something went wrong on the server.</p>
-                    <p>Please try again later or contact support at 
-                        <a href="mailto:support@carrito.com" class="support-link">
-                            support@carrito.com
-                        </a>
-                    </p>`
-                });
-            } else { 
+                if (showErrorModal) {
+                    $.showCustomPopup({
+                        title: "Server Error (500)",
+                        iconClass: "fas fa-exclamation-triangle",
+                        message: `
+                        <p>Something went wrong on the server.</p>
+                        <p>Please try again later or contact support at 
+                            <a href="mailto:support@carrito.com" class="support-link">
+                                support@carrito.com
+                            </a>
+                        </p>`
+                    });
+                } else if (showMessage && !hasCustomOnError) {
+                    showNotification(errorMsg, "error", statusCode);
+                }
+            } else if (showMessage && !hasCustomOnError) { 
                 showNotification(errorMsg, "error", statusCode);
             }
-            onError(xhr, status, error);
+            if (hasCustomOnError && typeof onError === 'function') {
+                onError(xhr, status, error);
+            }
         },
         complete: function () {
             onComplete();

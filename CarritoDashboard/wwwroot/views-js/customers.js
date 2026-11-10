@@ -193,6 +193,11 @@ $(document).ready(() => {
                     delete customerDetailsCache[customerId];
                     customersTable.ajax.reload(null, false);
                 }
+            },
+            onError: (xhr) => {
+                $('#popup-overlay').remove();
+                const msg = xhr.responseJSON?.responseMsg || "Failed to update customer.";
+                showNotification(msg, "error");
             }
         });
     }
@@ -246,6 +251,11 @@ $(document).ready(() => {
                     $.dynamicModal.close();
                     customersTable.ajax.reload(null, false);
                 }
+            },
+            onError: (xhr) => {
+                $('#popup-overlay').remove();
+                const msg = xhr.responseJSON?.responseMsg || "Failed to create customer.";
+                showNotification(msg, "error");
             }
         });
     }

@@ -36,12 +36,6 @@ $(document).ready(function () {
         }
     });
 
-    $('#btnRefreshTransactions').on('click', function () {
-        if (transactionsTable) {
-            transactionsTable.ajax.reload();
-        }
-    });
-
     // Handle storekeeper ready event
     $(document).on('storekeeperReady', function (e, skp) {
         if (skp && skp.storeName) {

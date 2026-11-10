@@ -292,6 +292,11 @@ $(document).ready(() => {
                     $.dynamicModal.close();
                     faqsTable.ajax.reload(null, false);
                 }
+            },
+            onError: (xhr) => {
+                $('#popup-overlay').remove();
+                const msg = xhr.responseJSON?.responseMsg || "Failed to save FAQ.";
+                showNotification(msg, "error");
             }
         });
     }
@@ -309,6 +314,11 @@ $(document).ready(() => {
                     $.dynamicModal.close();
                     faqsTable.ajax.reload(null, false);
                 }
+            },
+            onError: (xhr) => {
+                $('#popup-overlay').remove();
+                const msg = xhr.responseJSON?.responseMsg || "Failed to save FAQ.";
+                showNotification(msg, "error");
             }
         });
 

@@ -138,15 +138,15 @@ $(document).ready(() => {
                 url: `${baseApiUrl}/api/Rider/${riderId}`,
                 method: 'GET',
                 showMessage: false,
-                onSuccess: (response) => {
+                onSuccess: response => {
                     if (response.status === 200 && response.data) {
                         riderDetailsCache[riderId] = response.data;
                         resolve(response.data);
                     } else {
-                        showNotification(response.responseMsg || "Failed to load rider details", "error");
                         reject();
                     }
-                }
+                },
+                onError: () => reject()
             });
         });
     }
@@ -246,6 +246,11 @@ $(document).ready(() => {
                     delete riderDetailsCache[riderId];
                     ridersTable.ajax.reload(null, false);
                 }
+            },
+            onError: function (xhr) {
+                $('#popup-overlay').remove();
+                const msg = xhr.responseJSON?.responseMsg || "Failed to update rider.";
+                showNotification(msg, "error");
             }
         });
     }
@@ -328,6 +333,11 @@ $(document).ready(() => {
                     $.dynamicModal.close();
                     ridersTable.ajax.reload(null, false);
                 }
+            },
+            onError: (xhr) => {
+                $('#popup-overlay').remove();
+                const msg = xhr.responseJSON?.responseMsg || "Failed to create rider.";
+                showNotification(msg, "error");
             }
         });
     }

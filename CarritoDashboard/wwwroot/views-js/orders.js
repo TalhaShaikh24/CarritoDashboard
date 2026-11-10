@@ -1,5 +1,7 @@
 let ordersTable;
 
+let currentStatus = 0; // 0 = All
+
 const STATUS_MAP = {
     1: { text: "Pending", class: "pending" },
     2: { text: "Confirmed", class: "confirmed" },
@@ -11,8 +13,7 @@ const STATUS_MAP = {
 function getOrdersApiUrl() {
     const storekeeperId = AuthHelper.getStorekeeperId();
     if (AuthHelper.isStorekeeper() && storekeeperId) {
-        //return `${baseApiUrl}/api/Order/GetOrdersByStorekeeperId/${storekeeperId}`;
-        return `${baseApiUrl}/api/Order`;
+        return `${baseApiUrl}/api/Order/GetOrdersByStorekeeperId/${storekeeperId}`;
     }
     return `${baseApiUrl}/api/Order`;
 }
@@ -29,51 +30,91 @@ $(document).ready(() => {
 
     // Reload if storekeeper data becomes ready asynchronously
     $(document).on('storekeeperReady', function (e, skpUser) {
-        if (ordersTable && skpUser && skpUser.storekeeperId) {
-            ordersTable.ajax.url(`${baseApiUrl}/api/Order/GetOrdersByStorekeeperId/${skpUser.storekeeperId}`).load();
-            if (skpUser.storeName) {
-                $('.page-subtitle').text(`Viewing orders for ${skpUser.storeName}`);
-            }
+        if (skpUser && skpUser.storeName) {
+            $('.page-subtitle').text(`Viewing orders for ${skpUser.storeName}`);
+        }
+        if (ordersTable) {
+            ordersTable.ajax.reload(); // URL is rebuilt on every request
         }
     });
 
-    // Search
+    // Search (debounced, because every search is now a server request)
+    let searchTimer;
     $('#orderSearch').on('input', function () {
-        ordersTable.search(this.value).draw();
+        const value = this.value;
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => ordersTable.search(value).draw(), 400);
     });
 
     // Status filter tabs
     $('.filter-tab').click(function () {
         $('.filter-tab').removeClass('active');
         $(this).addClass('active');
-
-        const status = $(this).data('status');
-        ordersTable.column(6).search(status === 0 ? '' : `^${status}$`, true, false).draw();
-    });
-
-    // Export button (basic example - can be improved with actual CSV library)
-    $('#btnExportOrders').click(() => {
-        showNotification("Export functionality will be available soon", "info");
+        currentStatus = Number($(this).data('status')) || 0;
+        ordersTable.ajax.reload();
     });
 });
 
 function initializeDataTable() {
     ordersTable = $('#ordersTable').DataTable({
-        ajax: {
-            url: getOrdersApiUrl(),
-            type: 'GET',
-            dataSrc: function (response) {
-                if (response.status === 200 && response.data?.items) {
-                    return response.data.items;
-                }
-                showNotification(response.responseMsg || "Failed to load orders", "error");
-                return [];
+        processing: true,
+        serverSide: true,
+        searching: true,
+        ordering: false,          // server returns the order, same as inventory
+        pageLength: 10,
+        lengthMenu: [10, 25, 50, 100],
+        language: {
+            processing: '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>',
+            emptyTable: "No orders found",
+            info: "Page <strong>_PAGE_</strong> of <strong>_PAGES_</strong>",
+            paginate: {
+                previous: '<i class="fa fa-chevron-left"></i>',
+                next: '<i class="fa fa-chevron-right"></i>'
             }
+        },
+        ajax: function (data, callback) {
+            const pageSize = data.length;
+            const pageNumber = (data.start / data.length) + 1;
+            const searchValue = data.search.value;
+
+            const params = {
+                PageNumber: pageNumber,
+                PageSize: pageSize,
+                Search: searchValue
+            };
+            if (currentStatus) {
+                params.Status = currentStatus; // confirm the real parameter name, see below
+            }
+
+            $.ajax({
+                url: getOrdersApiUrl(),
+                type: 'GET',
+                data: params,
+                success: function (response) {
+                    const d = response && response.data;
+                    if (response && response.status === 200 && d) {
+                        const total = d.totalRecords ?? 0;
+                        callback({
+                            draw: data.draw,
+                            recordsTotal: total,
+                            recordsFiltered: total,
+                            data: d.items || []
+                        });
+                    } else {
+                        showNotification(response?.responseMsg || "Failed to load orders", "error");
+                        callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                    }
+                },
+                error: function () {
+                    showNotification("Failed to load orders", "error");
+                    callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                }
+            });
         },
         columns: [
             {
                 data: 'id',
-                render: d => `<strong>#ORD-${String(d).padStart(4, '0')}</strong>`
+                render: d => `<strong>#ORD-${d}</strong>`
             },
             {
                 data: null,
@@ -121,20 +162,6 @@ function initializeDataTable() {
                 }
             }
         ],
-        processing: true,
-        serverSide: false,
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-        language: {
-            processing: '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>',
-            emptyTable: "No orders found",
-            info: "Page <strong>_PAGE_</strong> of <strong>_PAGES_</strong>",
-            paginate: {
-                previous: '<i class="fa fa-chevron-left"></i>',
-                next: '<i class="fa fa-chevron-right"></i>'
-            }
-        },
-        order: [[3, 'desc']], // default sort by date descending
         drawCallback: function () {
             lucide?.createIcons();
         }
@@ -205,7 +232,7 @@ function showOrderDetailModal(order) {
         <div class="od-wrapper">
             <div class="od-header">
                 <div>
-                    <h3 class="od-id">#ORD-${String(order.id).padStart(4, '0')}</h3>
+                    <h3 class="od-id">#ORD-${order.id}</h3>
                     <div class="od-date">${formatTime(order.createdAt)}</div>
                 </div>
                 <span class="od-badge ${status.class}">${status.text}</span>

@@ -12,7 +12,6 @@ let selectedFiles = { newSettlement: {} };
 
 $(document).ready(() => {
     initializeDataTable();
-    populateFilters();
     fetchRiders();
     fetchStoreKeepers();
 
@@ -20,7 +19,7 @@ $(document).ready(() => {
         settlementTable.search(this.value).draw();
     });
 
-    $('#filterType, #filterStatus').on('change', () => settlementTable.ajax.reload());
+    $('#filterStatus').on('change', () => settlementTable.ajax.reload());
 
     $(document).on('click', '.action-btn.edit', function () {
         const data = $(this).data();
@@ -71,7 +70,7 @@ function initializeDataTable() {
                 data: 'recieptPhotoFilePath',
                 width: '60px',
                 render: (data) => {
-                    const imgUrl = data ? `${baseApiUrl}/${data}` : '/images/placeholder-receipt.png';
+                    const imgUrl = `${baseApiUrl}/${data}`;
                     return `<a href="${imgUrl}" target="_blank">
                                 <img src="${imgUrl}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">
                             </a>`;
@@ -125,10 +124,6 @@ function fetchStoreKeepers() {
     });
 }
 
-function populateFilters() {
-    $("#filterType, #filterStatus").customSelect();
-}
-
 function renderTypeBadge(typeId) {
     const isRider = typeId == SettlementType.RiderCodSettlement;
     const icon = isRider ? 'bike' : 'store';
@@ -159,7 +154,9 @@ $('#btnAddNewSettlement').click(function () {
             { text: "Cancel", class: "btn-outline", action: "close" },
             { text: "Create Settlement", class: "btn-primary", action: "save" }
         ],
-        onButtonClick: (action) => action === "save" && saveNewSettlement()
+        onButtonClick: (action) => {
+            if (action === "save") saveNewSettlement();
+        }
     });
 
     $("#newSetStatus, #newSetTargetUser").customSelect();
@@ -174,6 +171,9 @@ $('#btnAddNewSettlement').click(function () {
 });
 
 function populateTargetUserSelect(typeVal) {
+    const $targetLabel = $("#newSetTargetUserLabel");
+    $targetLabel.html(((typeVal === SettlementType.RiderCodSettlement) ? 'Rider' : 'Storekeeper') + ' <span style="color: red;">*</span>');
+
     const $targetSelect = $("#newSetTargetUser");
     $targetSelect.empty().append('<option value="">Select User</option>');
 
@@ -221,6 +221,11 @@ function saveNewSettlement() {
                 $.dynamicModal.close();
                 settlementTable.ajax.reload(null, false);
             }
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to create settlement.";
+            showNotification(msg, "error");
         }
     });
 }
@@ -238,14 +243,18 @@ function editSettlement(id, status, amount, userName) {
             { text: "Cancel", class: "btn-outline", action: "close" },
             { text: "Update Status", class: "btn-primary", action: "save" }
         ],
-        onButtonClick: (action) => action === "save" && updateSettlementStatus(id)
+        onButtonClick: (action) => {
+            if (action === "save") updateSettlementStatus(id, $('#editSetStatus').val());
+        }
     });
 
     $("#editSetStatus").customSelect();
 }
 
 function updateSettlementStatus(id, newStatus) {
-
+    const statusToUpdate = (newStatus !== undefined && newStatus !== null && newStatus !== "") 
+        ? newStatus 
+        : $('#editSetStatus').val();
 
     $.confirmDialog({
         title: "Change Status",
@@ -256,25 +265,26 @@ function updateSettlementStatus(id, newStatus) {
             ajaxRequest({
                 url: `${baseApiUrl}/api/Settlement/${id}`,
                 method: 'PUT',
-                data: JSON.stringify({ status: parseInt(newStatus) }), 
+                data: JSON.stringify({ status: parseInt(statusToUpdate) }), 
                 contentType: 'application/json',
-                showMessage: true,
+                showMessage: false,
+                showErrorModal: false,
                 onSuccess: (res) => {
                     if (res.status === 200) {
-
+                        $.dynamicModal.close();
+                        showNotification("Settlement status updated successfully.", "success");
                         settlementTable.ajax.reload(null, false);
                     }
+                },
+                onError: function (xhr) {
+                    $('#popup-overlay').remove();
+                    const msg = xhr.responseJSON?.responseMsg || "Failed to update settlement status.";
+                    showNotification(msg, "error");
                 }
             });
         },
         onCancel: function () {
-            console.log("User cancelled");
             return;
         }
     });
-
-
-
-
-    
 }

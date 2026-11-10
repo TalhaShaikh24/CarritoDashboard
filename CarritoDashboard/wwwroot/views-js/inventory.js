@@ -110,8 +110,8 @@ function initializeDataTable() {
             const searchValue = data.search.value;
 
             const storekeeperId = getActiveStorekeeperId();
-            const categoryId = $('#filterCategory').val() || null;
-            const brandId = $('#filterBrand').val() || null;
+            const categoryId = $('#filterCategory').val() == 'All Categories' ? null : $('#filterCategory').val();
+            const brandId = $('#filterBrand').val() == 'All Brands' ? null : $('#filterBrand').val();
 
             if (!storekeeperId) {
                 callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
@@ -126,8 +126,8 @@ function initializeDataTable() {
                     PageNumber: pageNumber,
                     PageSize: pageSize,
                     Search: searchValue,
-                    CategoryId: categoryId,
-                    BrandId: brandId
+                    CategoryIds: categoryId,
+                    BrandIds: brandId
                 },
                 success: function (response) {
                     if (response && response.status === 200 && response.data) {
@@ -268,7 +268,7 @@ function fetchCategories() {
 function populateCategoryFilter() {
     const catSelect = $('#filterCategory');
     catSelect.empty();
-    catSelect.append(new Option('All Categories', ''));
+    catSelect.append(new Option('All Categories', 'All Categories'));
     categoriesCache.forEach(c => catSelect.append(new Option(c.name, c.id)));
     if (catSelect.data('customSelect')) {
         catSelect.customSelect('refresh');
@@ -277,7 +277,7 @@ function populateCategoryFilter() {
 
 function fetchBrands() {
     return new Promise(resolve => {
-        const params = { PageSize: 100 };
+        const params = { PageSize: 10000 };
         const storekeeperId = getActiveStorekeeperId();
         if (storekeeperId) {
             params.storekeeperId = storekeeperId;
@@ -292,7 +292,7 @@ function fetchBrands() {
 function populateBrandFilter() {
     const brandSelect = $('#filterBrand');
     brandSelect.empty();
-    brandSelect.append(new Option('All Brands', ''));
+    brandSelect.append(new Option('All Brands', 'All Brands'));
     brandsCache.forEach(b => brandSelect.append(new Option(b.name, b.id)));
     if (brandSelect.data('customSelect')) {
         brandSelect.customSelect('refresh');
@@ -372,7 +372,7 @@ function editInventory(id) {
                 $template.find('#editInvCategory').append(getOptionsHtml(categoriesCache, item.categoryId));
                 $template.find('#editInvBrand').append(getOptionsHtml(brandsCache, item.brandId));
                 $template.find('#editInvUnit').append(getOptionsHtml(unitsCache, item.unitId));
-
+                
                 $.dynamicModal({
                     title: "Edit Inventory Item",
                     bodyHtml: $template.prop('outerHTML'), // Get HTML string
@@ -395,7 +395,7 @@ function editInventory(id) {
                 $('#editInvWeight').val(item.weight);
                 $('#editInvDescription').val(item.description);
                 // Type is shown but cannot be changed in Edit (the select is disabled)
-                debugger
+                
                 $("#editInvPackSize").removeAttr("required");
                 $('#editInvPackSizeLabel').html('Pack Size');
 
@@ -483,6 +483,11 @@ function addNewInventory() {
                 $.dynamicModal.close();
                 inventoryTable.ajax.reload(null, false);
             }
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to create inventory item.";
+            showNotification(msg, "error");
         }
     });
 }
@@ -547,6 +552,11 @@ function updateInventory(id) {
                 $.dynamicModal.close();
                 inventoryTable.ajax.reload(null, false);
             }
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to update inventory item.";
+            showNotification(msg, "error");
         }
     });
 }
@@ -668,6 +678,7 @@ function submitQuickAddPopup() {
             }
         },
         onError: () => {
+            $('#popup-overlay').remove();
             $saveBtn.prop('disabled', false);
         }
     });
@@ -1063,6 +1074,7 @@ function downloadImportSampleFile() {
             }
         },
         onError: () => {
+            $('#popup-overlay').remove();
             showNotification('Failed to download sample file.', 'error');
         }
     });
@@ -1479,6 +1491,11 @@ function submitImportInventory() {
                     inventoryTable.ajax.reload(null, false);
                 }
             }
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to import inventory items.";
+            showNotification(msg, "error");
         }
     });
 }

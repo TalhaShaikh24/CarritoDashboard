@@ -307,6 +307,11 @@ function updateStorekeeper(storekeeperId) {
                 delete storekeeperDetailsCache[storekeeperId];
                 storekeepersTable.ajax.reload(null, false);
             }
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to update storekeeper.";
+            showNotification(msg, "error");
         }
     });
 }
@@ -404,6 +409,11 @@ function addNewStorekeeper() {
                 $.dynamicModal.close();
                 storekeepersTable.ajax.reload(null, false);
             }
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to create storekeeper.";
+            showNotification(msg, "error");
         }
     });
 }

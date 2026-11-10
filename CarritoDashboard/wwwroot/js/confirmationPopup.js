@@ -45,11 +45,9 @@
             settings.onConfirm();
         });
 
-        $("#confirmCancel, #confirmOverlay").on("click", function (e) {
-            if (e.target.id === "confirmOverlay" || e.target.id === "confirmCancel") {
-                $("#confirmOverlay").remove();
-                settings.onCancel();
-            }
+        $("#confirmCancel").on("click", function () {
+            $("#confirmOverlay").remove();
+            settings.onCancel();
         });
     };
 

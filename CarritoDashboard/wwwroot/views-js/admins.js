@@ -107,6 +107,11 @@ function addNewAdmin() {
                 adminsTable.ajax.reload();
                 showNotification("Admin created and OTP sent!", "success");
             }
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to create admin.";
+            showNotification(msg, "error");
         }
     });
 }
@@ -167,6 +172,11 @@ function updateAdmin(adminId) {
         onSuccess: () => {
             $.dynamicModal.close();
             adminsTable.ajax.reload(null, false);
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to update admin.";
+            showNotification(msg, "error");
         }
     });
 }
@@ -240,9 +250,6 @@ $(document).on('click', '.action-btn.view', function () {
                 // Icons initialize karein
                 lucide?.createIcons();
             }
-        },
-        onError: () => {
-            showNotification("Failed to load admin details", "error");
         }
     });
 });

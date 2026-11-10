@@ -253,6 +253,11 @@ function addNewCategory() {
                 $.dynamicModal.close();
                 categoriesTable.ajax.reload(null, false);
             }
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to create category.";
+            showNotification(msg, "error");
         }
     });
 }
@@ -329,6 +334,11 @@ function updateCategory(id) {
                 $.dynamicModal.close();
                 categoriesTable.ajax.reload(null, false);
             }
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to update category.";
+            showNotification(msg, "error");
         }
     });
 }

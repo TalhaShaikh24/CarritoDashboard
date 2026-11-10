@@ -107,6 +107,11 @@ function saveCoupon() {
                 $.dynamicModal.close();
                 loadCoupons();
             }
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to create coupon.";
+            showNotification(msg, "error");
         }
     });
 }
@@ -166,6 +171,11 @@ function updateOffer(id) {
                 $.dynamicModal.close();
                 loadCoupons();
             }
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to update offer.";
+            showNotification(msg, "error");
         }
     });
 }

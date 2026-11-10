@@ -74,7 +74,7 @@
         // === Event listeners clean & re-attach ===
         const $doc = $(document);
         const $footer = $("#modalFooter");
-        const $closeElements = $("#modalCloseBtn, #modalOverlay");
+        const $closeElements = $("#modalCloseBtn");
 
         // Purane listeners remove karo
         $closeElements.off(".dynamicModal");

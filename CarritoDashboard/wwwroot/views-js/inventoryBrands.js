@@ -155,7 +155,10 @@ function initializeDataTable() {
                 render: function (data, type, row) {
 
                     if (data) {
-                        return `<img src="${baseApiUrl}/${data}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;" alt="${row.name}">`;
+                        const imgUrl = `${baseApiUrl}/${data}`;
+                        return `<a href="${imgUrl}" target="_blank">
+                                    <img src="${imgUrl}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;" alt="${row.name}">
+                                </a>`;
                     }
                     return `<div style="width: 40px; height: 40px; background: #eee; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #888;">${row.name.charAt(0).toUpperCase()}</div>`;
                 }
@@ -257,6 +260,11 @@ function addNewBrand() {
                 $.dynamicModal.close();
                 brandsTable.ajax.reload(null, false);
             }
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to create brand.";
+            showNotification(msg, "error");
         }
     });
 }
@@ -336,6 +344,11 @@ function updateBrand(id) {
                 $.dynamicModal.close();
                 brandsTable.ajax.reload(null, false);
             }
+        },
+        onError: (xhr) => {
+            $('#popup-overlay').remove();
+            const msg = xhr.responseJSON?.responseMsg || "Failed to update brand.";
+            showNotification(msg, "error");
         }
     });
 }

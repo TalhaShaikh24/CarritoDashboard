@@ -138,6 +138,11 @@ function showNotification(message, type = "info", statusCode = null, customTitle
         $("body").append($container);
     }
 
+    // Avoid duplicate notifications with the same message already visible
+    if ($container.find('.notification-message').filter(function () { return $(this).text().trim() === String(message).trim(); }).length > 0) {
+        return;
+    }
+
     const notification = $(`
         <div class="notification notification-${type}">
             <i class="${icons[type] || icons.info}"></i>
