@@ -178,8 +178,29 @@ function getCustomerName(customerId) {
 }
 
 // -----------------------------------------------------------------------------
-// 3. Status Determination Helper
+// 3. Status & Discount Type Determination Helpers
 // -----------------------------------------------------------------------------
+function isPercentageCoupon(c) {
+    if (!c) return false;
+    const type = c.discountType ?? c.DiscountType;
+    // DiscountType Enum: 1 = Percentage, 2 = Amount
+    if (type === 1 || type === "1" || String(type).toLowerCase() === "percentage") {
+        return true;
+    }
+    if (type === 2 || type === "2" || String(type).toLowerCase() === "amount" || String(type).toLowerCase() === "flat") {
+        return false;
+    }
+    if (c.discountPercentage && Number(c.discountPercentage) > 0) {
+        return true;
+    }
+    return false;
+}
+
+function getCouponDiscountValue(c) {
+    if (!c) return 0;
+    return Number(c.discountValue ?? c.DiscountValue ?? c.discountPercentage ?? 0);
+}
+
 function getCouponStatus(coupon) {
     const now = new Date();
     const start = new Date(coupon.startDate);
@@ -271,11 +292,13 @@ function renderCoupons() {
 
     filtered.forEach(c => {
         const status = getCouponStatus(c);
-        const isPercentage = (c.discountPercentage && c.discountPercentage > 0);
+        const isPercentage = isPercentageCoupon(c);
+        const discVal = getCouponDiscountValue(c);
         const discountText = isPercentage 
-            ? `${c.discountPercentage}%` 
-            : `Rs. ${Number(c.discountValue || 0).toLocaleString()}`;
+            ? `${discVal}%` 
+            : `Rs. ${discVal.toLocaleString()}`;
         const discountSub = isPercentage ? "OFF" : "FLAT OFF";
+        const maxCap = Number(c.maxDiscountAmount ?? c.maxOrderAmount ?? 0);
 
         const startFormatted = c.startDate ? new Date(c.startDate).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
         const expiryFormatted = c.expiryDate ? new Date(c.expiryDate).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
@@ -342,12 +365,16 @@ function renderCoupons() {
                 <div class="voucher-body">
                     <div class="voucher-specs-grid">
                         <div class="voucher-spec-item">
+                            <span class="voucher-spec-label">Type</span>
+                            <span class="voucher-spec-value">${isPercentage ? 'Percentage (%)' : 'Flat Amount'}</span>
+                        </div>
+                        <div class="voucher-spec-item">
                             <span class="voucher-spec-label">Min. Order</span>
                             <span class="voucher-spec-value">${c.minOrderValue > 0 ? `Rs. ${Number(c.minOrderValue).toLocaleString()}` : 'No Min.'}</span>
                         </div>
-                        <div class="voucher-spec-item">
-                            <span class="voucher-spec-label">Max. Discount</span>
-                            <span class="voucher-spec-value">${c.maxOrderAmount > 0 ? `Rs. ${Number(c.maxOrderAmount).toLocaleString()}` : (isPercentage ? 'No Cap' : 'N/A')}</span>
+                        <div class="voucher-spec-item" style="grid-column: span 2;">
+                            <span class="voucher-spec-label">Max. Discount Cap</span>
+                            <span class="voucher-spec-value">${maxCap > 0 ? `Rs. ${maxCap.toLocaleString()}` : (isPercentage ? 'No Cap' : 'N/A')}</span>
                         </div>
                     </div>
 
@@ -387,9 +414,14 @@ function renderCoupons() {
         const rowHtml = `
             <tr>
                 <td><strong style="font-family: monospace; font-size: 14px; letter-spacing: 0.05em; color: #0aa64a;">${c.code}</strong></td>
-                <td><strong>${discountText} ${discountSub}</strong></td>
+                <td>
+                    <strong>${discountText}</strong>
+                    <span style="font-size: 11px; margin-left: 4px; padding: 2px 7px; border-radius: 6px; background: ${isPercentage ? '#e0f2fe' : '#fef3c7'}; color: ${isPercentage ? '#0369a1' : '#b45309'}; font-weight: 700;">
+                        ${isPercentage ? 'Percentage' : 'Flat Amount'}
+                    </span>
+                </td>
                 <td>${c.minOrderValue > 0 ? `Rs. ${Number(c.minOrderValue).toLocaleString()}` : '-'}</td>
-                <td>${c.maxOrderAmount > 0 ? `Rs. ${Number(c.maxOrderAmount).toLocaleString()}` : '-'}</td>
+                <td>${maxCap > 0 ? `Rs. ${maxCap.toLocaleString()}` : '-'}</td>
                 <td>
                     <span style="font-size: 12px;">${startFormatted} &rarr; ${expiryFormatted}</span>
                 </td>
@@ -637,9 +669,10 @@ function openEditCouponModal(coupon) {
     $('#btnGenerateRandomCode').hide();
     $('#codeHelpText').text('Coupon code cannot be changed once created. Other parameters can be updated.');
 
-    // Determine existing discount type
-    const isPercentage = (coupon.discountPercentage && coupon.discountPercentage > 0);
-    const existingVal = isPercentage ? coupon.discountPercentage : coupon.discountValue;
+    // Determine existing discount type from API (DiscountType Enum: 1 = Percentage, 2 = Amount)
+    const isPercentage = isPercentageCoupon(coupon);
+    const existingVal = getCouponDiscountValue(coupon);
+    const maxDiscountVal = Number(coupon.maxDiscountAmount ?? coupon.maxOrderAmount ?? 0);
 
     if (isPercentage) {
         $('#btnDiscTypePercent').addClass('active');
@@ -686,7 +719,7 @@ function openEditCouponModal(coupon) {
     });
 
     if (coupon.minOrderValue > 0) $('#modalMinOrderValue').val(coupon.minOrderValue);
-    if (coupon.maxOrderAmount > 0) $('#modalMaxDiscount').val(coupon.maxOrderAmount);
+    if (maxDiscountVal > 0) $('#modalMaxDiscount').val(maxDiscountVal);
     $('#modalUsageLimit').val(coupon.usageLimit || 100);
 
     if (coupon.startDate) {
