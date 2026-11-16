@@ -1,13 +1,18 @@
 let ordersTable;
 
+let currentOrderType = 0; // 0 = All
 let currentStatus = 0; // 0 = All
+
+const ORDER_TYPE_TEXT = { 1: "Online", 2: "InStore" };
 
 const STATUS_MAP = {
     1: { text: "Pending", class: "pending" },
     2: { text: "Confirmed", class: "confirmed" },
-    3: { text: "Out for Delivery", class: "delivery" },
-    4: { text: "Delivered", class: "completed" },
-    5: { text: "Cancelled", class: "cancelled" }
+    3: { text: "Rider Assigned", class: "delivery" },
+    4: { text: "Out for Delivery", class: "delivery" },
+    5: { text: "Delivered", class: "completed" },
+    6: { text: "Cancelled", class: "cancelled" },
+    7: { text: "Completed", class: "completed" }
 };
 
 function getOrdersApiUrl() {
@@ -46,13 +51,18 @@ $(document).ready(() => {
         searchTimer = setTimeout(() => ordersTable.search(value).draw(), 400);
     });
 
-    // Status filter tabs
-    $('.filter-tab').click(function () {
-        $('.filter-tab').removeClass('active');
-        $(this).addClass('active');
-        currentStatus = Number($(this).data('status')) || 0;
+    $('#orderTypeFilter').on('change', function () {
+        currentOrderType = Number($(this).val()) || 0;
         ordersTable.ajax.reload();
     });
+
+    $('#orderStatusFilter').on('change', function () {
+        currentStatus = Number($(this).val()) || 0;
+        ordersTable.ajax.reload();
+    });
+
+    $('#orderTypeFilter').customSelect();
+    $('#orderStatusFilter').customSelect();
 });
 
 function initializeDataTable() {
@@ -82,8 +92,13 @@ function initializeDataTable() {
                 PageSize: pageSize,
                 Search: searchValue
             };
+
             if (currentStatus) {
-                params.Status = currentStatus; // confirm the real parameter name, see below
+                params.Status = currentStatus;
+            }
+
+            if (currentOrderType) {
+                params.OrderType = currentOrderType;
             }
 
             $.ajax({
@@ -113,8 +128,18 @@ function initializeDataTable() {
         },
         columns: [
             {
-                data: 'id',
-                render: d => `<strong>#ORD-${d}</strong>`
+                data: null,
+                render: function (data) {
+                    const typeBadge = data.type == 1 ?
+                        '<span class="badge badge-light-primary badge-type">Online</span>'
+                        : '<span class="badge badge-light-warning badge-type">InStore</span>';
+                    return `
+                        <div class="product-title-cell">
+                            <span class="product-title">#ORD-${data.id}</span>
+                            ${typeBadge}
+                        </div>
+                    `;
+                }
             },
             {
                 data: null,
@@ -137,13 +162,13 @@ function initializeDataTable() {
                 })
             },
             {
-                data: 'netPrice',
+                data: 'grandTotal',
                 render: d => `<strong>Rs. ${Number(d || 0).toFixed(2)}</strong>`
             },
             {
                 data: 'status',
                 render: function (data) {
-                    const s = STATUS_MAP[data] || { text: 'Unknown', class: 'unknown' };
+                    const s = STATUS_MAP[data];
                     return `<span class="status-badge ${s.class}">${s.text}</span>`;
                 }
             },
@@ -191,7 +216,7 @@ function viewOrderDetails(orderId) {
 
 
 function showOrderDetailModal(order) {
-    const status = STATUS_MAP[order.status] || { text: 'Unknown', class: 'unknown' };
+    const status = STATUS_MAP[order.status];
 
     // Helpers
     const formatMoney = (amount) => `Rs. ${Number(amount || 0).toLocaleString('en-PK', { minimumFractionDigits: 2 })}`;
@@ -227,7 +252,7 @@ function showOrderDetailModal(order) {
             </tr>
         `).join('');
     }
-
+    
     const html = `
         <div class="od-wrapper">
             <div class="od-header">
@@ -249,11 +274,13 @@ function showOrderDetailModal(order) {
                     <div class="od-card-value">${order.storekeeperStoreName || 'Unknown'}</div>
                     <div class="od-card-sub">${order.storekeeperPhone || '---'}</div>
                 </div>
-                <div class="od-card">
-                    <div class="od-card-label"><i data-lucide="bike" width="14"></i> Rider</div>
-                    <div class="od-card-value">${order.riderFullName || 'Not Assigned'}</div>
-                    <div class="od-card-sub">${order.riderPhone || '---'}</div>
-                </div>
+                ${ORDER_TYPE_TEXT[order.type] === "Online" ? `
+                    <div class="od-card">
+                        <div class="od-card-label"><i data-lucide="bike" width="14"></i> Rider</div>
+                        <div class="od-card-value">${order.riderFullName || 'Not Assigned'}</div>
+                        <div class="od-card-sub">${order.riderPhone || '---'}</div>
+                    </div>`
+                : ``}
             </div>
 
             <div class="od-section">
@@ -262,20 +289,21 @@ function showOrderDetailModal(order) {
                     ${historyHtml}
                 </div>
             </div>
-
-            <div class="od-section">
-                <div class="od-section-title"><i data-lucide="map" width="18"></i> Locations</div>
-                <div class="od-address-row">
-                    <div class="od-addr-col">
-                        <div class="od-addr-label">Pickup From (Store)</div>
-                        <div class="od-addr-val"><i data-lucide="store" width="14" style="vertical-align:middle"></i> ${order.pickupAddress?.address || 'N/A'}</div>
-                    </div>
-                    <div class="od-addr-col">
-                        <div class="od-addr-label">Deliver To (Customer)</div>
-                        <div class="od-addr-val"><i data-lucide="map-pin" width="14" style="vertical-align:middle"></i> ${order.deliveryAddress?.address || 'N/A'}</div>
+            ${ORDER_TYPE_TEXT[order.type] === "Online" ? `
+                <div class="od-section">
+                    <div class="od-section-title"><i data-lucide="map" width="18"></i> Locations</div>
+                    <div class="od-address-row">
+                        <div class="od-addr-col">
+                            <div class="od-addr-label">Pickup From (Store)</div>
+                            <div class="od-addr-val"><i data-lucide="store" width="14" style="vertical-align:middle"></i> ${order.pickupAddress?.address || 'N/A'}</div>
+                        </div>
+                        <div class="od-addr-col">
+                            <div class="od-addr-label">Deliver To (Customer)</div>
+                            <div class="od-addr-val"><i data-lucide="map-pin" width="14" style="vertical-align:middle"></i> ${order.deliveryAddress?.address || 'N/A'}</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            `: ''}
 
             <div class="od-section">
                 <div class="od-section-title"><i data-lucide="shopping-cart" width="18"></i> Order Items</div>
@@ -297,8 +325,8 @@ function showOrderDetailModal(order) {
                 <div class="od-section-title"><i data-lucide="receipt" width="18"></i> Payment Summary</div>
                 <div class="od-payment-box">
                     <div class="od-pay-row">
-                        <span>Subtotal (Offer Price)</span>
-                        <span>${formatMoney(order.offerPrice)}</span>
+                        <span>Subtotal</span>
+                        <span>${formatMoney(order.subtotal)}</span>
                     </div>
                     <div class="od-pay-row">
                         <span>Delivery Charges</span>
@@ -308,9 +336,13 @@ function showOrderDetailModal(order) {
                         <span>Discount</span>
                         <span style="color:#16a34a;">- ${formatMoney(order.discount)}</span>
                     </div>
+                    <div class="od-pay-row">
+                        <span>Tax</span>
+                        <span style="color:#16a34a;">- ${formatMoney(order.tax)}</span>
+                    </div>
                     <div class="od-pay-row total">
                         <span>Total Payable</span>
-                        <span>${formatMoney(order.netPrice)}</span>
+                        <span>${formatMoney(order.grandTotal)}</span>
                     </div>
                 </div>
             </div>

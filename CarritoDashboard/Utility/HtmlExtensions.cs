@@ -4,7 +4,7 @@ namespace Restaurant.Utility
 {
     public static class HtmlExtensions
     {
-        public static string IsActive(this IHtmlHelper html, string controller, string action = null)
+        public static string IsActive(this IHtmlHelper html, string controller, string? action = null)
         {
             var routeData = html.ViewContext.RouteData.Values;
             var routeAction = routeData["action"]?.ToString();

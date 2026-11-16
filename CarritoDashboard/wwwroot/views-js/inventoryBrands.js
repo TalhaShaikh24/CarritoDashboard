@@ -153,7 +153,6 @@ function initializeDataTable() {
             {
                 data: 'photoFilePath',
                 render: function (data, type, row) {
-
                     if (data) {
                         const imgUrl = `${baseApiUrl}/${data}`;
                         return `<a href="${imgUrl}" target="_blank">

@@ -7,21 +7,24 @@
         </div>
 
         <div class="module-header-right">
-            <div class="filter-tabs" id="orderStatusTabs">
-                <button class="filter-tab active" data-status="0">All</button>
-                <button class="filter-tab" data-status="1">Pending</button>
-                <button class="filter-tab" data-status="2">Confirmed</button>
-                <button class="filter-tab" data-status="3">Out for Delivery</button>
-                <button class="filter-tab" data-status="4">Delivered</button>
-                <button class="filter-tab" data-status="5">Cancelled</button>
-            </div>
+            <select class="form-control" id="orderTypeFilter" style="min-width: 140px;">
+                <option value="0">All Types</option>
+                <option value="1">Online</option>
+                <option value="2">InStore</option>
+            </select>
+            <select class="form-control" id="orderStatusFilter" style="min-width: 140px;">
+                <option value="0">All Status</option>
+                <option value="1">Pending</option>
+                <option value="2">Confirmed</option>
+                <option value="3">Rider Assigned</option>
+                <option value="4">Out for Delivery</option>
+                <option value="5">Delivered</option>
+                <option value="6">Cancelled</option>
+                <option value="7">Completed InStore</option>
+            </select>
         </div>
 
     </div>
-
-
-    
-
     <div class="table-container">
         <table class="data-table" id="ordersTable">
             <thead>

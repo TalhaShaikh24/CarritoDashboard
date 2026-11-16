@@ -45,6 +45,7 @@
                     <th>Category</th>
                     <th>Brand</th>
                     <th>Price</th>
+                    <th>Stock</th>
                     <th>Status</th>
                     <th class="text-center">Actions</th>
                 </tr>
@@ -134,17 +135,22 @@
         </div>
         <div class="form-row">
             <div class="form-group col-md-6">
-                <label>Category <a href="javascript:void(0);" class="quick-add-link" data-kind="category" data-target="editInvCategory">+ Add New</a></label>
-                <select id="editInvCategory" class="form-control">
+                <label>Category *<a href="javascript:void(0);" class="quick-add-link" data-kind="category" data-target="editInvCategory">+ Add New</a></label>
+                <select id="editInvCategory" class="form-control" required>
                     <option value="">Select Category</option>
                 </select>
             </div>
             <div class="form-group col-md-6">
-                <label>Brand <a href="javascript:void(0);" class="quick-add-link" data-kind="brand" data-target="editInvBrand">+ Add New</a></label>
-                <select id="editInvBrand" class="form-control">
+                <label>Brand *<a href="javascript:void(0);" class="quick-add-link" data-kind="brand" data-target="editInvBrand">+ Add New</a></label>
+                <select id="editInvBrand" class="form-control" required>
                     <option value="">Select Brand</option>
                 </select>
             </div>
+        </div>
+
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="editInvDescription" class="form-control" rows="3" placeholder="Enter Description"></textarea>
         </div>
 
         <div class="form-row">
@@ -156,7 +162,7 @@
                 </select>
             </div>
             <div class="form-group col-md-6">
-                <label>Unit</label>
+                <label id="editInvUnitLabel">Unit</label>
                 <select id="editInvUnit" class="form-control">
                     <option value="">Select Unit</option>
                 </select>
@@ -165,12 +171,8 @@
 
         <div class="form-row">
             <div class="form-group col-md-3">
-                <label>Weight *</label>
-                <input type="number" id="editInvWeight" class="form-control" min="0" step="0.01" required placeholder="Enter Weight">
-            </div>
-            <div class="form-group col-md-6">
-                <label id="editInvPriceLabel">Price</label>
-                <input type="number" id="editInvPrice" class="form-control" min="0" required placeholder="Enter Price">
+                <label>Weight</label>
+                <input type="number" id="editInvWeight" class="form-control" min="0" step="0.01" placeholder="Enter Weight">
             </div>
             <div class="form-group col-md-3">
                 <label id="editInvPackSizeLabel">Pack Size</label>
@@ -178,14 +180,28 @@
             </div>
             <div class="form-group col-md-3">
                 <label>Min Order Quantity *</label>
-                <input type="number" id="editInvMinOrderQuantity" class="form-control" min="0" step="0.01" required placeholder="Enter Min Order Quantity">
+                <input type="number" id="editInvMinOrderQuantity" class="form-control" min="0" required placeholder="Enter Min Order Quantity">
             </div>
-        </div>
-
-
-        <div class="form-group">
-            <label>Description</label>
-            <textarea id="editInvDescription" class="form-control" rows="3" placeholder="Enter Description"></textarea>
+            <div class="form-group col-md-4">
+                <label>Tax Rate *</label>
+                <select id="editInvTaxRate" class="form-control">
+                </select>
+            </div>
+            <div class="form-group col-md-4">
+                <label>Tax Type *</label>
+                <select id="editInvTaxType" class="form-control">
+                    <option value="1">Inclusive</option>
+                    <option value="2">Exclusive</option>
+                </select>
+            </div>
+            <div class="form-group col-md-4">
+                <label>Discount</label>
+                <input type="number" id="editInvDiscount" class="form-control" min="0" step="1" placeholder="Enter Discount">
+            </div>
+            <div class="form-group col-md-6">
+                <label id="editInvPriceLabel">Price</label>
+                <input type="number" id="editInvPrice" class="form-control" min="0" required placeholder="Enter Price">
+            </div>
         </div>
 
         <hr style="margin: 20px 0;">

@@ -110,9 +110,9 @@ const AuthHelper = (function () {
                 '/inventorytransaction', '/inventorytransaction/index',
                 '/order', '/order/index'
             ];
-
+            
             if (!allowedPaths.includes(path)) {
-                sessionStorage.setItem('accessDeniedNotice', 'Storekeepers can only access Dashboard, Inventory, Categories, Brands, and Orders.');
+                sessionStorage.setItem('accessDeniedNotice', 'Storekeepers do not have access.');
                 window.location.replace('/Home/Index');
                 return;
             }

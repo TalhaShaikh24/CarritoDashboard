@@ -27,10 +27,10 @@
         </div>
     </div>
 
-    <!-- 6 Compact KPI Cards -->
+    <!-- Compact KPI Cards -->
     <div class="dash-kpi-grid">
-        <!-- 1. Total Revenue -->
-        <div class="kpi-card">
+        <!-- Total Revenue -->
+        <div class="kpi-card" id="box-revenue">
             <div class="kpi-top">
                 <span class="kpi-label">Total Revenue</span>
                 <i class="kpi-icon" data-lucide="wallet"></i>
@@ -41,8 +41,32 @@
             </div>
         </div>
 
-        <!-- 2. Platform Commission -->
-        <div class="kpi-card">
+        <!-- Total Purchase -->
+        <div class="kpi-card" id="box-purchase">
+            <div class="kpi-top">
+                <span class="kpi-label">Total Purchase</span>
+                <i class="kpi-icon" data-lucide="shopping-cart"></i>
+            </div>
+            <div class="kpi-value" id="stat-purchase">Rs 0</div>
+            <div class="kpi-foot">
+                <span class="kpi-badge-orange">Gross purchases</span>
+            </div>
+        </div>
+
+        <!-- Total Purchase Invoies -->
+        <div class="kpi-card" id="box-purchase-invoices">
+            <div class="kpi-top">
+                <span class="kpi-label">Purchase Invoices</span>
+                <i class="kpi-icon" data-lucide="file-text"></i>
+            </div>
+            <div class="kpi-value" id="stat-purchase-invoices">0</div>
+            <div class="kpi-foot">
+                <span class="kpi-badge-orange">Total purchase invoices</span>
+            </div>
+        </div>
+
+        <!-- Platform Commission -->
+        <div class="kpi-card" id="box-commission">
             <div class="kpi-top">
                 <span class="kpi-label">Commission</span>
                 <i class="kpi-icon" data-lucide="percent"></i>
@@ -53,8 +77,8 @@
             </div>
         </div>
 
-        <!-- 3. Active Customers -->
-        <div class="kpi-card">
+        <!-- Active Customers -->
+        <div class="kpi-card" id="box-customers">
             <div class="kpi-top">
                 <span class="kpi-label">Customers</span>
                 <i class="kpi-icon" data-lucide="users"></i>
@@ -65,8 +89,8 @@
             </div>
         </div>
 
-        <!-- 4. Orders Delivered -->
-        <div class="kpi-card">
+        <!-- Orders Delivered -->
+        <div class="kpi-card" id="box-orders">
             <div class="kpi-top">
                 <span class="kpi-label">Orders</span>
                 <i class="kpi-icon" data-lucide="package-check"></i>
@@ -77,8 +101,32 @@
             </div>
         </div>
 
-        <!-- 5. Active Stores -->
-        <div class="kpi-card">
+        <!-- Average Order Value -->
+        <div class="kpi-card" id="box-average-order-value">
+            <div class="kpi-top">
+                <span class="kpi-label">Avg Order Value</span>
+                <i class="kpi-icon" data-lucide="chart-no-axes-combined"></i>
+            </div>
+            <div class="kpi-value" id="stat-average-order-value">Rs 0</div>
+            <div class="kpi-foot">
+                <span class="kpi-badge-green">Average Order Value</span>
+            </div>
+        </div>
+
+        <!-- Total Products -->
+        <div class="kpi-card" id="box-products">
+            <div class="kpi-top">
+                <span class="kpi-label">My Products</span>
+                <i class="kpi-icon" data-lucide="boxes"></i>
+            </div>
+            <div class="kpi-value" id="stat-products">0</div>
+            <div class="kpi-foot">
+                <span class="kpi-badge-green">Active Products</span>
+            </div>
+        </div>
+
+        <!-- Active Stores -->
+        <div class="kpi-card" id="box-storekeepers">
             <div class="kpi-top">
                 <span class="kpi-label">Stores</span>
                 <i class="kpi-icon" data-lucide="store"></i>
@@ -89,8 +137,8 @@
             </div>
         </div>
 
-        <!-- 6. Active Riders -->
-        <div class="kpi-card">
+        <!-- Active Riders -->
+        <div class="kpi-card" id="box-riders">
             <div class="kpi-top">
                 <span class="kpi-label">Riders</span>
                 <i class="kpi-icon" data-lucide="bike"></i>
@@ -113,9 +161,19 @@
         </div>
     </div>
 
-    <!-- 2 Column Compact Grid: Top Stores & Top Products -->
+    <!-- 2 Column Compact Grid: Top Stores/Recent Orders & Top Products -->
     <div class="dash-split-grid">
-        <div class="dash-block" style="margin-bottom: 0;">
+        <div class="dash-block" id="recentOrdersBlock" style="margin-bottom: 0;">
+            <div class="dash-block-head">
+                <span class="dash-block-title">Recent Orders</span>
+                <span class="dash-badge-neutral">Latest Orders</span>
+            </div>
+            <div class="compact-list" id="recentOrdersList">
+                <div class="empty-state">Loading recent orders...</div>
+            </div>
+        </div>
+
+        <div class="dash-block" id="topSellersBlock" style="margin-bottom: 0;">
             <div class="dash-block-head">
                 <span class="dash-block-title">Top Stores</span>
                 <span class="dash-badge-neutral">By Revenue</span>

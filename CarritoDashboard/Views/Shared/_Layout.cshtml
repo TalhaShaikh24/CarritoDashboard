@@ -75,26 +75,6 @@
                     <span class="nav-label">Dashboard</span>
                 </a>
 
-                <!-- POS Terminal -->
-                <a class="nav-item @Html.IsActive("Pos")" data-module="pos" data-storekeeper="true" href="@Url.Action("Index", "Pos")">
-                    <i class="nav-icon" data-lucide="scan-barcode"></i>
-                    <span class="nav-label">Point of Sale (POS)</span>
-                    <span class="nav-badge" style="margin-left: auto; background: rgba(10, 166, 74, 0.15); color: #0aa64a; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 12px;">ACTIVE</span>
-                </a>
-
-                <!-- Operations -->
-                <div class="nav-group @(isOperationsActive ? "open" : "")" data-storekeeper="true">
-                    <div class="nav-item has-submenu @(isOperationsActive ? "active-parent" : "")" data-submenu="operations" data-storekeeper="true">
-                        <i class="nav-icon" data-lucide="shopping-bag"></i>
-                        <span class="nav-label">Orders & Finance</span>
-                        <i class="chevron nav-icon" data-lucide="chevron-down"></i>
-                    </div>
-                    <div class="submenu @(isOperationsActive ? "open" : "")" id="submenu-operations">
-                        <a class="submenu-item @Html.IsActive("Order")" data-module="orders" data-storekeeper="true" href="@Url.Action("Index", "Order")">Orders</a>
-                        <a class="submenu-item @Html.IsActive("Settlement")" data-module="settlements" href="@Url.Action("Index", "Settlement")">Settlements</a>
-                    </div>
-                </div>
-
                 <div class="nav-group @(isInventoryActive ? "open" : "")" data-storekeeper="true">
                     <div class="nav-item has-submenu @(isInventoryActive ? "active-parent" : "")" data-submenu="inventory" data-storekeeper="true">
                         <i class="nav-icon" data-lucide="package"></i>
@@ -108,6 +88,25 @@
                         <a class="submenu-item @Html.IsActive("Supplier")" data-module="supplier" data-storekeeper="true" href="@Url.Action("Index", "Supplier")">Suppliers</a>
                         <a class="submenu-item @Html.IsActive("InventoryUnit")" data-module="inventoryUnit" href="@Url.Action("Index", "InventoryUnit")">Units</a>
                         <a class="submenu-item @Html.IsActive("InventoryTransaction")" data-module="inventoryTransaction" data-storekeeper="true" href="@Url.Action("Index", "InventoryTransaction")">Stock Transactions</a>
+                    </div>
+                </div>
+
+                <!-- POS Terminal -->
+                <a class="nav-item @Html.IsActive("Pos")" data-module="pos" data-storekeeper="true" href="@Url.Action("Index", "Pos")">
+                    <i class="nav-icon" data-lucide="scan-barcode"></i>
+                    <span class="nav-label">Point of Sale (POS)</span>
+                </a>
+
+                <!-- Operations -->
+                <div class="nav-group @(isOperationsActive ? "open" : "")" data-storekeeper="true">
+                    <div class="nav-item has-submenu @(isOperationsActive ? "active-parent" : "")" data-submenu="operations" data-storekeeper="true">
+                        <i class="nav-icon" data-lucide="shopping-bag"></i>
+                        <span class="nav-label">Orders & Finance</span>
+                        <i class="chevron nav-icon" data-lucide="chevron-down"></i>
+                    </div>
+                    <div class="submenu @(isOperationsActive ? "open" : "")" id="submenu-operations">
+                        <a class="submenu-item @Html.IsActive("Order")" data-module="orders" data-storekeeper="true" href="@Url.Action("Index", "Order")">Orders</a>
+                        <a class="submenu-item @Html.IsActive("Settlement")" data-module="settlements" href="@Url.Action("Index", "Settlement")">Settlements</a>
                     </div>
                 </div>
 

@@ -5,7 +5,25 @@ $(document).ready(() => {
         const storeName = AuthHelper.getStoreName() || 'My Store';
         $('.dash-page-heading').text(`${storeName} Overview`);
         $('#cityFilter').hide().next('.custom-select-wrapper').hide();
+        $('#topSellersBlock').hide();
         $('#topRidersBlock').hide();
+
+        // Hide Admin Stats
+        $('#box-commission').hide();
+        $('#box-customers').hide();
+        $('#box-storekeepers').hide();
+        $('#box-online-storekeepers-label').hide();
+        $('#box-riders').hide();
+        $('#box-online-riders-label').hide();
+    }
+    else {
+        $('#recentOrdersBlock').hide();
+
+        // Hide Storekeeper Stats
+        $('#box-purchase').hide();
+        $('#box-purchase-invoices').hide();
+        $('#box-average-order-value').hide();
+        $('#box-products').hide();
     }
 
     const state = {
@@ -37,6 +55,7 @@ $(document).ready(() => {
             $('.dash-page-heading').text(`${skp.storeName} Overview`);
         }
         $('#cityFilter').hide().next('.custom-select-wrapper').hide();
+        $('#topSellersBlock').hide();
         $('#topRidersBlock').hide();
         refreshDashboard();
     });
@@ -135,68 +154,106 @@ $(document).ready(() => {
     function refreshDashboard() {
         if (AuthHelper.isStorekeeper()) {
             const skpId = AuthHelper.getStorekeeperId();
-            if (skpId) {
-                loadStorekeeperDashboard(skpId);
-                loadRevenueChart();
-                return;
-            }
+            loadStats(skpId);
+            loadRevenueChart(skpId);
+            loadRecentOrders(skpId);
+            loadTopProducts(skpId);
         }
-        loadStats();
-        loadRevenueChart();
-        loadTopProducts();
-        loadTopSellers();
-        loadTopRiders();
+        else {
+            loadStats();
+            loadRevenueChart();
+            loadTopProducts();
+            loadTopSellers();
+            loadTopRiders();
+        }
     }
 
     // --- Data Loading ---
-    function loadStats() {
+    function loadStats(skpId) {
         ajaxRequest({
             url: `${baseApiUrl}/api/Dashboard/GetStats`,
             method: 'GET',
-            data: { fromDate: state.fromDate, toDate: state.toDate, city: state.city },
+            data: { fromDate: state.fromDate, toDate: state.toDate, storekeeperId: skpId, city: state.city },
             isQuery: true,
             showMessage: false,
             onSuccess: (res) => {
                 if (res && res.data) {
-                    const d = res.data;
+                    const data = res.data;
+                    debugger;
+                    // Shared Stats
+                    $('#stat-revenue').text(formatCompactCurrency(data.TotalRevenue)).attr('title', formatCurrency(data.TotalRevenue));
+                    $('#stat-orders').text(data.OrdersDelivered);
+                    $('#stat-canceled-label').text(`${data.OrdersCanceled} Canceled`);
 
-                    // --- UPDATED STATS MAPPING ---
-                    const rev = d.Revenue || d.revenue || 0;
-                    const comm = d.CommissionCollected || d.commissionCollected || 0;
-
-                    $('#stat-revenue').text(formatCompactCurrency(rev)).attr('title', formatCurrency(rev));
-                    $('#stat-commission').text(formatCompactCurrency(comm)).attr('title', formatCurrency(comm));
-                    $('#stat-customers').text(d.ActiveCustomers ?? d.activeCustomers ?? 0);
-                    $('#stat-orders').text(d.OrdersDelivered ?? d.ordersDelivered ?? 0);
-                    $('#stat-canceled-label').text(`${d.OrdersCanceled ?? d.ordersCanceled ?? 0} Canceled`);
-                    $('#stat-storekeepers').text(d.ActiveStorekeepers ?? d.activeStorekeepers ?? 0);
-                    $('#stat-online-storekeepers-label').text(`${d.OnlineStorekeepers ?? d.onlineStorekeepers ?? 0} Online`);
-                    $('#stat-riders').text(d.ActiveRiders ?? d.activeRiders ?? 0);
-                    $('#stat-online-riders-label').text(`${d.OnlineRiders ?? d.onlineRiders ?? 0} Online`);
+                    // Storekeeper Stats
+                    if (skpId) {
+                        $('#stat-purchase').text(formatCompactCurrency(data.TotalPurchase)).attr('title', formatCurrency(data.TotalPurchase));
+                        $('#stat-purchase-invoices').text(data.TotalPurchaseInvoices);
+                        $('#stat-average-order-value').text(formatCompactCurrency(data.AverageOrderValue)).attr('title', formatCurrency(data.AverageOrderValue));
+                        $('#stat-products').text(data.TotalProducts);
+                    }
+                    // Admin Stats
+                    else {
+                        $('#stat-commission').text(formatCompactCurrency(data.Commission)).attr('title', formatCurrency(data.Commission));
+                        $('#stat-customers').text(data.ActiveCustomers);
+                        $('#stat-storekeepers').text(data.ActiveStorekeepers);
+                        $('#stat-online-storekeepers-label').text(`${data.OnlineStorekeepers} Online`);
+                        $('#stat-riders').text(data.ActiveRiders);
+                        $('#stat-online-riders-label').text(`${data.OnlineRiders} Online`);
+                    }
                 }
             }
         });
     }
 
+    function loadRevenueChart(skpId) {
+        let revenueData = [], purchaseData = [];
+        let expected = skpId ? 2 : 1;
+        let loaded = 0;
 
-    function loadRevenueChart() {
+        function tryRender() {
+            if (++loaded === expected) renderRevenueChart(revenueData, purchaseData);
+        }
+
         ajaxRequest({
             url: `${baseApiUrl}/api/Dashboard/GetRevenue`,
             method: 'GET',
-            data: { fromDate: state.fromDate, toDate: state.toDate, city: state.city },
+            data: { fromDate: state.fromDate, toDate: state.toDate, storekeeperId: skpId, city: state.city },
+            isQuery: true,
+            showMessage: false,
+            onSuccess: (res) => { revenueData = res.data || []; tryRender(); }
+        });
+
+        if (skpId) {
+            ajaxRequest({
+                url: `${baseApiUrl}/api/Dashboard/GetPurchases`,
+                method: 'GET',
+                data: { fromDate: state.fromDate, toDate: state.toDate, storekeeperId: skpId, city: state.city },
+                isQuery: true,
+                showMessage: false,
+                onSuccess: (res) => { purchaseData = res.data || []; tryRender(); }
+            });
+        }
+    }
+
+    function loadRecentOrders(skpId) {
+        ajaxRequest({
+            url: `${baseApiUrl}/api/Dashboard/GetRecentOrders`,
+            method: 'GET',
+            data: { storekeeperId: skpId },
             isQuery: true,
             showMessage: false,
             onSuccess: (res) => {
-                renderRevenueChart(res.data || []);
+                renderRecentOrders(res.data || []);
             }
         });
     }
 
-    function loadTopProducts() {
+    function loadTopProducts(skpId) {
         ajaxRequest({
             url: `${baseApiUrl}/api/Dashboard/GetTopSellingItems`,
             method: 'GET',
-            data: { fromDate: state.fromDate, toDate: state.toDate, city: state.city },
+            data: { fromDate: state.fromDate, toDate: state.toDate, storekeeperId: skpId, city: state.city },
             isQuery: true,
             showMessage: false,
             onSuccess: (res) => {
@@ -233,7 +290,42 @@ $(document).ready(() => {
 
     // --- Render Functions ---
 
-    function renderRevenueChart(data) {
+    function buildValues(data, mode, fromDate, toDate) {
+        const buckets = {};
+
+        data.forEach(item => {
+            const d = new Date(item.Date);
+            if (isNaN(d)) return;
+            let key;
+            if (mode === 'yearly') key = String(d.getFullYear());
+            else if (mode === 'monthly') key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            else key = d.toISOString().slice(0, 10);
+            buckets[key] = (buckets[key] || 0) + (item.Revenue ?? item.Purchase ?? 0);
+        });
+
+        const allKeys = [];
+        if (mode === 'yearly') {
+            for (let y = fromDate.getFullYear(); y <= toDate.getFullYear(); y++) allKeys.push(String(y));
+        } else if (mode === 'monthly') {
+            const cursor = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
+            const end = new Date(toDate.getFullYear(), toDate.getMonth(), 1);
+            while (cursor <= end) {
+                allKeys.push(`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`);
+                cursor.setMonth(cursor.getMonth() + 1);
+            }
+        } else {
+            const cursor = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+            const end = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+            while (cursor <= end) {
+                allKeys.push(cursor.toISOString().slice(0, 10));
+                cursor.setDate(cursor.getDate() + 1);
+            }
+        }
+
+        return allKeys.map(k => buckets[k] || 0);
+    }
+
+    function renderRevenueChart(revenueData, purchaseData = []) {
         const canvas = document.getElementById('revenueChart');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
@@ -245,10 +337,6 @@ $(document).ready(() => {
         const toDate = state.toDate ? new Date(state.toDate) : new Date();
         const spanMonths = (toDate.getFullYear() - fromDate.getFullYear()) * 12 + (toDate.getMonth() - fromDate.getMonth());
 
-        // Decide granularity
-        // ≤ 1 month  → daily
-        // 1–12 months → monthly
-        // > 12 months → yearly
         let mode;
         if (spanMonths <= 1) {
             mode = 'daily';
@@ -258,110 +346,88 @@ $(document).ready(() => {
             mode = 'yearly';
         }
 
-        // Update badge label
         const badgeLabels = { daily: 'Daily Trajectory', monthly: 'Monthly Trajectory', yearly: 'Yearly Trajectory' };
         $('#revenueChartBadge').text(badgeLabels[mode]);
 
-        let labels, values;
+        let labels, allKeys = [];
 
+        // Build labels and keys
         if (mode === 'yearly') {
-            // Aggregate by year
-            const buckets = {};
-            data.forEach(item => {
-                const d = new Date(item.Date ?? item.date);
-                if (isNaN(d)) return;
-                const key = String(d.getFullYear());
-                buckets[key] = (buckets[key] || 0) + (item.Revenue ?? item.revenue ?? 0);
-            });
-
-            // Walk year-by-year from fromDate to toDate
-            const allKeys = [];
-            for (let y = fromDate.getFullYear(); y <= toDate.getFullYear(); y++) {
-                allKeys.push(String(y));
-            }
-
+            for (let y = fromDate.getFullYear(); y <= toDate.getFullYear(); y++) allKeys.push(String(y));
             labels = allKeys;
-            values = allKeys.map(k => buckets[k] || 0);
-
         } else if (mode === 'monthly') {
-            // Aggregate by month
-            const buckets = {};
-            data.forEach(item => {
-                const d = new Date(item.Date ?? item.date);
-                if (isNaN(d)) return;
-                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                buckets[key] = (buckets[key] || 0) + (item.Revenue ?? item.revenue ?? 0);
-            });
-
-            // Walk month-by-month from fromDate to toDate
-            const allKeys = [];
             const cursor = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
             const endMonth = new Date(toDate.getFullYear(), toDate.getMonth(), 1);
             while (cursor <= endMonth) {
                 allKeys.push(`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`);
                 cursor.setMonth(cursor.getMonth() + 1);
             }
-
             labels = allKeys.map(k => {
                 const [y, m] = k.split('-');
                 return `${MONTH_NAMES[parseInt(m, 10) - 1]} ${y}`;
             });
-            values = allKeys.map(k => buckets[k] || 0);
-
         } else {
-            // Daily — build complete day-by-day list
-            const buckets = {};
-            data.forEach(item => {
-                const d = new Date(item.Date ?? item.date);
-                if (isNaN(d)) return;
-                const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
-                buckets[key] = (buckets[key] || 0) + (item.Revenue ?? item.revenue ?? 0);
-            });
-
-            const allKeys = [];
             const cursor = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
             const endDay = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
             while (cursor <= endDay) {
                 allKeys.push(cursor.toISOString().slice(0, 10));
                 cursor.setDate(cursor.getDate() + 1);
             }
-
             labels = allKeys.map(k => {
                 const d = new Date(k);
                 return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
             });
-            values = allKeys.map(k => buckets[k] || 0);
+        }
+
+        const revenueValues = buildValues(revenueData, mode, fromDate, toDate);
+        const purchaseValues = buildValues(purchaseData, mode, fromDate, toDate);
+
+        const datasets = [
+            {
+                label: 'Gross Revenue',
+                data: revenueValues,
+                backgroundColor: 'rgba(10, 166, 74, 0.75)',
+                hoverBackgroundColor: '#0aa64a',
+                borderRadius: 4,
+                borderSkipped: false,
+                maxBarThickness: 40
+            }
+        ];
+
+        // Only add purchases dataset if purchase data exists
+        if (purchaseData.length > 0) {
+            datasets.push({
+                label: 'Gross Purchases',
+                data: purchaseValues,
+                backgroundColor: 'rgba(59, 130, 246, 0.75)',
+                hoverBackgroundColor: '#3b82f6',
+                borderRadius: 4,
+                borderSkipped: false,
+                maxBarThickness: 40
+            });
         }
 
         state.charts.revenue = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
-                datasets: [{
-                    label: 'Gross Revenue',
-                    data: values,
-                    backgroundColor: 'rgba(10, 166, 74, 0.75)',
-                    hoverBackgroundColor: '#0aa64a',
-                    borderRadius: 4,
-                    borderSkipped: false,
-                    maxBarThickness: 40
-                }]
+                datasets: datasets
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false },
+                    legend: { display: purchaseData.length > 0 },
                     tooltip: {
                         backgroundColor: '#0f172a',
                         titleFont: { size: 11, family: "'Inter', sans-serif" },
                         bodyFont: { size: 12, family: "'Inter', sans-serif", weight: 'bold' },
                         padding: 8,
                         cornerRadius: 4,
-                        displayColors: false,
+                        displayColors: purchaseData.length > 0,
                         callbacks: {
                             label: function (context) {
-                                return 'Revenue: ' + formatCurrency(context.parsed.y);
+                                return `${context.dataset.label}: ` + formatCurrency(context.parsed.y);
                             }
                         }
                     }
@@ -392,6 +458,40 @@ $(document).ready(() => {
                     }
                 }
             }
+        });
+    }
+
+    function renderRecentOrders(orders) {
+        const $container = $('#recentOrdersList');
+        $container.empty();
+        if (!orders || orders.length === 0) {
+            $container.html('<div class="empty-state">No recent orders found.</div>');
+            return;
+        }
+
+        orders.forEach((order, index) => {
+            const STATUS_TEXT = {
+                1: "Pending", 2: "Confirmed", 3: "Rider Confirmed", 4: "Out for Delivery", 5: "Delivered", 5: "Cancelled", 6: "In Progress", 7: "Completed"
+            };
+
+            const orderNum = `#ORD-${String(order.Id).padStart(4, '0')}`;
+            const dateStr = order.CreatedAt ? new Date(order.CreatedAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '---';
+            const stText = STATUS_TEXT[order.Status];
+            const price = formatCurrency(order.GrandTotal);
+
+            const html = `
+                <div class="compact-item">
+                    <span class="compact-rank rank-other">${index + 1}</span>
+                    <div class="compact-info">
+                        <p class="compact-name">${orderNum}</p>
+                        <p class="compact-sub">${dateStr} · <span style="color:#166534; font-weight:600;">${stText}</span></p>
+                    </div>
+                    <div class="compact-metric">
+                        <p class="compact-val">${price}</p>
+                    </div>
+                </div>
+            `;
+            $container.append(html);
         });
     }
 
@@ -498,150 +598,6 @@ $(document).ready(() => {
                     </div>
                     <div class="compact-metric">
                         <p class="compact-val">${delivered} delivered</p>
-                    </div>
-                </div>
-            `;
-            $container.append(html);
-        });
-    }
-
-    // --- Storekeeper Dashboard Logic ---
-    function loadStorekeeperDashboard(skpId) {
-        if (!skpId) return;
-
-        // 1. Fetch Storekeeper Stats (Orders, Revenue, Avg Order Value, Recent Orders)
-        ajaxRequest({
-            url: `${baseApiUrl}/api/Storekeeper/GetStorekeeperStats/${skpId}`,
-            method: 'GET',
-            showMessage: false,
-            onSuccess: (res) => {
-                if (res && res.data) {
-                    const d = res.data;
-
-                    // 1. Total Revenue
-                    const skpRev = d.TotalRevenue || 0;
-                    const skpAov = d.AverageOrderValue || 0;
-                    $('#stat-revenue').text(formatCompactCurrency(skpRev)).attr('title', formatCurrency(skpRev));
-
-                    // 2. Average Order Value (Replaces Commission)
-                    $('#stat-commission').text(formatCompactCurrency(skpAov)).attr('title', formatCurrency(skpAov));
-                    $('#stat-commission').closest('.kpi-card').find('.kpi-label').text('Avg Order Value');
-                    $('#stat-commission').closest('.kpi-card').find('.kpi-foot span').text('Per order');
-
-                    // 3. Lifetime Orders (Replaces Customers)
-                    $('#stat-customers').text(d.TotalOrders || 0);
-                    $('#stat-customers').closest('.kpi-card').find('.kpi-label').text('Total Orders');
-                    $('#stat-customers').closest('.kpi-card').find('.kpi-foot span').text('Lifetime');
-
-                    // 4. Recent Orders count
-                    const recentCount = (d.RecentOrders && d.RecentOrders.length) || 0;
-                    $('#stat-orders').text(recentCount);
-                    $('#stat-orders').closest('.kpi-card').find('.kpi-label').text('Recent Orders');
-                    $('#stat-canceled-label').text('Recent activity');
-
-                    // 6. Store Status
-                    $('#stat-riders').text('Active');
-                    $('#stat-riders').closest('.kpi-card').find('.kpi-label').text('Store Status');
-                    $('#stat-riders').closest('.kpi-card').find('.kpi-foot span').text('Accepting orders');
-
-                    // Render Recent Orders in place of "Top Stores"
-                    renderStorekeeperRecentOrders(d.RecentOrders || []);
-                }
-            }
-        });
-
-        // 2. Fetch Storekeeper Inventory Count
-        ajaxRequest({
-            url: `${baseApiUrl}/api/Inventory/storekeeper/${skpId}?PageNumber=1&PageSize=1`,
-            method: 'GET',
-            showMessage: false,
-            onSuccess: (res) => {
-                if (res && res.data) {
-                    $('#stat-storekeepers').text(res.data.totalRecords || 0);
-                    $('#stat-storekeepers').closest('.kpi-card').find('.kpi-label').text('My Products');
-                    $('#stat-storekeepers').closest('.kpi-card').find('.kpi-foot span').text('Active SKUs');
-                }
-            }
-        });
-
-        // 3. Load Store's Items in place of Top Products
-        ajaxRequest({
-            url: `${baseApiUrl}/api/Inventory/storekeeper/${skpId}?PageNumber=1&PageSize=5`,
-            method: 'GET',
-            showMessage: false,
-            onSuccess: (res) => {
-                if (res && res.data && res.data.items) {
-                    renderStorekeeperInventoryHighlights(res.data.items);
-                }
-            }
-        });
-    }
-
-    function renderStorekeeperRecentOrders(orders) {
-        const $box = $('#topSellersList').closest('.dash-block');
-        $box.find('.dash-block-title').text('My Recent Orders');
-        $box.find('.dash-badge-neutral').text('Latest Orders');
-
-        const $container = $('#topSellersList');
-        $container.empty();
-        if (!orders || orders.length === 0) {
-            $container.html('<div class="empty-state">No recent orders found.</div>');
-            return;
-        }
-
-        const STATUS_TEXT = {
-            1: "Pending", 2: "Confirmed", 3: "Out for Delivery", 4: "Delivered", 5: "Cancelled", 6: "In Progress"
-        };
-
-        orders.forEach((order, index) => {
-            const orderNum = `#ORD-${String(order.id).padStart(4, '0')}`;
-            const dateStr = order.createdAt ? new Date(order.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '---';
-            const stText = STATUS_TEXT[order.status] || 'Processing';
-            const price = formatCurrency(order.netPrice || 0);
-
-            const html = `
-                <div class="compact-item">
-                    <span class="compact-rank rank-other">${index + 1}</span>
-                    <div class="compact-info">
-                        <p class="compact-name">${orderNum}</p>
-                        <p class="compact-sub">${dateStr} · <span style="color:#166534; font-weight:600;">${stText}</span></p>
-                    </div>
-                    <div class="compact-metric">
-                        <p class="compact-val">${price}</p>
-                    </div>
-                </div>
-            `;
-            $container.append(html);
-        });
-    }
-
-    function renderStorekeeperInventoryHighlights(items) {
-        const $box = $('#topProductsList').closest('.dash-block');
-        $box.find('.dash-block-title').text('My Catalog Items');
-        $box.find('.dash-badge-neutral').text('Store Inventory');
-
-        const $container = $('#topProductsList');
-        $container.empty();
-        if (!items || items.length === 0) {
-            $container.html('<div class="empty-state">No inventory items found.</div>');
-            return;
-        }
-
-        items.forEach((item, index) => {
-            const rank = index + 1;
-            const rankClass = rank === 1 ? 'rank-1' : 'rank-other';
-            const price = formatCurrency(item.price || 0);
-            const weight = item.weight ? `${item.weight} ${item.unitName || ''}` : (item.unitName || 'Unit');
-
-            const html = `
-                <div class="compact-item">
-                    <span class="compact-rank ${rankClass}">#${rank}</span>
-                    <div class="compact-info">
-                        <p class="compact-name" title="${item.title || ''}">${item.title || 'Product'}</p>
-                        <p class="compact-sub">${item.categoryName || 'General'} · ${weight}</p>
-                    </div>
-                    <div class="compact-metric">
-                        <p class="compact-val">${price}</p>
                     </div>
                 </div>
             `;

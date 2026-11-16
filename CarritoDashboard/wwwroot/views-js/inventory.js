@@ -15,6 +15,7 @@ let storekeepersCache = [];
 let categoriesCache = [];
 let brandsCache = [];
 let unitsCache = [];
+let taxRatesCache = [];
 
 let selectedFiles = {
     editInventory: {},
@@ -30,7 +31,7 @@ $(document).ready(() => {
     }
 
     // 1. Load Filter Options (Storekeepers/Brands/Categories) then Init Table
-    Promise.all([fetchStorekeepers(), fetchCategories(), fetchBrands(), fetchUnits()]).then(() => {
+    Promise.all([fetchStorekeepers(), fetchCategories(), fetchBrands(), fetchUnits(), fetchTaxRates()]).then(() => {
         populateFilters();
         if (AuthHelper.isStorekeeper()) {
             initializeDataTable();
@@ -151,8 +152,10 @@ function initializeDataTable() {
                 data: 'photoFilePath',
                 width: '60px',
                 render: function (data) {
-                    const imgUrl = data ? `${baseApiUrl}/${data}` : '/images/placeholder-product.png';
-                    return `<img src="${imgUrl}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">`;
+                    const imgUrl = `${baseApiUrl}/${data}`;
+                    return `<a href="${imgUrl}" target="_blank">
+                                    <img src="${imgUrl}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;" alt="${data.title}">
+                                </a>`;
                 }
             },
             {
@@ -199,11 +202,20 @@ function initializeDataTable() {
                 render: d => `<span class="">${d || 'N/A'}</span>`
             },
             {
-                data: null,
+                data: 'price',
                 render: function (data, type, row) {
                     const unit = (row && row.unitName ? row.unitName : 'UNIT').toUpperCase();
                     const weight = row.weight;
                     return row.type == 2 ? `<span>Rs. ${row.price} / ${weight} ${unit}</span>` : `<span>Rs. ${row.price} / CASE</span>`;
+                }
+            },
+            {
+                data: 'stock',
+                render: function (data, type, row) {
+                    const unit = (row && row.unitName ? row.unitName : 'UNIT').toUpperCase();
+                    return row.type == 2
+                        ? `<span>${data ?? 0} ${unit}</span>`
+                        : `<span>${data ?? 0} Case(s)</span>`;
                 }
             },
             {
@@ -218,10 +230,9 @@ function initializeDataTable() {
                 className: 'text-center',
                 visible: AuthHelper.isStorekeeper() ? true : false,
                 render: function (data, type, row) {
-                    debugger
                     return `
                         <div class="action-btns">
-                            <a href="/InventoryTransaction" class="action-btn" title="View Stock Transactions" style="display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">
+                            <a href="/InventoryTransaction?inventoryItemId=${data.id}" class="action-btn" title="View Stock Transactions" style="display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">
                                 <i style="width: 18px;" data-lucide="history"></i>
                             </a>
                             <button class="action-btn edit" ${AuthHelper.isStorekeeper() ? '' : 'disabled'} data-id="${row.id}" title="Edit Item">
@@ -307,6 +318,21 @@ function fetchUnits() {
     });
 }
 
+function fetchTaxRates() {
+    return new Promise(resolve => {
+        const storekeeperId = getActiveStorekeeperId();
+        if (!storekeeperId) return resolve();
+        
+        $.get(baseApiUrl + '/api/TaxRate/' + storekeeperId, (res) => {
+            if (res && res.status === 200 && res.data) {
+                // The GetAll endpoint returns a flat array (not paginated)
+                taxRatesCache = Array.isArray(res.data) ? res.data : (res.data.items || []);
+            }
+            resolve();
+        }).fail(() => resolve());
+    });
+}
+
 function populateFilters() {
     const skSelect = $('#filterStorekeeper');
     const catSelect = $('#filterCategory');
@@ -345,6 +371,22 @@ function populateFilters() {
     $(unitSelect).customSelect({ placeholder: 'Select Unit' });
 }
 
+function getTaxRateOptionsHtml(selectedId) {
+    let html = '';
+    taxRatesCache.forEach(t => {
+        html += `<option value="${t.id}" ${String(t.id) === String(selectedId) ? 'selected' : ''}>${t.name} (${t.rate}%)</option>`;
+    });
+    return html;
+}
+
+function getImportTaxRateOptionsHtml(selectedId) {
+    let html = '';
+    taxRatesCache.forEach(t => {
+        html += `<option value="${t.id}" ${String(t.id) === String(selectedId) ? 'selected' : ''}>${escapeImportHtml(t.name)} (${t.rate}%)</option>`;
+    });
+    return html;
+}
+
 function getOptionsHtml(items, selectedId) {
     return items.map(item =>
         `<option value="${item.id}" ${item.id === selectedId ? 'selected' : ''}>${item.name}</option>`
@@ -372,6 +414,7 @@ function editInventory(id) {
                 $template.find('#editInvCategory').append(getOptionsHtml(categoriesCache, item.categoryId));
                 $template.find('#editInvBrand').append(getOptionsHtml(brandsCache, item.brandId));
                 $template.find('#editInvUnit').append(getOptionsHtml(unitsCache, item.unitId));
+                $template.find('#editInvTaxRate').append(getTaxRateOptionsHtml(item.taxRateId));
                 
                 $.dynamicModal({
                     title: "Edit Inventory Item",
@@ -387,12 +430,15 @@ function editInventory(id) {
                         }
                     }
                 });
-
+                
                 // Set values on the live modal DOM: .val() on the detached template is
                 // lost because the modal body is passed as an outerHTML string
                 $('#editInvTitle').val(item.title);
+                $('#editInvTaxRate').val(item.taxRateId);
+                $('#editInvTaxType').val(item.taxType);
+                $('#editInvDiscount').val(item.discount || '');
                 $('#editInvPrice').val(item.price);
-                $('#editInvWeight').val(item.weight);
+                $('#editInvWeight').val(item.weight || '');
                 $('#editInvDescription').val(item.description);
                 // Type is shown but cannot be changed in Edit (the select is disabled)
                 
@@ -407,6 +453,8 @@ function editInventory(id) {
                 $("#editInvBrand").customSelect();
                 $("#editInvCategory").customSelect();
                 $("#editInvUnit").customSelect();
+                $("#editInvTaxRate").customSelect();
+                $("#editInvTaxType").customSelect();
 
                 // Init Uploader
                 initUploader('#editInvPhoto', 'editInventory', 'photo', photoUrl);
@@ -424,14 +472,18 @@ function addNewInventory() {
     const categoryId = $('#newInvCategory').val();
     const brandId = $('#newInvBrand').val();
     const unitId = $('#newInvUnit').val();
+    const taxRateId = $('#newInvTaxRate').val();
+    const taxType = $('#newInvTaxType').val();
+    const discount = $('#newInvDiscount').val();
     const price = $('#newInvPrice').val();
     const weight = $('#newInvWeight').val() || 0;
     const type = $('#newInvType').val();
     const packSize = $('#newInvPackSize').val();
+    const stock = $('#newInvStock').val() || 0;
     const minOrderQuantity = $('#newInvMinOrderQuantity').val() || 0;
 
     // Pack Item needs Pack Size (Weight is optional); Catch Weight Item needs Weight (Pack Size is not sent)
-    if (!title || !categoryId || !brandId || !unitId || !price || !type ||
+    if (!title || !categoryId || !brandId || !unitId || !taxRateId || !taxType || !price || !type ||
         (type === '1' && !packSize) || (type === '2' && !weight)) {
         showNotification("Please fill all required fields", "error");
         return;
@@ -448,6 +500,9 @@ function addNewInventory() {
     formData.append('[0].CategoryId', categoryId);
     formData.append('[0].BrandId', brandId);
     formData.append('[0].UnitId', unitId);
+    formData.append('[0].TaxRateId', taxRateId);
+    formData.append('[0].TaxType', taxType);
+    formData.append('[0].Discount', discount);
     formData.append('[0].Price', price);
     formData.append('[0].Type', type);
     if (type === '1') {
@@ -460,6 +515,7 @@ function addNewInventory() {
         // Catch Weight Item: Weight is sent, PackSize is not sent (stays null on the API side)
         formData.append('[0].Weight', weight);
     }
+    formData.append('[0].Stock', stock);
     formData.append('[0].MinOrderQuantity', minOrderQuantity);
     formData.append('[0].Description', $('#newInvDescription').val().trim());
     formData.append('[0].CreatedByUserId', AuthHelper.getUserId() || 1);
@@ -470,7 +526,7 @@ function addNewInventory() {
     }
 
     showNotification("Creating inventory item...", "info");
-
+    
     ajaxRequest({
         url: `${baseApiUrl}/api/Inventory?storekeeperId=${activeSkpId}`, 
         method: 'POST',
@@ -503,15 +559,21 @@ function updateInventory(id) {
     const type = $('#editInvType').val();
     const packSize = $('#editInvPackSize').val();
     const weight = $('#editInvWeight').val();
+    const taxRateId = $('#editInvTaxRate').val();
+    const taxType = $('#editInvTaxType').val();
+    const discount = $('#editInvDiscount').val();
 
     // Pack Item needs Pack Size (Weight is optional); Catch Weight Item needs Weight (Pack Size is not sent)
-    if ((type === '1' && !packSize) || (type === '2' && !weight)) {
+    if ((type === '1' && !packSize) || (type === '2' && !weight) || !taxRateId || !taxType) {
         showNotification("Please fill all required fields", "error");
         return;
     }
 
     // Optional/Nullable fields
     formData.append('Title', $('#editInvTitle').val().trim());
+    formData.append('TaxRateId', taxRateId);
+    formData.append('TaxType', taxType);
+    if (discount) formData.append('Discount', discount);
     formData.append('Price', $('#editInvPrice').val() || 0);
     formData.append('Type', type);
     if (type === '1') {
@@ -717,7 +779,7 @@ $('#btnAddNewInventory').click(function () {
     const categoryOptions = getOptionsHtml(categoriesCache);
     const brandOptions = getOptionsHtml(brandsCache);
     // The first unit is selected by default in the Add form
-    const unitOptions = getOptionsHtml(unitsCache, unitsCache.length ? unitsCache[0].id : undefined);
+    const unitOptions = getOptionsHtml(unitsCache);
 
     const addFormHtml = `
         <form id="frmAddInventory">
@@ -743,6 +805,11 @@ $('#btnAddNewInventory').click(function () {
                 </div>
             </div>
 
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="newInvDescription" class="form-control" rows="3" placeholder="Enter Description"></textarea>
+            </div>
+
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label>Type *</label>
@@ -753,8 +820,8 @@ $('#btnAddNewInventory').click(function () {
                     </select>
                 </div>
                 <div class="form-group col-md-6">
-                    <label>Unit *</label>
-                    <select id="newInvUnit" class="form-control" required>
+                    <label id="newInvUnitLabel">Unit</label>
+                    <select id="newInvUnit" class="form-control">
                         <option value="">Select Unit</option>
                         ${unitOptions}
                     </select>
@@ -763,26 +830,42 @@ $('#btnAddNewInventory').click(function () {
 
             <div class="form-row">
                 <div class="form-group col-md-3">
-                    <label>Weight *</label>
-                    <input type="number" id="newInvWeight" class="form-control" min="0" step="0.01" required placeholder="Enter Weight">
-                </div>
-                <div class="form-group col-md-6">
-                    <label id="newInvPriceLabel">Price *</label>
-                    <input type="number" id="newInvPrice" class="form-control" min="0" required placeholder="Enter Price">
+                    <label>Weight</label>
+                    <input type="number" id="newInvWeight" class="form-control" min="0" step="0.01" placeholder="Enter Weight">
                 </div>
                 <div class="form-group col-md-3">
                     <label id="newInvPackSizeLabel">Pack Size</label>
                     <input type="number" id="newInvPackSize" class="form-control" min="0" placeholder="Enter Pack Size">
                 </div>
                 <div class="form-group col-md-3">
-                    <label>Min Order Quantity *</label>
-                    <input type="number" id="newInvMinOrderQuantity" class="form-control" min="0" step="0.01" required placeholder="Enter Min Order Quantity">
+                    <label id="newInvStockLabel">Stock *</label>
+                    <input type="number" id="newInvStock" class="form-control" min="0" required placeholder="Enter Initial Stock">
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label>Description</label>
-                <textarea id="newInvDescription" class="form-control" rows="3" placeholder="Enter Description"></textarea>
+                <div class="form-group col-md-6">
+                    <label>Min Order Quantity *</label>
+                    <input type="number" id="newInvMinOrderQuantity" class="form-control" min="0" required placeholder="Enter Min Order Quantity">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Tax Rate *</label>
+                    <select id="newInvTaxRate" class="form-control">
+                        ${getTaxRateOptionsHtml()}
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Tax Type *</label>
+                    <select id="newInvTaxType" class="form-control">
+                        <option value="1">Inclusive</option>
+                        <option value="2">Exclusive</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Discount</label>
+                    <input type="number" id="newInvDiscount" class="form-control" min="0" step="1" placeholder="Enter Discount">
+                </div>
+                <div class="form-group col-md-6">
+                    <label id="newInvPriceLabel">Price *</label>
+                    <input type="number" id="newInvPrice" class="form-control" min="0" required placeholder="Enter Price">
+                </div>
             </div>
 
             <hr style="margin:20px 0;">
@@ -814,6 +897,8 @@ $('#btnAddNewInventory').click(function () {
     $("#newInvBrand").customSelect();
     $("#newInvUnit").customSelect();
     $("#newInvType").customSelect();
+    $("#newInvTaxRate").customSelect();
+    $("#newInvTaxType").customSelect();
     applyInventoryTypeState();
 
     
@@ -830,8 +915,6 @@ function applyInventoryTypeState() {
         $('#newInvPackSize').val('');
     }
 
-    // Weight stays enabled for Pack Item too (it is optional there)
-
     // Unit display: full name in the select (e.g. "BA - Bag"), short code before " - " (e.g. "BA")
     const unitFullName = $('#newInvUnit').val() ? $('#newInvUnit option:selected').text().trim() : '';
     const unitCode = unitFullName ? (unitFullName.includes(' - ') ? unitFullName.split(' - ')[0].trim() : unitFullName) : '';
@@ -842,9 +925,14 @@ function applyInventoryTypeState() {
         $('#newInvPriceLabel').html('Price Per Case *');
         $('#newInvPrice').attr('placeholder', 'Enter Price Per Case');
 
+        $("#newInvUnit").removeAttr("required");
+        $('#newInvUnitLabel').html('Unit');
+
         $("#newInvPackSize").attr("required", "true");
         $('#newInvPackSizeLabel').html('Pack Size *');
     } else if (isCatchWeight) {
+        $("#newInvUnit").attr("required", "true");
+        $('#newInvUnitLabel').html('Unit *');
 
         $("#newInvPackSize").removeAttr("required");
         $('#newInvPackSizeLabel').html('Pack Size');
@@ -865,12 +953,7 @@ function applyInventoryTypeState() {
         $('#newInvPrice').attr('placeholder', 'Enter Price');
     }
 
-    // Pack Size label stays plain; only its placeholder follows the selected unit
-    if (unitFullName) {
-        $('#newInvPackSize').attr('placeholder', `Enter Size in ${unitCode}`);
-    } else {
-        $('#newInvPackSize').attr('placeholder', 'Enter Pack Size');
-    }
+    $('#newInvWeight').attr('placeholder', unitCode ? `Enter weight in ${unitCode}` : 'Enter Weight');
 }
 
 $(document).on('change', '#newInvType', applyInventoryTypeState);
@@ -901,9 +984,15 @@ function applyEditInventoryTypeState() {
         $('#editInvPriceLabel').html('Price Per Case *');
         $('#editInvPrice').attr('placeholder', 'Enter Price Per Case');
 
+        $("#editInvUnit").removeAttr("required");
+        $('#editInvUnitLabel').html('Unit');
+
         $("#editInvPackSize").attr("required", "true");
         $('#editInvPackSizeLabel').html('Pack Size *');
     } else if (isCatchWeight) {
+        $("#editInvUnit").attr("required", "true");
+        $('#editInvUnitLabel').html('Unit *');
+
         $("#editInvPackSize").removeAttr("required");
         $('#editInvPackSizeLabel').html('Pack Size');
 
@@ -923,11 +1012,7 @@ function applyEditInventoryTypeState() {
         $('#editInvPrice').attr('placeholder', 'Enter Price');
     }
 
-    if (unitFullName) {
-        $('#editInvPackSize').attr('placeholder', `Enter Size in ${unitCode}`);
-    } else {
-        $('#editInvPackSize').attr('placeholder', 'Enter Pack Size');
-    }
+    $('#editInvWeight').attr('placeholder', unitCode ? `Enter weight in ${unitCode}` : 'Enter Weight');
 }
 
 $(document).on('change', '#editInvUnit', applyEditInventoryTypeState);
@@ -942,7 +1027,7 @@ $(document).on('input change', '#editInvWeight', applyEditInventoryTypeState);
 
 let importInvRows = [];
 
-const IMPORT_INV_HEADERS = ['Title', 'Category', 'Brand', 'Type', 'Unit', 'Price', 'Weight', 'Pack Size', 'Min Order Quantity', 'Description'];
+const IMPORT_INV_HEADERS = ['Title', 'Category', 'Brand', 'Description', 'Type', 'Unit', 'Weight', 'Pack Size', 'Min Order Quantity', 'Tax Rate', 'Tax Type', 'Discount', 'Price'];
 
 function escapeImportHtml(value) {
     return String(value === null || value === undefined ? '' : value)
@@ -992,13 +1077,16 @@ $('#btnImportInventory').click(function () {
                             <th>Title *</th>
                             <th>Category *</th>
                             <th>Brand *</th>
+                            <th>Description</th>
                             <th>Type *</th>
-                            <th>Unit *</th>
-                            <th>Price *</th>
+                            <th>Unit</th>
                             <th>Weight</th>
                             <th>Pack Size</th>
-                            <th>Min Order Qty</th>
-                            <th>Description</th>
+                            <th>Min Order Qty *</th>
+                            <th>Tax Rate *</th>
+                            <th>Tax Type *</th>
+                            <th>Discount</th>
+                            <th>Price *</th>
                             <th style="width: 44px;"></th>
                         </tr>
                     </thead>
@@ -1060,13 +1148,16 @@ function downloadImportSampleFile() {
                     item.title || '',
                     item.categoryName || '',
                     item.brandName || '',
+                    item.description || '',
                     Number(item.type) === 2 ? 'Catch Weight Item' : 'Pack Item',
                     item.unitName || '',
-                    item.price === null || item.price === undefined ? '' : item.price,
                     item.weight ? item.weight : '',
                     item.packSize === null || item.packSize === undefined ? '' : item.packSize,
                     item.minOrderQuantity === null || item.minOrderQuantity === undefined ? '' : item.minOrderQuantity,
-                    item.description || ''
+                    item.taxRateName,
+                    item.taxType === 2 ? 'Exclusive' : (item.taxType === 1 ? 'Inclusive' : ''),
+                    item.discount === null || item.discount === undefined ? '' : item.discount,
+                    item.price === null || item.price === undefined ? '' : item.price
                 ]));
                 generateImportSampleFile(rows);
             } else {
@@ -1129,6 +1220,18 @@ function handleImportInvFile(e) {
     $('#importInvFileName').text(file.name);
     const fileName = file.name.toLowerCase();
 
+    // Show loader
+    const $fileLabel = $('label[for="importInvFileInput"]');
+    const originalLabelHtml = $fileLabel.html();
+    $fileLabel.html('<i class="fa-solid fa-spinner fa-spin"></i> Processing...')
+        .css('pointerEvents', 'none');
+    $('#importInvPreviewWrap').hide();
+    
+    function resetLoader() {
+        $fileLabel.html(originalLabelHtml).css('pointerEvents', '');
+        lucide?.createIcons();
+    }
+
     if (fileName.endsWith('.csv')) {
         const reader = new FileReader();
         reader.onload = function (event) {
@@ -1138,11 +1241,15 @@ function handleImportInvFile(e) {
                 console.error('Error parsing CSV:', err);
                 showNotification('Error processing CSV file. Please check the file structure.', 'error');
             }
+            finally {
+                resetLoader();
+            }
         };
         reader.readAsText(file);
     } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
         if (typeof XLSX === 'undefined') {
             showNotification('Excel support could not be loaded. Please upload the file as CSV instead.', 'error');
+            resetLoader();
             return;
         }
         const reader = new FileReader();
@@ -1155,6 +1262,9 @@ function handleImportInvFile(e) {
             } catch (err) {
                 console.error('Error parsing Excel file:', err);
                 showNotification('Error processing Excel file. Please check the file structure.', 'error');
+            }
+            finally {
+                resetLoader();
             }
         };
         reader.readAsArrayBuffer(file);
@@ -1250,6 +1360,13 @@ function parseImportType(rawValue) {
     return '1'; // Pack Item is the default, same as the Add form
 }
 
+function parseImportTaxType(rawValue) {
+    const text = String(rawValue || '').trim().toLowerCase();
+    if (text === '2' || text.includes('excl')) return '2';
+    if (text === '1' || text.includes('incl')) return '1';
+    return '';
+}
+
 function buildImportInvRows(rows) {
     if (!rows || rows.length === 0) {
         showNotification('The uploaded file is empty.', 'error');
@@ -1261,21 +1378,25 @@ function buildImportInvRows(rows) {
         title: headerRow.findIndex(h => h.includes('title') || h === 'name' || h.includes('product')),
         category: headerRow.findIndex(h => h.includes('categor')),
         brand: headerRow.findIndex(h => h.includes('brand')),
+        description: headerRow.findIndex(h => h.includes('desc')),
         type: headerRow.findIndex(h => h.includes('type')),
         unit: headerRow.findIndex(h => h.includes('unit')),
+        taxRate: headerRow.findIndex(h => h.includes('taxrate')),
+        taxType: headerRow.findIndex(h => h.includes('taxtype')),
+        discount: headerRow.findIndex(h => h.includes('discount')),
         price: headerRow.findIndex(h => h.includes('price')),
         weight: headerRow.findIndex(h => h.includes('weight')),
         packSize: headerRow.findIndex(h => h.includes('packsize') || h === 'pack'),
-        minOrder: headerRow.findIndex(h => h.includes('minorder') || h === 'moq'),
-        description: headerRow.findIndex(h => h.includes('desc'))
+        minOrder: headerRow.findIndex(h => h.includes('minorder') || h === 'moq')
     };
 
     const hasHeader = Object.values(col).some(idx => idx !== -1);
     if (!hasHeader) {
         // No recognisable header: fall back to the sample file's column order
         // and treat every row as data
-        col.title = 0; col.category = 1; col.brand = 2; col.type = 3; col.unit = 4;
-        col.price = 5; col.weight = 6; col.packSize = 7; col.minOrder = 8; col.description = 9;
+        col.title = 0; col.category = 1; col.brand = 2; col.description = 3; col.type = 4;
+        col.unit = 5; col.taxRate = 6; col.taxType = 7; col.discount = 8;
+        col.price = 9; col.weight = 10; col.packSize = 11; col.minOrder = 12;
     }
 
     const cell = (row, idx) => (idx === -1 || row[idx] === undefined || row[idx] === null) ? '' : row[idx];
@@ -1295,6 +1416,9 @@ function buildImportInvRows(rows) {
             brandId: brand ? String(brand.id) : '',
             unitId: unit ? String(unit.id) : '',
             type: parseImportType(cell(row, col.type)),
+            taxRateId: findImportCachedItem(taxRatesCache, cell(row, col.taxRate))?.id || '',
+            taxType: parseImportTaxType(cell(row, col.taxType)),
+            discount: cleanImportNumber(cell(row, col.discount)),
             price: cleanImportNumber(cell(row, col.price)),
             weight: cleanImportNumber(cell(row, col.weight)),
             packSize: cleanImportNumber(cell(row, col.packSize)),
@@ -1329,6 +1453,7 @@ function renderImportInvPreview() {
             <td><input type="text" class="form-control" data-field="title" value="${escapeImportHtml(row.title)}" placeholder="Enter Title" style="min-width: 220px;"></td>
             <td><select class="form-control ${row.categoryId ? '' : 'import-inv-unmatched'}" data-field="categoryId">${getImportOptionsHtml(categoriesCache, row.categoryId, 'Select Category')}</select></td>
             <td><select class="form-control ${row.brandId ? '' : 'import-inv-unmatched'}" data-field="brandId">${getImportOptionsHtml(brandsCache, row.brandId, 'Select Brand')}</select></td>
+            <td><input type="text" class="form-control" data-field="description" value="${escapeImportHtml(row.description)}" placeholder="Enter Description" style="min-width: 140px;"></td>
             <td>
                 <select class="form-control" data-field="type">
                     <option value="1" ${row.type === '1' ? 'selected' : ''}>Pack Item</option>
@@ -1336,11 +1461,25 @@ function renderImportInvPreview() {
                 </select>
             </td>
             <td><select class="form-control ${row.unitId ? '' : 'import-inv-unmatched'}" data-field="unitId">${getImportOptionsHtml(unitsCache, row.unitId, 'Select Unit')}</select></td>
-            <td><input type="number" class="form-control" data-field="price" min="0" step="0.01" value="${escapeImportHtml(row.price)}" placeholder="Enter Price" style="min-width: 90px;"></td>
             <td><input type="number" class="form-control" data-field="weight" min="0" step="0.01" value="${escapeImportHtml(row.weight)}" placeholder="Enter Weight" style="min-width: 90px;"></td>
             <td><input type="number" class="form-control import-inv-packsize" data-field="packSize" min="0" step="1" value="${escapeImportHtml(row.packSize)}" placeholder="Enter Pack Size" style="min-width: 90px;"></td>
             <td><input type="number" class="form-control" data-field="minOrderQuantity" min="0" step="0.01" value="${escapeImportHtml(row.minOrderQuantity)}" placeholder="Enter Min Order Quantity" style="min-width: 100px;"></td>
-            <td><input type="text" class="form-control" data-field="description" value="${escapeImportHtml(row.description)}" placeholder="Enter Description" style="min-width: 140px;"></td>
+            <td>
+                <select class="form-control" data-field="taxRateId">
+                    ${getImportTaxRateOptionsHtml(row.taxRateId)}
+                </select>
+            </td>
+            <td>
+                <select class="form-control" data-field="taxType">
+                    <option value="1" ${row.taxType === '1' ? 'selected' : ''}>Inclusive</option>
+                    <option value="2" ${row.taxType === '2' ? 'selected' : ''}>Exclusive</option>
+                </select>
+            </td>
+            <td>
+                <input type="number" class="form-control" data-field="discount" min="0" step="0.01"
+                       value="${escapeImportHtml(row.discount)}" placeholder="Enter Discount" style="min-width: 100px;">
+            </td>
+            <td><input type="number" class="form-control" data-field="price" min="0" step="0.01" value="${escapeImportHtml(row.price)}" placeholder="Enter Price" style="min-width: 90px;"></td>
             <td><button type="button" class="action-btn delete import-inv-delete" title="Delete row"><i style="width: 16px;" data-lucide="trash-2"></i></button></td>
         </tr>`;
     });
@@ -1457,6 +1596,11 @@ function submitImportInventory() {
         formData.append(`[${i}].CategoryId`, row.categoryId);
         formData.append(`[${i}].BrandId`, row.brandId);
         formData.append(`[${i}].UnitId`, row.unitId);
+        formData.append(`[${i}].TaxRateId`, row.taxRateId);
+        formData.append(`[${i}].TaxType`, row.taxType);
+        if (row.discount !== '' && !isNaN(Number(row.discount))) {
+            formData.append(`[${i}].Discount`, row.discount);
+        }
         formData.append(`[${i}].Price`, row.price);
         formData.append(`[${i}].Type`, row.type);
         if (row.type === '1') {

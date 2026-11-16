@@ -114,8 +114,6 @@ function initializeDataTable() {
         ajax: function (data, callback, settings) {
             const pageSize = data.length;
             const pageNumber = (data.start / data.length) + 1;
-            const searchValue = data.search ? data.search.value : '';
-
             const storekeeperId = getActiveStorekeeperId();
 
             if (!storekeeperId) {
@@ -130,10 +128,16 @@ function initializeDataTable() {
             const queryParams = {
                 PageNumber: pageNumber,
                 PageSize: pageSize,
-                Search: searchValue || undefined,
+                Search: data.search.value,
                 storekeeperId: storekeeperId
             };
-            
+
+            const inventoryItemId = $('#inventoryItemId').val();
+            if (inventoryItemId) {
+                queryParams.inventoryItemId = inventoryItemId;
+                $('#inventoryItemId').val(''); //Clear the hidden field once used
+            }
+
             function handleSuccess(response) {
                 if (response && (response.status === 200 || response.status === undefined) && response.data) {
                     const items = response.data.items || [];

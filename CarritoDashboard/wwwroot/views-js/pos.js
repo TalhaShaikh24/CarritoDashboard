@@ -175,9 +175,6 @@ const PosApp = (function () {
         if (typeof AuthHelper !== 'undefined' && AuthHelper.isStorekeeper()) {
             return AuthHelper.getStorekeeperId();
         }
-        const selected = $('#posStorekeeperSelect').val();
-        if (selected) return parseInt(selected, 10);
-        return activeStorekeeperId || (storekeepersCache[0] ? storekeepersCache[0].id : 1);
     }
 
     function initStorekeeper() {
@@ -185,35 +182,8 @@ const PosApp = (function () {
             activeStorekeeperId = AuthHelper.getStorekeeperId();
             const storeName = AuthHelper.getStoreName() || 'My Store';
             $('#posStoreNameLabel').text(`Store: ${storeName}`);
-            $('#posStorekeeperSelect').hide();
             return Promise.resolve(activeStorekeeperId);
         }
-
-        // For Admin: fetch storekeepers from API
-        return new Promise(resolve => {
-            $.get(`${baseApiUrl}/api/Storekeeper`, { PageNumber: 1, PageSize: 50 }, res => {
-                if (res && res.status === 200 && res.data && res.data.items && res.data.items.length > 0) {
-                    storekeepersCache = res.data.items;
-                    const $sel = $('#posStorekeeperSelect');
-                    $sel.empty();
-                    storekeepersCache.forEach((sk, idx) => {
-                        const name = sk.storeName || sk.fullName || `Store #${sk.id}`;
-                        $sel.append(new Option(name, sk.id, idx === 0, idx === 0));
-                    });
-                    activeStorekeeperId = storekeepersCache[0].id;
-                    $('#posStoreNameLabel').text(`Store: ${storekeepersCache[0].storeName || 'Selected'}`);
-                    $sel.show();
-                } else {
-                    activeStorekeeperId = 1;
-                    $('#posStoreNameLabel').text('Store #1');
-                }
-                resolve(activeStorekeeperId);
-            }).fail(() => {
-                activeStorekeeperId = 1;
-                $('#posStoreNameLabel').text('Store #1');
-                resolve(activeStorekeeperId);
-            });
-        });
     }
 
     function loadPersistedState() {
@@ -1440,20 +1410,6 @@ const PosApp = (function () {
             searchTerm = '';
             $('#posSearchProduct').val('').focus();
             $(this).hide();
-            fetchInventory();
-        });
-
-        // Storekeeper selector change (for Admin)
-        $('#posStorekeeperSelect').on('change', function () {
-            activeStorekeeperId = parseInt($(this).val(), 10);
-            const selectedSk = storekeepersCache.find(s => s.id === activeStorekeeperId);
-            if (selectedSk) {
-                $('#posStoreNameLabel').text(`Store: ${selectedSk.storeName || selectedSk.fullName || 'Selected'}`);
-            }
-            selectedCategoryId = null;
-            searchTerm = '';
-            $('#posSearchProduct').val('');
-            fetchCategories();
             fetchInventory();
         });
 
