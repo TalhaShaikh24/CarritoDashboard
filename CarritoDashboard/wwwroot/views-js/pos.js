@@ -1498,6 +1498,10 @@ const PosApp = (function () {
             fetchInventory();
         });
 
+<<<<<<< HEAD
+=======
+        // Category pills click (filters live inventory by categoryId)
+>>>>>>> 05cff5168ad05cb1c6a28144ff46c41ddaf0a66e
         $(document).on('click', '.pos-cat-pill', function () {
             const catId = $(this).data('category-id');
             selectedCategoryId = (catId === '' || catId === undefined || catId === null) ? null : parseInt(catId, 10);
