@@ -39,6 +39,7 @@ $(document).ready(() => {
             $('.page-subtitle').text(`Viewing orders for ${skpUser.storeName}`);
         }
         if (ordersTable) {
+            ordersTable.column('store:name').visible(!AuthHelper.isStorekeeper());
             ordersTable.ajax.reload(); // URL is rebuilt on every request
         }
     });
@@ -149,6 +150,8 @@ function initializeDataTable() {
             },
             {
                 data: 'storekeeperStoreName',
+                name: 'store',
+                visible: !AuthHelper.isStorekeeper(),
                 render: d => d || '---'
             },
             {
@@ -162,8 +165,23 @@ function initializeDataTable() {
                 })
             },
             {
-                data: 'grandTotal',
-                render: d => `<strong>Rs. ${Number(d || 0).toFixed(2)}</strong>`
+                data: null,
+                render: function (data) {
+                    const grandTotal = Number(data.grandTotal || 0).toFixed(2);
+                    const disc = extractOrderDiscounts(data);
+                    let discountBadge = '';
+                    if (disc.hasDiscount) {
+                        discountBadge = `
+                            <div class="od-table-discount-wrap mt-1">
+                                <span class="od-table-discount-pill action-btn-link" data-id="${data.id}" title="Discount: -Rs. ${disc.totalDiscount.toFixed(2)}. Click to view breakdown.">
+                                    <i data-lucide="tag" width="11" height="11"></i>
+                                    -Rs. ${disc.totalDiscount.toFixed(2)}
+                                </span>
+                            </div>
+                        `;
+                    }
+                    return `<div><strong>Rs. ${grandTotal}</strong>${discountBadge}</div>`;
+                }
             },
             {
                 data: 'status',
@@ -215,12 +233,141 @@ function viewOrderDetails(orderId) {
 }
 
 
+function extractOrderDiscounts(order) {
+    if (!order) {
+        return { totalDiscount: 0, couponDiscount: 0, discountOnItems: 0, hasDiscount: false, breakdown: [] };
+    }
+
+    const parseAmount = (val) => {
+        if (val === null || val === undefined || val === '') return 0;
+        const n = Number(val);
+        return isNaN(n) ? 0 : n;
+    };
+
+    const couponDiscount = parseAmount(order.couponDiscount ?? order.CouponDiscount);
+    const discountOnItems = parseAmount(order.discountOnItems ?? order.DiscountOnItems);
+    let totalDiscount = parseAmount(order.totalDiscount ?? order.TotalDiscount ?? order.discount ?? order.Discount);
+
+    // If totalDiscount wasn't directly provided or is 0, but itemized discounts exist, sum them up
+    if (totalDiscount <= 0 && (couponDiscount > 0 || discountOnItems > 0)) {
+        totalDiscount = couponDiscount + discountOnItems;
+    }
+
+    const breakdown = [];
+    // Only show the discounts which have values not null and greater than 0
+    if (discountOnItems > 0) {
+        breakdown.push({
+            type: 'items',
+            label: 'Store / Items Discount',
+            description: 'Discount offered by store on line items',
+            amount: discountOnItems,
+            icon: 'shopping-bag'
+        });
+    }
+
+    if (couponDiscount > 0) {
+        breakdown.push({
+            type: 'coupon',
+            label: 'Coupon Discount',
+            description: 'Discount on coupon applied',
+            amount: couponDiscount,
+            icon: 'ticket'
+        });
+    }
+
+    // Account for any difference between totalDiscount and itemized breakdown (e.g. general promotion or manual order discount)
+    const accounted = couponDiscount + discountOnItems;
+    const remaining = Math.round((totalDiscount - accounted) * 100) / 100;
+    if (remaining > 0.009 && breakdown.length > 0) {
+        breakdown.push({
+            type: 'other',
+            label: 'Other Discount',
+            description: 'Additional order promotional discount',
+            amount: remaining,
+            icon: 'tag'
+        });
+    } else if (breakdown.length === 0 && totalDiscount > 0) {
+        breakdown.push({
+            type: 'order',
+            label: 'Order Discount',
+            description: 'Total promotional discount applied',
+            amount: totalDiscount,
+            icon: 'tag'
+        });
+    }
+
+    return {
+        totalDiscount,
+        couponDiscount,
+        discountOnItems,
+        hasDiscount: totalDiscount > 0,
+        breakdown
+    };
+}
+
 function showOrderDetailModal(order) {
     const status = STATUS_MAP[order.status];
 
     // Helpers
     const formatMoney = (amount) => `Rs. ${Number(amount || 0).toLocaleString('en-PK', { minimumFractionDigits: 2 })}`;
     const formatTime = (d) => new Date(d).toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    // Discount handling (TotalDiscount, CouponDiscount, DiscountOnItems)
+    const discountInfo = extractOrderDiscounts(order);
+
+    let discountRowHtml = '';
+    if (discountInfo.hasDiscount) {
+        discountRowHtml = `
+            <div class="od-pay-row od-discount-pay-row">
+                <div class="od-discount-label-group" id="odDiscountLabelTrigger" role="button" tabindex="0" title="Tap to view discount breakdown">
+                    <span class="od-discount-title">Discount</span>
+                    <span class="od-discount-info-badge" aria-hidden="true">
+                        <i data-lucide="info" width="13" height="13"></i>
+                    </span>
+                </div>
+                <div class="od-discount-popover-anchor">
+                    <button type="button" class="od-discount-trigger-btn" id="odDiscountTriggerBtn" aria-haspopup="dialog" aria-expanded="false" title="Tap to view discount breakdown">
+                        <span class="od-disc-tag"><i data-lucide="tag" width="13" height="13"></i></span>
+                        <span class="od-disc-val">- ${formatMoney(discountInfo.totalDiscount)}</span>
+                        <span class="od-disc-chevron"><i data-lucide="chevron-down" width="13" height="13"></i></span>
+                    </button>
+
+                    <div class="od-discount-popover" id="odDiscountPopover" style="display: none;" role="dialog" aria-label="Discount Breakdown">
+                        <div class="od-popover-arrow"></div>
+                        <div class="od-popover-header">
+                            <div class="od-popover-title">
+                                <i data-lucide="sparkles" width="14" height="14"></i>
+                                <span>Discount Breakdown</span>
+                            </div>
+                            <button type="button" class="od-popover-close" id="odCloseDiscountPopover" aria-label="Close breakdown">
+                                <i data-lucide="x" width="13" height="13"></i>
+                            </button>
+                        </div>
+                        <div class="od-popover-body">
+                            ${discountInfo.breakdown.map(item => `
+                                <div class="od-popover-item">
+                                    <div class="od-popover-item-left">
+                                        <span class="od-popover-item-icon ${item.type}">
+                                            <i data-lucide="${item.icon}" width="14" height="14"></i>
+                                        </span>
+                                        <div>
+                                            <div class="od-popover-item-title">${item.label}</div>
+                                            <div class="od-popover-item-desc">${item.description}</div>
+                                        </div>
+                                    </div>
+                                    <div class="od-popover-item-val">- ${formatMoney(item.amount)}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="od-popover-footer">
+                            <span>Total</span>
+                            <strong>- ${formatMoney(discountInfo.totalDiscount)}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 
     // 1. Order History HTML
     let historyHtml = '<p class="text-muted">No history found</p>';
@@ -242,15 +389,98 @@ function showOrderDetailModal(order) {
     // 2. Items HTML (Table Style for full width)
     let itemsHtml = '<tr><td colspan="3" class="text-center text-muted">No items</td></tr>';
     if (order.orderItems?.length > 0) {
-        itemsHtml = order.orderItems.map(item => `
-            <tr>
-                <td width="60%">
-                    <strong>${item.title}</strong>
-                </td>
-                <td width="20%" class="text-center">${item.quantity} x ${Number(item.price).toFixed(0)}</td>
-                <td width="20%" class="text-right" style="text-align:right;">${formatMoney(item.totalPrice)}</td>
-            </tr>
-        `).join('');
+        itemsHtml = order.orderItems.map(item => {
+            const itemTitle = item.title || item.Title || 'Unnamed Item';
+            const quantity = Number(item.quantity ?? item.Quantity ?? 1);
+            const unitPrice = Number(item.price ?? item.Price ?? 0);
+            const itemDiscount = Number(item.discount ?? item.Discount ?? 0);
+            const taxAmount = Number(item.tax ?? item.Tax ?? 0);
+            const taxRate = Number(item.taxRate ?? item.TaxRate ?? 0);
+            const taxName = (item.taxName ?? item.TaxName ?? '').trim();
+            const baseTotal = quantity * unitPrice;
+
+            let lineTotal = Number(item.lineTotal ?? item.LineTotal ?? item.totalPrice ?? item.TotalPrice ?? 0);
+            if (lineTotal <= 0 && unitPrice > 0) {
+                lineTotal = Math.max(0, baseTotal - itemDiscount + taxAmount);
+            }
+
+            // Thumbnail
+            const photoPath = item.photoFilePath ?? item.PhotoFilePath;
+            let thumbHtml = `
+                <div class="od-item-thumb-placeholder">
+                    <i data-lucide="package" width="16" height="16"></i>
+                </div>
+            `;
+            if (photoPath && typeof photoPath === 'string' && photoPath.trim() !== '') {
+                const photoUrl = photoPath.startsWith('http') ? photoPath : `${baseApiUrl}/${photoPath.replace(/^\/+/, '')}`;
+                thumbHtml = `
+                    <img src="${photoUrl}" class="od-item-thumb" alt="${itemTitle}" onerror="this.onerror=null; this.replaceWith(this.nextElementSibling);" />
+                    <div class="od-item-thumb-placeholder" style="display:none;">
+                        <i data-lucide="package" width="16" height="16"></i>
+                    </div>
+                `;
+            }
+
+            // Badges for Discount and Tax
+            const metaChips = [];
+            if (itemDiscount > 0) {
+                metaChips.push(`
+                    <span class="od-item-chip discount" title="Discount on item: -${formatMoney(itemDiscount)}">
+                        <i data-lucide="tag" width="11" height="11"></i>
+                        <span>-${formatMoney(itemDiscount)}</span>
+                    </span>
+                `);
+            }
+
+            if (taxAmount > 0 || taxRate > 0) {
+                let taxLabel = taxName || 'Tax';
+                if (taxRate > 0) {
+                    taxLabel += ` (${taxRate}%)`;
+                }
+                if (taxAmount > 0) {
+                    taxLabel += `: +${formatMoney(taxAmount)}`;
+                }
+                metaChips.push(`
+                    <span class="od-item-chip tax" title="Tax on item: ${taxLabel}">
+                        <i data-lucide="receipt" width="11" height="11"></i>
+                        <span>${taxLabel}</span>
+                    </span>
+                `);
+            }
+
+            const metaChipsHtml = metaChips.length > 0 ? `
+                <div class="od-item-chips">
+                    ${metaChips.join('')}
+                </div>
+            ` : '';
+
+            const originalPriceHtml = (itemDiscount > 0 && baseTotal > lineTotal)
+                ? `<span class="od-item-del-price" title="Original: ${formatMoney(baseTotal)}">${formatMoney(baseTotal)}</span>`
+                : '';
+
+            return `
+                <tr>
+                    <td width="55%">
+                        <div class="od-item-cell">
+                            ${thumbHtml}
+                            <div class="od-item-info">
+                                <div class="od-item-title">${itemTitle}</div>
+                                ${metaChipsHtml}
+                            </div>
+                        </div>
+                    </td>
+                    <td width="22%" class="text-center od-item-qty-col">
+                        ${quantity} × ${formatMoney(unitPrice)}
+                    </td>
+                    <td width="23%" class="text-right" style="text-align:right;">
+                        <div class="od-item-total-col">
+                            <span class="od-item-final-price">${formatMoney(lineTotal)}</span>
+                            ${originalPriceHtml}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     }
     
     const html = `
@@ -310,8 +540,8 @@ function showOrderDetailModal(order) {
                 <table class="od-items-table">
                     <thead>
                         <tr>
-                            <th>Item Name</th>
-                            <th class="text-center">Qty / Price</th>
+                            <th>Item Details</th>
+                            <th class="text-center">Qty × Price</th>
                             <th style="text-align:right;">Total</th>
                         </tr>
                     </thead>
@@ -332,10 +562,7 @@ function showOrderDetailModal(order) {
                         <span>Delivery Charges</span>
                         <span>${formatMoney(order.deliveryCharges)}</span>
                     </div>
-                    <div class="od-pay-row">
-                        <span>Discount</span>
-                        <span style="color:#16a34a;">- ${formatMoney(order.discount)}</span>
-                    </div>
+                    ${discountRowHtml}
                     <div class="od-pay-row">
                         <span>Tax</span>
                         <span style="color:#16a34a;">- ${formatMoney(order.tax)}</span>
@@ -361,3 +588,78 @@ function showOrderDetailModal(order) {
 
     lucide?.createIcons();
 }
+
+// Toggle discount popover open/close
+function toggleDiscountPopover(forceState) {
+    const $popover = $('#odDiscountPopover');
+    const $btn = $('#odDiscountTriggerBtn');
+    if ($popover.length === 0) return;
+
+    const isVisible = $popover.is(':visible');
+    const shouldOpen = typeof forceState === 'boolean' ? forceState : !isVisible;
+
+    if (shouldOpen) {
+        $popover.stop(true, true).fadeIn(150);
+        $btn.addClass('is-open').attr('aria-expanded', 'true');
+        lucide?.createIcons();
+
+        // Check if popover extends below modal viewport, flip if needed
+        const $modalBody = $popover.closest('.modal-body');
+        if ($modalBody.length) {
+            const popoverOffset = $popover.offset();
+            const modalOffset = $modalBody.offset();
+            if (popoverOffset && modalOffset) {
+                const popoverBottom = popoverOffset.top + $popover.outerHeight();
+                const modalBottom = modalOffset.top + $modalBody.innerHeight();
+                if (popoverBottom > modalBottom && $popover.outerHeight() < ($popover.parent().offset().top - modalOffset.top)) {
+                    $popover.addClass('placement-top');
+                } else {
+                    $popover.removeClass('placement-top');
+                }
+            }
+        }
+    } else {
+        $popover.stop(true, true).fadeOut(150);
+        $btn.removeClass('is-open').attr('aria-expanded', 'false');
+    }
+}
+
+// Global delegated events for discount popover and table discount pills
+$(document).on('click', '#odDiscountTriggerBtn, #odDiscountLabelTrigger', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleDiscountPopover();
+});
+
+$(document).on('keydown', '#odDiscountLabelTrigger', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleDiscountPopover();
+    }
+});
+
+$(document).on('click', '#odCloseDiscountPopover', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleDiscountPopover(false);
+});
+
+$(document).on('click', function (e) {
+    if (!$(e.target).closest('.od-discount-popover-anchor, #odDiscountLabelTrigger').length) {
+        toggleDiscountPopover(false);
+    }
+});
+
+$(document).on('keydown', function (e) {
+    if (e.key === 'Escape') {
+        toggleDiscountPopover(false);
+    }
+});
+
+$(document).on('click', '.od-table-discount-pill', function (e) {
+    e.stopPropagation();
+    const orderId = $(this).data('id');
+    if (orderId) {
+        viewOrderDetails(orderId);
+    }
+});

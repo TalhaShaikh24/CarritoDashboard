@@ -174,15 +174,11 @@
                     <div class="pos-summary-row">
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <span>Discount</span>
-                            <button type="button" class="pos-summary-pill-btn" id="btnApplyCartDiscount">+ Add</button>
                         </div>
                         <span style="color: #b91c1c; font-weight: 700;" id="posSummaryDiscount">- Rs. 0.00</span>
                     </div>
                     <div class="pos-summary-row">
-                        <div style="display: flex; align-items: center; gap: 6px;">
-                            <span>Tax (GST)</span>
-                            <button type="button" class="pos-summary-pill-btn" id="btnToggleTax">GST 5%</button>
-                        </div>
+                        <span>Tax</span>
                         <strong id="posSummaryTax">Rs. 0.00</strong>
                     </div>
                     <div class="pos-summary-row" id="posDeliveryFeeRow" style="display: none;">
@@ -434,7 +430,7 @@
                     <strong id="recDiscount" style="color: #b91c1c;">- Rs. 0.00</strong>
                 </div>
                 <div class="receipt-calc-row" id="recTaxRow">
-                    <span>GST (5%):</span>
+                    <span>Tax:</span>
                     <strong id="recTax">Rs. 0.00</strong>
                 </div>
                 <div class="receipt-calc-row" id="recFeeRow" style="display: none;">
@@ -560,41 +556,6 @@
         <div class="pos-modal-footer">
             <button type="button" class="btn btn-outline" onclick="PosApp.closeModal('newCustomerModal')">Cancel</button>
             <button type="button" class="btn btn-primary" id="btnSaveNewCustomer">Save & Select</button>
-        </div>
-    </div>
-</div>
-
-<!-- =========================================================================
-     MODAL: Cart Discount
-     ========================================================================= -->
-<div class="pos-modal-overlay" id="discountModal" style="display: none;">
-    <div class="pos-modal-card pos-modal-sm">
-        <div class="pos-modal-header">
-            <div class="pos-modal-title">
-                <i data-lucide="tag" style="color: var(--pos-primary);"></i>
-                <span>Apply Order Discount</span>
-            </div>
-            <button type="button" class="pos-modal-close-btn" onclick="PosApp.closeModal('discountModal')">&times;</button>
-        </div>
-        <div class="pos-modal-body">
-            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-                <button type="button" class="pos-cat-pill active flex-1" id="btnDiscTypePercent" style="justify-content: center;">Percentage (%)</button>
-                <button type="button" class="pos-cat-pill flex-1" id="btnDiscTypeFixed" style="justify-content: center;">Fixed Amount (Rs.)</button>
-            </div>
-            <div class="form-group">
-                <label id="discValueLabel">Discount Percentage (%)</label>
-                <input type="number" id="discValueInput" class="form-control" placeholder="e.g. 10" min="0" step="any">
-            </div>
-            <label style="font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; display: block;">Quick Promo Codes:</label>
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                <button type="button" class="pos-quick-cash-chip promo-chip" data-code="WELCOME10" data-pct="10">WELCOME10 (10%)</button>
-                <button type="button" class="pos-quick-cash-chip promo-chip" data-code="SAVE50" data-fixed="50">SAVE50 (Rs. 50)</button>
-                <button type="button" class="pos-quick-cash-chip promo-chip" data-code="FLAT100" data-fixed="100">FLAT100 (Rs. 100)</button>
-            </div>
-        </div>
-        <div class="pos-modal-footer">
-            <button type="button" class="btn btn-outline" id="btnRemoveDiscount">Remove Discount</button>
-            <button type="button" class="btn btn-primary" id="btnApplyDiscountSubmit">Apply</button>
         </div>
     </div>
 </div>
@@ -749,36 +710,6 @@
         </div>
         <div class="pos-modal-footer">
             <button type="button" class="btn btn-primary" onclick="PosApp.closeModal('shortcutsModal')">Got It</button>
-        </div>
-    </div>
-</div>
-
-<!-- =========================================================================
-     MODAL: Line Item Edit / Discount / Note
-     ========================================================================= -->
-<div class="pos-modal-overlay" id="lineItemModal" style="display: none;">
-    <div class="pos-modal-card pos-modal-sm">
-        <div class="pos-modal-header">
-            <div class="pos-modal-title">
-                <i data-lucide="edit-3" style="color: var(--pos-primary);"></i>
-                <span>Item Options</span>
-            </div>
-            <button type="button" class="pos-modal-close-btn" onclick="PosApp.closeModal('lineItemModal')">&times;</button>
-        </div>
-        <div class="pos-modal-body">
-            <h4 id="lineItemTitle" style="font-size: 14px; font-weight: 700; color: var(--pos-dark); margin-bottom: 12px;">Product</h4>
-            <div class="form-group">
-                <label>Line Discount (Rs.)</label>
-                <input type="number" id="lineItemDiscountInput" class="form-control" placeholder="0.00" min="0">
-            </div>
-            <div class="form-group">
-                <label>Item Note / Instructions</label>
-                <input type="text" id="lineItemNoteInput" class="form-control" placeholder="e.g. Extra fresh, sliced, no plastic bag">
-            </div>
-        </div>
-        <div class="pos-modal-footer">
-            <button type="button" class="btn btn-outline" onclick="PosApp.closeModal('lineItemModal')">Cancel</button>
-            <button type="button" class="btn btn-primary" id="btnSaveLineItemOptions">Save</button>
         </div>
     </div>
 </div>

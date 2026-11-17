@@ -999,6 +999,23 @@ body.pos-fullscreen-mode .pos-module {
     font-weight: 600;
 }
 
+.pos-cart-item-tax-tag {
+    font-size: 10.5px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+    .pos-cart-item-tax-tag.inclusive {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .pos-cart-item-tax-tag.exclusive {
+        background: #fef3c7;
+        color: #b45309;
+    }
+
 .pos-cart-qty-ctrl {
     display: flex;
     align-items: center;
@@ -1074,11 +1091,6 @@ body.pos-fullscreen-mode .pos-module {
 .pos-item-action-btn:hover {
     color: var(--pos-danger);
     background: #fde8e8;
-}
-
-.pos-item-action-btn.btn-edit-line:hover {
-    color: var(--pos-accent);
-    background: #fef3c7;
 }
 
 /* Empty Cart */

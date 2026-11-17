@@ -206,6 +206,23 @@ function initializeDataTable() {
                 render: function (data, type, row) {
                     const unit = (row && row.unitName ? row.unitName : 'UNIT').toUpperCase();
                     const weight = row.weight;
+                    const unitLabel = row.type == 2 ? `${weight} ${unit}` : 'CASE';
+                    const discountedPrice = row.discountedPrice ?? row.DiscountedPrice;
+                    const discountMinQty = row.discountMinQuantity ?? row.DiscountMinQuantity;
+                    const hasDiscount = discountedPrice !== null && discountedPrice !== undefined && discountedPrice !== '' && Number(discountedPrice) > 0;
+
+                    if (hasDiscount) {
+                        const minQtyBadge = (discountMinQty && Number(discountMinQty) > 1)
+                            ? `<div style="margin-top: 3px;"><span class="badge badge-light-primary" style="font-size: 11px;" title="Discount available on min ${discountMinQty} items">Discount Min Qty: ${discountMinQty}</span></div>`
+                            : '';
+                        return `
+                            <div>
+                                <span style="font-weight: 600; color: #0aa64a;">Rs. ${discountedPrice} / ${unitLabel}</span>
+                                <span style="text-decoration: line-through; color: #9ca3af; font-size: 12px; margin-left: 4px;">Rs. ${row.price}</span>
+                                ${minQtyBadge}
+                            </div>
+                        `;
+                    }
                     return row.type == 2 ? `<span>Rs. ${row.price} / ${weight} ${unit}</span>` : `<span>Rs. ${row.price} / CASE</span>`;
                 }
             },
@@ -437,6 +454,14 @@ function editInventory(id) {
                 $('#editInvTaxRate').val(item.taxRateId);
                 $('#editInvTaxType').val(item.taxType);
                 $('#editInvDiscount').val(item.discount || '');
+                const initialPrice = parseFloat(item.price);
+                const initialDiscount = parseFloat(item.discount);
+                if (!isNaN(initialPrice) && !isNaN(initialDiscount) && initialDiscount > 0) {
+                    $('#editInvDiscountedPrice').val(Number(Math.max(0, initialPrice - initialDiscount).toFixed(2)));
+                } else {
+                    $('#editInvDiscountedPrice').val(item.discountedPrice ?? item.DiscountedPrice ?? '');
+                }
+                $('#editInvDiscountMinQuantity').val(item.discountMinQuantity ?? item.DiscountMinQuantity ?? '');
                 $('#editInvPrice').val(item.price);
                 $('#editInvWeight').val(item.weight || '');
                 $('#editInvDescription').val(item.description);
@@ -475,6 +500,8 @@ function addNewInventory() {
     const taxRateId = $('#newInvTaxRate').val();
     const taxType = $('#newInvTaxType').val();
     const discount = $('#newInvDiscount').val();
+    const discountedPrice = $('#newInvDiscountedPrice').val();
+    const discountMinQuantity = $('#newInvDiscountMinQuantity').val();
     const price = $('#newInvPrice').val();
     const weight = $('#newInvWeight').val() || 0;
     const type = $('#newInvType').val();
@@ -503,6 +530,12 @@ function addNewInventory() {
     formData.append('[0].TaxRateId', taxRateId);
     formData.append('[0].TaxType', taxType);
     formData.append('[0].Discount', discount);
+    if (discountedPrice !== '' && discountedPrice !== null && discountedPrice !== undefined) {
+        formData.append('[0].DiscountedPrice', discountedPrice);
+    }
+    if (discountMinQuantity !== '' && discountMinQuantity !== null && discountMinQuantity !== undefined) {
+        formData.append('[0].DiscountMinQuantity', discountMinQuantity);
+    }
     formData.append('[0].Price', price);
     formData.append('[0].Type', type);
     if (type === '1') {
@@ -562,6 +595,8 @@ function updateInventory(id) {
     const taxRateId = $('#editInvTaxRate').val();
     const taxType = $('#editInvTaxType').val();
     const discount = $('#editInvDiscount').val();
+    const discountedPrice = $('#editInvDiscountedPrice').val();
+    const discountMinQuantity = $('#editInvDiscountMinQuantity').val();
 
     // Pack Item needs Pack Size (Weight is optional); Catch Weight Item needs Weight (Pack Size is not sent)
     if ((type === '1' && !packSize) || (type === '2' && !weight) || !taxRateId || !taxType) {
@@ -574,6 +609,12 @@ function updateInventory(id) {
     formData.append('TaxRateId', taxRateId);
     formData.append('TaxType', taxType);
     if (discount) formData.append('Discount', discount);
+    if (discountedPrice !== '' && discountedPrice !== null && discountedPrice !== undefined) {
+        formData.append('DiscountedPrice', discountedPrice);
+    }
+    if (discountMinQuantity !== '' && discountMinQuantity !== null && discountMinQuantity !== undefined) {
+        formData.append('DiscountMinQuantity', discountMinQuantity);
+    }
     formData.append('Price', $('#editInvPrice').val() || 0);
     formData.append('Type', type);
     if (type === '1') {
@@ -841,7 +882,7 @@ $('#btnAddNewInventory').click(function () {
                     <label id="newInvStockLabel">Stock *</label>
                     <input type="number" id="newInvStock" class="form-control" min="0" required placeholder="Enter Initial Stock">
                 </div>
-                <div class="form-group col-md-6">
+                <div class="form-group col-md-3">
                     <label>Min Order Quantity *</label>
                     <input type="number" id="newInvMinOrderQuantity" class="form-control" min="0" required placeholder="Enter Min Order Quantity">
                 </div>
@@ -859,12 +900,20 @@ $('#btnAddNewInventory').click(function () {
                     </select>
                 </div>
                 <div class="form-group col-md-4">
+                    <label id="newInvPriceLabel">Price *</label>
+                    <input type="number" id="newInvPrice" class="form-control" min="0" required placeholder="Enter Price">
+                </div>
+                <div class="form-group col-md-4">
                     <label>Discount</label>
                     <input type="number" id="newInvDiscount" class="form-control" min="0" step="1" placeholder="Enter Discount">
                 </div>
-                <div class="form-group col-md-6">
-                    <label id="newInvPriceLabel">Price *</label>
-                    <input type="number" id="newInvPrice" class="form-control" min="0" required placeholder="Enter Price">
+                <div class="form-group col-md-4">
+                    <label>Discounted Price</label>
+                    <input type="number" id="newInvDiscountedPrice" class="form-control" min="0" step="1" placeholder="Discounted Price" readonly disabled>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Discount Min Quantity</label>
+                    <input type="number" id="newInvDiscountMinQuantity" class="form-control" min="0" step="1" placeholder="Enter Min Quantity for Discount">
                 </div>
             </div>
 
@@ -1018,6 +1067,26 @@ function applyEditInventoryTypeState() {
 $(document).on('change', '#editInvUnit', applyEditInventoryTypeState);
 $(document).on('input change', '#editInvWeight', applyEditInventoryTypeState);
 
+// Automatically calculate DiscountedPrice = Price - Discount (disabled for manual input)
+function updateCalculatedDiscountedPrice(priceSelector, discountSelector, targetSelector) {
+    const price = parseFloat($(priceSelector).val());
+    const discount = parseFloat($(discountSelector).val());
+    if (!isNaN(price) && !isNaN(discount) && discount > 0) {
+        const discounted = Math.max(0, price - discount);
+        $(targetSelector).val(Number(discounted.toFixed(2)));
+    } else {
+        $(targetSelector).val('');
+    }
+}
+
+$(document).on('input change', '#newInvPrice, #newInvDiscount', function () {
+    updateCalculatedDiscountedPrice('#newInvPrice', '#newInvDiscount', '#newInvDiscountedPrice');
+});
+
+$(document).on('input change', '#editInvPrice, #editInvDiscount', function () {
+    updateCalculatedDiscountedPrice('#editInvPrice', '#editInvDiscount', '#editInvDiscountedPrice');
+});
+
 // ==================== Import Inventory (Excel / CSV) ====================
 // Same flow as the MenuOptics import: download a sample file, upload the
 // filled file, review and edit the rows inside the popup, then submit. The
@@ -1027,7 +1096,7 @@ $(document).on('input change', '#editInvWeight', applyEditInventoryTypeState);
 
 let importInvRows = [];
 
-const IMPORT_INV_HEADERS = ['Title', 'Category', 'Brand', 'Description', 'Type', 'Unit', 'Weight', 'Pack Size', 'Min Order Quantity', 'Tax Rate', 'Tax Type', 'Discount', 'Price'];
+const IMPORT_INV_HEADERS = ['Title', 'Category', 'Brand', 'Description', 'Type', 'Unit', 'Weight', 'Pack Size', 'Min Order Quantity', 'Tax Rate', 'Tax Type', 'Discount', 'Discount Min Qty', 'Discounted Price', 'Price'];
 
 function escapeImportHtml(value) {
     return String(value === null || value === undefined ? '' : value)
@@ -1086,6 +1155,8 @@ $('#btnImportInventory').click(function () {
                             <th>Tax Rate *</th>
                             <th>Tax Type *</th>
                             <th>Discount</th>
+                            <th>Discount Min Qty</th>
+                            <th>Discounted Price</th>
                             <th>Price *</th>
                             <th style="width: 44px;"></th>
                         </tr>
@@ -1157,6 +1228,8 @@ function downloadImportSampleFile() {
                     item.taxRateName,
                     item.taxType === 2 ? 'Exclusive' : (item.taxType === 1 ? 'Inclusive' : ''),
                     item.discount === null || item.discount === undefined ? '' : item.discount,
+                    (item.discountMinQuantity ?? item.DiscountMinQuantity) ?? '',
+                    (item.discountedPrice ?? item.DiscountedPrice) ?? '',
                     item.price === null || item.price === undefined ? '' : item.price
                 ]));
                 generateImportSampleFile(rows);
@@ -1178,8 +1251,8 @@ function buildImportTemplateRows() {
 
     return [
         IMPORT_INV_HEADERS,
-        ['Sample Pack Item', categoryName, brandName, 'Pack Item', unitName, 1200, '', 12, 1, 'Sample pack item - replace with your own data'],
-        ['Sample Catch Weight Item', categoryName, brandName, 'Catch Weight Item', unitName, 850, 2.5, '', 0.5, 'Sample catch weight item - replace with your own data']
+        ['Sample Pack Item', categoryName, brandName, 'Sample pack item', 'Pack Item', unitName, '', 12, 1, 'Standard', 'Exclusive', 10, 2, 1080, 1200],
+        ['Sample Catch Weight Item', categoryName, brandName, 'Sample catch weight item', 'Catch Weight Item', unitName, 2.5, '', 0.5, 'Standard', 'Exclusive', '', '', '', 850]
     ];
 }
 
@@ -1383,8 +1456,10 @@ function buildImportInvRows(rows) {
         unit: headerRow.findIndex(h => h.includes('unit')),
         taxRate: headerRow.findIndex(h => h.includes('taxrate')),
         taxType: headerRow.findIndex(h => h.includes('taxtype')),
-        discount: headerRow.findIndex(h => h.includes('discount')),
-        price: headerRow.findIndex(h => h.includes('price')),
+        discount: headerRow.findIndex(h => h.includes('discount') && !h.includes('min') && !h.includes('price')),
+        discountMinQuantity: headerRow.findIndex(h => h.includes('discountmin') || h.includes('minqty') || (h.includes('discount') && h.includes('min'))),
+        discountedPrice: headerRow.findIndex(h => h.includes('discountedprice') || (h.includes('discount') && h.includes('price'))),
+        price: headerRow.findIndex(h => h.includes('price') && !h.includes('discount')),
         weight: headerRow.findIndex(h => h.includes('weight')),
         packSize: headerRow.findIndex(h => h.includes('packsize') || h === 'pack'),
         minOrder: headerRow.findIndex(h => h.includes('minorder') || h === 'moq')
@@ -1395,8 +1470,8 @@ function buildImportInvRows(rows) {
         // No recognisable header: fall back to the sample file's column order
         // and treat every row as data
         col.title = 0; col.category = 1; col.brand = 2; col.description = 3; col.type = 4;
-        col.unit = 5; col.taxRate = 6; col.taxType = 7; col.discount = 8;
-        col.price = 9; col.weight = 10; col.packSize = 11; col.minOrder = 12;
+        col.unit = 5; col.weight = 6; col.packSize = 7; col.minOrder = 8; col.taxRate = 9;
+        col.taxType = 10; col.discount = 11; col.discountMinQuantity = 12; col.discountedPrice = 13; col.price = 14;
     }
 
     const cell = (row, idx) => (idx === -1 || row[idx] === undefined || row[idx] === null) ? '' : row[idx];
@@ -1419,6 +1494,8 @@ function buildImportInvRows(rows) {
             taxRateId: findImportCachedItem(taxRatesCache, cell(row, col.taxRate))?.id || '',
             taxType: parseImportTaxType(cell(row, col.taxType)),
             discount: cleanImportNumber(cell(row, col.discount)),
+            discountMinQuantity: cleanImportNumber(cell(row, col.discountMinQuantity)),
+            discountedPrice: cleanImportNumber(cell(row, col.discountedPrice)),
             price: cleanImportNumber(cell(row, col.price)),
             weight: cleanImportNumber(cell(row, col.weight)),
             packSize: cleanImportNumber(cell(row, col.packSize)),
@@ -1479,6 +1556,14 @@ function renderImportInvPreview() {
                 <input type="number" class="form-control" data-field="discount" min="0" step="0.01"
                        value="${escapeImportHtml(row.discount)}" placeholder="Enter Discount" style="min-width: 100px;">
             </td>
+            <td>
+                <input type="number" class="form-control" data-field="discountMinQuantity" min="0" step="1"
+                       value="${escapeImportHtml(row.discountMinQuantity)}" placeholder="Enter Min Qty" style="min-width: 100px;">
+            </td>
+            <td>
+                <input type="number" class="form-control" data-field="discountedPrice" min="0" step="0.01"
+                       value="${escapeImportHtml(row.discountedPrice)}" placeholder="Calculated automatically" readonly disabled style="min-width: 100px;">
+            </td>
             <td><input type="number" class="form-control" data-field="price" min="0" step="0.01" value="${escapeImportHtml(row.price)}" placeholder="Enter Price" style="min-width: 90px;"></td>
             <td><button type="button" class="action-btn delete import-inv-delete" title="Delete row"><i style="width: 16px;" data-lucide="trash-2"></i></button></td>
         </tr>`;
@@ -1525,6 +1610,16 @@ $(document).on('input change', '#importInvTableBody input, #importInvTableBody s
     if (!importInvRows[index] || !field) return;
 
     importInvRows[index][field] = $(this).val();
+    if (field === 'discount' || field === 'price') {
+        const rowPrice = parseFloat(importInvRows[index].price);
+        const rowDiscount = parseFloat(importInvRows[index].discount);
+        if (!isNaN(rowPrice) && !isNaN(rowDiscount) && rowDiscount > 0) {
+            importInvRows[index].discountedPrice = Number(Math.max(0, rowPrice - rowDiscount).toFixed(2));
+        } else {
+            importInvRows[index].discountedPrice = '';
+        }
+        $(this).closest('tr').find('input[data-field="discountedPrice"]').val(importInvRows[index].discountedPrice);
+    }
     if (field === 'type') {
         applyImportInvTypeStates();
     }
@@ -1600,6 +1695,12 @@ function submitImportInventory() {
         formData.append(`[${i}].TaxType`, row.taxType);
         if (row.discount !== '' && !isNaN(Number(row.discount))) {
             formData.append(`[${i}].Discount`, row.discount);
+        }
+        if (row.discountMinQuantity !== '' && !isNaN(Number(row.discountMinQuantity))) {
+            formData.append(`[${i}].DiscountMinQuantity`, row.discountMinQuantity);
+        }
+        if (row.discountedPrice !== '' && !isNaN(Number(row.discountedPrice))) {
+            formData.append(`[${i}].DiscountedPrice`, row.discountedPrice);
         }
         formData.append(`[${i}].Price`, row.price);
         formData.append(`[${i}].Type`, row.type);

@@ -19,14 +19,14 @@ const PosApp = (function () {
 
     function getAvatarColor(str) {
         const palette = [
-            { bg: '#e0f2fe', text: '#0284c7' }, // Blue
-            { bg: '#dcfce7', text: '#15803d' }, // Green
-            { bg: '#fef3c7', text: '#b45309' }, // Amber
-            { bg: '#f3e8ff', text: '#7e22ce' }, // Purple
-            { bg: '#fee2e2', text: '#b91c1c' }, // Rose
-            { bg: '#ffedd5', text: '#c2410c' }, // Orange
-            { bg: '#ccfbf1', text: '#0f766e' }, // Teal
-            { bg: '#f1f5f9', text: '#475569' }  // Slate
+            { bg: '#e0f2fe', text: '#0284c7' },
+            { bg: '#dcfce7', text: '#15803d' },
+            { bg: '#fef3c7', text: '#b45309' },
+            { bg: '#f3e8ff', text: '#7e22ce' },
+            { bg: '#fee2e2', text: '#b91c1c' },
+            { bg: '#ffedd5', text: '#c2410c' },
+            { bg: '#ccfbf1', text: '#0f766e' },
+            { bg: '#f1f5f9', text: '#475569' }
         ];
         let hash = 0;
         for (let i = 0; i < (str || '').length; i++) {
@@ -47,32 +47,30 @@ const PosApp = (function () {
     // -------------------------------------------------------------------------
     // 2. STATE
     // -------------------------------------------------------------------------
-    let cart = []; // [{ id, product, qty, lineDiscount, note }]
+    let cart = [];
     let selectedCustomer = DUMMY_CUSTOMERS[0];
-    let orderType = "Walk-in"; // Walk-in, Takeaway, Delivery
+    let orderType = "Walk-in";
 
-    // Live Inventory & Catalog state
     let realProducts = [];
     let productsCache = {};
     let realCategories = [];
     let realBrands = [];
-    let selectedCategoryId = null; // null represents "All"
+    let selectedCategoryId = null;
     let selectedBrand = "";
     let searchTerm = "";
     let searchTimeout = null;
     let sortBy = "popular";
-    let viewMode = "grid"; // 'grid' or 'list'
+    let viewMode = "grid";
     let isLoadingProducts = false;
     let activeStorekeeperId = null;
     let storekeepersCache = [];
 
-    // Order calculation state
-    let cartDiscount = { type: 'none', value: 0 }; // type: 'none' | 'percent' | 'fixed'
-    let isTaxEnabled = true; // GST 5%
+    let taxRatesCache = [];
+    let taxRatesMap = {};
+
     const TAX_RATE = 0.05;
     const DELIVERY_FEE = 100;
 
-    // Shift / Register tracking
     let shiftData = {
         openingFloat: 10000,
         cashSales: 0,
@@ -81,20 +79,13 @@ const PosApp = (function () {
         ordersCount: 0
     };
 
-    // Sales history state
     let salesHistory = [];
-
-    // Held orders state
     let heldOrders = [];
 
-    // Settings
     let soundEnabled = true;
     let nextOrderSeq = 1001;
     let currentOrderNum = "#ORD-1001";
     let activePaymentMethod = "Cash";
-
-    // Line item being edited in modal
-    let editingLineItemId = null;
 
     // -------------------------------------------------------------------------
     // 3. AUDIO SYNTHESIZER (Web Audio API)
@@ -103,9 +94,7 @@ const PosApp = (function () {
     function getAudioContext() {
         if (!audioCtx) {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (AudioContext) {
-                audioCtx = new AudioContext();
-            }
+            if (AudioContext) audioCtx = new AudioContext();
         }
         return audioCtx;
     }
@@ -116,19 +105,14 @@ const PosApp = (function () {
             const ctx = getAudioContext();
             if (!ctx) return;
             if (ctx.state === 'suspended') ctx.resume();
-
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
-
             osc.type = type;
             osc.frequency.setValueAtTime(freq, ctx.currentTime);
-
             gain.gain.setValueAtTime(0.12, ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-
             osc.connect(gain);
             gain.connect(ctx.destination);
-
             osc.start();
             osc.stop(ctx.currentTime + duration);
         } catch (e) {
@@ -138,8 +122,8 @@ const PosApp = (function () {
 
     function playSuccessChime() {
         if (!soundEnabled) return;
-        playBeep(523.25, 0.12, 'triangle'); // C5
-        setTimeout(() => playBeep(659.25, 0.22, 'triangle'), 110); // E5
+        playBeep(523.25, 0.12, 'triangle');
+        setTimeout(() => playBeep(659.25, 0.22, 'triangle'), 110);
     }
 
     function playWarningBeep() {
@@ -158,23 +142,30 @@ const PosApp = (function () {
         bindEvents();
         updateHeldOrdersBadge();
 
-        // Initialize Storekeeper, then load Categories and Inventory from API
         initStorekeeper().then(() => {
-            return fetchCategories();
+            return Promise.all([fetchCategories(), fetchTaxRates()]);
         }).then(() => {
             fetchInventory();
         });
 
-        // Render Lucide icons
-        if (window.lucide) {
-            lucide.createIcons();
-        }
+        $(document).on('storekeeperReady', function (e, skpUser) {
+            if (skpUser) {
+                initStorekeeper().then(() => {
+                    return Promise.all([fetchCategories(), fetchTaxRates()]);
+                }).then(() => {
+                    fetchInventory();
+                });
+            }
+        });
+
+        if (window.lucide) lucide.createIcons();
     }
 
     function getActiveStorekeeperId() {
         if (typeof AuthHelper !== 'undefined' && AuthHelper.isStorekeeper()) {
             return AuthHelper.getStorekeeperId();
         }
+        return activeStorekeeperId;
     }
 
     function initStorekeeper() {
@@ -184,6 +175,34 @@ const PosApp = (function () {
             $('#posStoreNameLabel').text(`Store: ${storeName}`);
             return Promise.resolve(activeStorekeeperId);
         }
+        return Promise.resolve(activeStorekeeperId);
+    }
+
+    function fetchTaxRates() {
+        const skId = getActiveStorekeeperId();
+        if (!skId) {
+            taxRatesCache = [];
+            taxRatesMap = {};
+            return Promise.resolve([]);
+        }
+        return new Promise((resolve) => {
+            $.get(`${baseApiUrl}/api/TaxRate/${skId}`)
+                .done(res => {
+                    if (res && res.status === 200 && res.data) {
+                        taxRatesCache = Array.isArray(res.data) ? res.data : (res.data.items || []);
+                    } else {
+                        taxRatesCache = [];
+                    }
+                    taxRatesMap = {};
+                    taxRatesCache.forEach(t => { taxRatesMap[t.id] = t; });
+                    resolve(taxRatesCache);
+                })
+                .fail(() => {
+                    taxRatesCache = [];
+                    taxRatesMap = {};
+                    resolve([]);
+                });
+        });
     }
 
     function loadPersistedState() {
@@ -201,9 +220,8 @@ const PosApp = (function () {
             if (savedShift) shiftData = JSON.parse(savedShift);
 
             const savedSeq = localStorage.getItem('pos_order_seq');
-            if (savedSeq) {
-                nextOrderSeq = parseInt(savedSeq, 10);
-            }
+            if (savedSeq) nextOrderSeq = parseInt(savedSeq, 10);
+
             currentOrderNum = `#ORD-${nextOrderSeq}`;
             $('#posCurrentOrderNum').text(currentOrderNum);
         } catch (e) {
@@ -236,9 +254,7 @@ const PosApp = (function () {
     function initCashierProfile() {
         if (typeof AuthHelper !== 'undefined') {
             const user = AuthHelper.getCurrentUser();
-            if (user && user.fullName) {
-                $('#posCashierName').text(user.fullName);
-            }
+            if (user && user.fullName) $('#posCashierName').text(user.fullName);
         }
     }
 
@@ -248,17 +264,11 @@ const PosApp = (function () {
     function fetchCategories() {
         const skId = getActiveStorekeeperId();
         if (!skId) return Promise.resolve();
-
         return new Promise(resolve => {
             $.ajax({
                 url: `${baseApiUrl}/api/InventoryCategory`,
                 type: 'GET',
-                data: {
-                    PageNumber: 1,
-                    PageSize: 100,
-                    Search: '',
-                    storekeeperId: skId
-                },
+                data: { PageNumber: 1, PageSize: 100, Search: '', storekeeperId: skId },
                 success: function (res) {
                     if (res && res.status === 200 && res.data && res.data.items) {
                         realCategories = res.data.items;
@@ -266,9 +276,7 @@ const PosApp = (function () {
                     }
                     resolve();
                 },
-                error: function () {
-                    resolve();
-                }
+                error: function () { resolve(); }
             });
         });
     }
@@ -277,7 +285,6 @@ const PosApp = (function () {
         const $container = $('#posCategoryPills');
         $container.empty();
 
-        // 1. "All" Pill
         const isAllActive = (selectedCategoryId === null) ? 'active' : '';
         $container.append(`
             <button type="button" class="pos-cat-pill ${isAllActive}" data-category-id="">
@@ -285,7 +292,6 @@ const PosApp = (function () {
             </button>
         `);
 
-        // 2. Each Category Pill
         realCategories.forEach(cat => {
             const isActive = (selectedCategoryId == cat.id) ? 'active' : '';
             $container.append(`
@@ -314,6 +320,19 @@ const PosApp = (function () {
             unitStr = `Pack of ${item.packSize}`;
         }
 
+        const rawPrice = parseFloat(item.price ?? item.Price) || 0;
+        const rawDiscount = parseFloat(item.discount ?? item.Discount) || 0;
+        const rawDiscountedPrice = parseFloat(item.discountedPrice ?? item.DiscountedPrice) || 0;
+        const discountMinQty = parseInt(item.discountMinQuantity ?? item.DiscountMinQuantity, 10) || 1;
+        const taxRateId = item.taxRateId ?? item.TaxRateId ?? 0;
+        const rawTaxType = item.taxType ?? item.TaxType;
+        const taxType = (rawTaxType === 2 || String(rawTaxType).toLowerCase() === 'exclusive') ? 2 : 1;
+        const taxName = item.taxName ?? item.TaxName ?? item.taxRateName ?? '';
+        let taxRate = parseFloat(item.taxRate ?? item.TaxRate) || 0;
+        if (!taxRate && taxRatesMap[taxRateId]) {
+            taxRate = parseFloat(taxRatesMap[taxRateId].rate) || 0;
+        }
+
         return {
             id: item.id,
             title: item.title || 'Untitled Item',
@@ -321,7 +340,14 @@ const PosApp = (function () {
             categoryId: item.categoryId,
             brand: item.brandName || 'Generic',
             brandId: item.brandId,
-            price: parseFloat(item.price) || 0,
+            price: rawPrice,
+            discount: rawDiscount,
+            discountedPrice: rawDiscountedPrice,
+            discountMinQuantity: discountMinQty,
+            taxType: taxType,
+            taxRateId: taxRateId,
+            taxName: taxName,
+            taxRate: taxRate,
             unit: unitStr,
             sku: item.barcode || `INV-${item.id}`,
             barcode: item.barcode || '',
@@ -343,10 +369,7 @@ const PosApp = (function () {
             PageSize: 100,
             Search: searchTerm || ''
         };
-
-        if (selectedCategoryId) {
-            queryData.CategoryIds = selectedCategoryId;
-        }
+        if (selectedCategoryId) queryData.CategoryIds = selectedCategoryId;
 
         $.ajax({
             url: `${baseApiUrl}/api/Inventory/storekeeper/${skId}`,
@@ -356,9 +379,7 @@ const PosApp = (function () {
                 isLoadingProducts = false;
                 if (res && res.status === 200 && res.data && res.data.items) {
                     realProducts = res.data.items.map(mapApiProduct);
-                    realProducts.forEach(p => {
-                        productsCache[p.id] = p;
-                    });
+                    realProducts.forEach(p => { productsCache[p.id] = p; });
                 } else {
                     realProducts = [];
                 }
@@ -399,7 +420,7 @@ const PosApp = (function () {
             if (sortBy === 'name_asc') return (a.title || '').localeCompare(b.title || '');
             if (sortBy === 'price_asc') return a.price - b.price;
             if (sortBy === 'price_desc') return b.price - a.price;
-            return a.id - b.id; // 'popular' / default
+            return a.id - b.id;
         });
     }
 
@@ -450,6 +471,29 @@ const PosApp = (function () {
                        <div class="pos-card-initial-fallback" style="display: none; background: ${color.bg}; color: ${color.text};">${initial}</div>`
                     : `<div class="pos-card-initial-fallback" style="display: flex; background: ${color.bg}; color: ${color.text};">${initial}</div>`;
 
+                const discPrice = (p.discountedPrice > 0 && p.discountedPrice < p.price) ? p.discountedPrice : (p.discount > 0 ? (p.price - p.discount) : 0);
+                const hasItemDiscount = discPrice > 0 && discPrice < p.price;
+
+                let cardPriceHtml = `<div class="pos-card-price"><span class="currency">Rs.</span>${p.price.toFixed(2)}</div>`;
+                if (hasItemDiscount) {
+                    cardPriceHtml = `
+                        <div class="pos-card-price" style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15;">
+                            <div>
+                                <span class="currency" style="color: #0aa64a;">Rs.</span><span style="color: #0aa64a; font-weight: 700;">${discPrice.toFixed(2)}</span>
+                                <del style="color: #94a3af; font-size: 11px; margin-left: 3px;">Rs. ${p.price.toFixed(0)}</del>
+                            </div>
+                            ${p.discountMinQuantity > 1 ? `<span style="font-size: 9.5px; color: #2563eb; font-weight: 600;">Disc Min Qty: ${p.discountMinQuantity}</span>` : ''}
+                        </div>
+                    `;
+                }
+
+                let taxTagHtml = '';
+                if (p.taxRate > 0) {
+                    taxTagHtml = p.taxType === 2
+                        ? `<span class="pos-cart-item-tax-tag exclusive" style="font-size: 9.5px;" title="Exclusive tax: +${p.taxRate}%">+${p.taxRate}% Tax</span>`
+                        : `<span class="pos-cart-item-tax-tag inclusive" style="font-size: 9.5px;" title="Inclusive tax (${p.taxRate}%)">Tax Incl</span>`;
+                }
+
                 const cardHtml = `
                     <div class="pos-product-card ${isOut ? 'out-of-stock' : ''}" data-id="${p.id}" title="${escapeHtml(p.title)}">
                         <div class="pos-card-thumb-wrap">
@@ -458,14 +502,15 @@ const PosApp = (function () {
                             <span class="pos-card-cat-badge">${escapeHtml((p.category || 'Item').split(' ')[0])}</span>
                         </div>
                         <div class="pos-card-info">
-                            <span class="pos-card-sku">${escapeHtml(p.sku)}</span>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span class="pos-card-sku">${escapeHtml(p.sku)}</span>
+                                ${taxTagHtml}
+                            </div>
                             <h4 class="pos-card-title">${escapeHtml(p.title)}</h4>
                             <span class="pos-card-unit">${escapeHtml(p.unit)} &bull; ${escapeHtml(p.brand)}</span>
                         </div>
                         <div class="pos-card-bottom">
-                            <div class="pos-card-price">
-                                <span class="currency">Rs.</span>${p.price.toFixed(2)}
-                            </div>
+                            ${cardPriceHtml}
                             <button type="button" class="pos-card-add-btn" title="Add to Order">
                                 <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
                             </button>
@@ -489,11 +534,31 @@ const PosApp = (function () {
                        <div class="pos-row-initial-fallback" style="display: none; background: ${color.bg}; color: ${color.text};">${initial}</div>`
                     : `<div class="pos-row-initial-fallback" style="display: flex; background: ${color.bg}; color: ${color.text};">${initial}</div>`;
 
+                const discPrice = (p.discountedPrice > 0 && p.discountedPrice < p.price) ? p.discountedPrice : (p.discount > 0 ? (p.price - p.discount) : 0);
+                const hasItemDiscount = discPrice > 0 && discPrice < p.price;
+
+                let rowPriceHtml = `<div class="pos-row-price">Rs. ${p.price.toFixed(2)}</div>`;
+                if (hasItemDiscount) {
+                    rowPriceHtml = `
+                        <div class="pos-row-price" style="display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2;">
+                            <span style="color: #0aa64a; font-weight: 700;">Rs. ${discPrice.toFixed(2)}</span>
+                            <del style="color: #94a3af; font-size: 11px;">Rs. ${p.price.toFixed(2)}</del>
+                        </div>
+                    `;
+                }
+
+                let rowTaxTag = '';
+                if (p.taxRate > 0) {
+                    rowTaxTag = p.taxType === 2
+                        ? `<span class="pos-cart-item-tax-tag exclusive" style="font-size: 9.5px; margin-left: 4px;">+${p.taxRate}% Tax</span>`
+                        : `<span class="pos-cart-item-tax-tag inclusive" style="font-size: 9.5px; margin-left: 4px;">Tax Incl</span>`;
+                }
+
                 const rowHtml = `
                     <div class="pos-product-row ${isOut ? 'out-of-stock' : ''}" data-id="${p.id}">
                         ${rowThumbHtml}
                         <div class="pos-row-details">
-                            <div class="pos-row-title">${escapeHtml(p.title)}</div>
+                            <div class="pos-row-title">${escapeHtml(p.title)} ${rowTaxTag}</div>
                             <div class="pos-row-meta">
                                 <span>${escapeHtml(p.sku)}</span>
                                 <span>&bull;</span>
@@ -502,7 +567,7 @@ const PosApp = (function () {
                                 <span style="color: ${p.stock <= 5 ? '#f59e0b' : '#10b981'}; font-weight: 600;">${p.stock} in stock</span>
                             </div>
                         </div>
-                        <div class="pos-row-price">Rs. ${p.price.toFixed(2)}</div>
+                        ${rowPriceHtml}
                         <button type="button" class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; border-radius: 8px;">
                             + Add
                         </button>
@@ -512,9 +577,7 @@ const PosApp = (function () {
             });
         }
 
-        if (window.lucide) {
-            lucide.createIcons();
-        }
+        if (window.lucide) lucide.createIcons();
     }
 
     // -------------------------------------------------------------------------
@@ -526,9 +589,7 @@ const PosApp = (function () {
 
         if (product.stock <= 0) {
             playWarningBeep();
-            if (typeof showNotification === 'function') {
-                showNotification(`"${product.title}" is out of stock!`, "warning");
-            }
+            if (typeof showNotification === 'function') showNotification(`"${product.title}" is out of stock!`, "warning");
             return;
         }
 
@@ -536,20 +597,12 @@ const PosApp = (function () {
         if (existingItem) {
             if (existingItem.qty + quantity > product.stock) {
                 playWarningBeep();
-                if (typeof showNotification === 'function') {
-                    showNotification(`Maximum available stock reached (${product.stock} available)`, "warning");
-                }
+                if (typeof showNotification === 'function') showNotification(`Maximum available stock reached (${product.stock} available)`, "warning");
                 return;
             }
             existingItem.qty += quantity;
         } else {
-            cart.push({
-                id: product.id,
-                product: product,
-                qty: quantity,
-                lineDiscount: 0,
-                note: ""
-            });
+            cart.push({ id: product.id, product: product, qty: quantity });
         }
 
         playBeep(920, 0.08);
@@ -567,9 +620,7 @@ const PosApp = (function () {
 
         if (newQty > item.product.stock) {
             playWarningBeep();
-            if (typeof showNotification === 'function') {
-                showNotification(`Only ${item.product.stock} units available in stock`, "warning");
-            }
+            if (typeof showNotification === 'function') showNotification(`Only ${item.product.stock} units available in stock`, "warning");
             item.qty = item.product.stock;
         } else {
             item.qty = newQty;
@@ -589,46 +640,108 @@ const PosApp = (function () {
         if (cart.length === 0) return;
         if (confirm("Are you sure you want to clear all items in this order?")) {
             cart = [];
-            cartDiscount = { type: 'none', value: 0 };
             playBeep(350, 0.1);
             updateCartUI();
         }
     }
 
+    function calculateItemLine(item) {
+        const product = item.product || {};
+        const price = parseFloat(product.price) || 0;
+        const qty = parseFloat(item.qty) || 0;
+        const grossTotal = price * qty;
+
+        let autoStoreDiscount = 0;
+        const minQty = parseInt(product.discountMinQuantity, 10) || 1;
+        if (qty >= minQty) {
+            const discPrice = parseFloat(product.discountedPrice) || 0;
+            const discVal = parseFloat(product.discount) || 0;
+            if (discPrice > 0 && discPrice < price) {
+                autoStoreDiscount = (price - discPrice) * qty;
+            } else if (discVal > 0) {
+                autoStoreDiscount = discVal * qty;
+            }
+        }
+
+        const itemDiscount = Math.min(grossTotal, autoStoreDiscount);
+        const lineSubtotal = Math.max(0, grossTotal - itemDiscount);
+
+        const rawTaxType = product.taxType ?? product.raw?.taxType;
+        const taxType = (rawTaxType === 2 || String(rawTaxType).toLowerCase() === 'exclusive') ? 2 : 1;
+        const taxRateId = product.taxRateId ?? product.raw?.taxRateId;
+        const taxRateObj = taxRatesMap[taxRateId];
+
+        let taxRate = 0;
+        if (product.taxRate !== undefined && product.taxRate !== null && !isNaN(product.taxRate) && product.taxRate > 0) {
+            taxRate = parseFloat(product.taxRate);
+        } else if (taxRateObj && !isNaN(taxRateObj.rate)) {
+            taxRate = parseFloat(taxRateObj.rate);
+        } else if (product.raw && product.raw.taxRate && !isNaN(product.raw.taxRate)) {
+            taxRate = parseFloat(product.raw.taxRate);
+        } else {
+            taxRate = 5;
+        }
+
+        const taxName = product.taxName || (taxRateObj ? taxRateObj.name : 'GST');
+
+        let taxAmount = 0;
+        let exclusiveTax = 0;
+        let inclusiveTax = 0;
+        let linePayable = lineSubtotal;
+
+        if (taxRate > 0 && lineSubtotal > 0) {
+            if (taxType === 2) {
+                taxAmount = lineSubtotal * (taxRate / 100);
+                exclusiveTax = taxAmount;
+                inclusiveTax = 0;
+                linePayable = lineSubtotal + exclusiveTax;
+            } else {
+                taxAmount = lineSubtotal - (lineSubtotal / (1 + (taxRate / 100)));
+                exclusiveTax = 0;
+                inclusiveTax = taxAmount;
+                linePayable = lineSubtotal;
+            }
+        }
+
+        return {
+            price, qty, grossTotal,
+            autoStoreDiscount, itemDiscount, lineSubtotal,
+            taxType, taxRate, taxName, taxAmount,
+            exclusiveTax, inclusiveTax, linePayable
+        };
+    }
+
     function calculateTotals() {
         let itemsCount = 0;
-        let subtotal = 0;
+        let grossSubtotal = 0;
+        let totalItemDiscounts = 0;
+        let totalLineSubtotal = 0;
+        let totalExclusiveTax = 0;
+        let totalInclusiveTax = 0;
 
         cart.forEach(item => {
-            itemsCount += item.qty;
-            const itemPriceTotal = (item.product.price * item.qty) - (item.lineDiscount || 0);
-            subtotal += Math.max(0, itemPriceTotal);
+            const line = calculateItemLine(item);
+            itemsCount += line.qty;
+            grossSubtotal += line.grossTotal;
+            totalItemDiscounts += line.itemDiscount;
+            totalLineSubtotal += line.lineSubtotal;
+            totalExclusiveTax += line.exclusiveTax;
+            totalInclusiveTax += line.inclusiveTax;
         });
 
-        // Overall Order Discount
-        let discountAmount = 0;
-        if (cartDiscount.type === 'percent') {
-            discountAmount = (subtotal * (cartDiscount.value / 100));
-        } else if (cartDiscount.type === 'fixed') {
-            discountAmount = cartDiscount.value;
-        }
-        discountAmount = Math.min(discountAmount, subtotal);
-
-        const discountedSubtotal = Math.max(0, subtotal - discountAmount);
-
-        // Tax
-        const taxAmount = isTaxEnabled ? (discountedSubtotal * TAX_RATE) : 0;
-
-        // Delivery fee
+        const totalTax = totalExclusiveTax + totalInclusiveTax;
         const deliveryFee = orderType === 'Delivery' ? DELIVERY_FEE : 0;
-
-        const grandTotal = discountedSubtotal + taxAmount + deliveryFee;
+        const grandTotal = Math.max(0, (grossSubtotal - totalItemDiscounts) + totalExclusiveTax + deliveryFee);
 
         return {
             itemsCount,
-            subtotal,
-            discountAmount,
-            taxAmount,
+            subtotal: grossSubtotal,
+            itemDiscounts: totalItemDiscounts,
+            orderDiscount: 0,
+            discountAmount: totalItemDiscounts,
+            taxAmount: totalTax,
+            exclusiveTax: totalExclusiveTax,
+            inclusiveTax: totalInclusiveTax,
             deliveryFee,
             grandTotal
         };
@@ -648,7 +761,7 @@ const PosApp = (function () {
             $container.find('.pos-cart-item').remove();
 
             cart.forEach(item => {
-                const lineTotal = Math.max(0, (item.product.price * item.qty) - (item.lineDiscount || 0));
+                const line = calculateItemLine(item);
                 const initial = (item.product.title || 'P').trim().charAt(0).toUpperCase();
                 const color = getAvatarColor(item.product.title);
                 const hasImage = Boolean(item.product.image && item.product.image.trim().length > 0);
@@ -657,6 +770,15 @@ const PosApp = (function () {
                        <div class="pos-cart-initial-fallback" style="display: none; background: ${color.bg}; color: ${color.text};">${initial}</div>`
                     : `<div class="pos-cart-initial-fallback" style="display: flex; background: ${color.bg}; color: ${color.text};">${initial}</div>`;
 
+                let taxBadge = '';
+                if (line.taxRate > 0) {
+                    if (line.taxType === 2) {
+                        taxBadge = `<span class="pos-cart-item-tax-tag exclusive" title="Exclusive Tax (+${line.taxRate}%): +Rs. ${line.exclusiveTax.toFixed(2)}">+${line.taxRate}% ${escapeHtml(line.taxName)}</span>`;
+                    } else {
+                        taxBadge = `<span class="pos-cart-item-tax-tag inclusive" title="Inclusive Tax (${line.taxRate}%): Rs. ${line.inclusiveTax.toFixed(2)} (Tax Included in Price)">${line.taxRate}% ${escapeHtml(line.taxName)} (Incl)</span>`;
+                    }
+                }
+
                 const itemHtml = `
                     <div class="pos-cart-item" data-id="${item.id}">
                         ${cartThumbHtml}
@@ -664,8 +786,8 @@ const PosApp = (function () {
                             <div class="pos-cart-item-name" title="${escapeHtml(item.product.title)}">${escapeHtml(item.product.title)}</div>
                             <div class="pos-cart-item-meta">
                                 <span>Rs. ${item.product.price.toFixed(2)}</span>
-                                ${item.lineDiscount > 0 ? `<span class="pos-cart-item-discount-tag">-Rs. ${item.lineDiscount}</span>` : ''}
-                                ${item.note ? `<span title="${escapeHtml(item.note)}" style="color: #0aa64a;"><i data-lucide="file-text" style="width: 12px; height: 12px; vertical-align: -2px;"></i></span>` : ''}
+                                ${line.itemDiscount > 0 ? `<span class="pos-cart-item-discount-tag" title="Discount: -Rs. ${line.itemDiscount.toFixed(2)}">-Rs. ${line.itemDiscount.toFixed(2)}</span>` : ''}
+                                ${taxBadge}
                             </div>
                         </div>
                         <div class="pos-cart-qty-ctrl">
@@ -673,13 +795,10 @@ const PosApp = (function () {
                             <input type="number" class="pos-qty-input" value="${item.qty}" min="1" max="${item.product.stock}">
                             <button type="button" class="pos-qty-btn btn-qty-plus">&plus;</button>
                         </div>
-                        <div class="pos-cart-item-total">
-                            Rs. ${lineTotal.toFixed(2)}
+                        <div class="pos-cart-item-total" title="${line.taxType === 2 && line.exclusiveTax > 0 ? `Subtotal: Rs. ${line.lineSubtotal.toFixed(2)} + Tax: Rs. ${line.exclusiveTax.toFixed(2)}` : ''}">
+                            Rs. ${line.linePayable.toFixed(2)}
                         </div>
                         <div class="pos-cart-item-actions">
-                            <button type="button" class="pos-item-action-btn btn-edit-line" title="Line Discount & Note">
-                                <i data-lucide="sliders-horizontal" style="width: 14px; height: 14px;"></i>
-                            </button>
                             <button type="button" class="pos-item-action-btn btn-delete-item" title="Remove">
                                 <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                             </button>
@@ -692,20 +811,17 @@ const PosApp = (function () {
             $('#btnOpenPaymentModal').prop('disabled', false);
         }
 
-        // Summary stats
         $('#posSummaryItemCount').text(totals.itemsCount);
         $('#posSummarySubtotal').text(`Rs. ${totals.subtotal.toFixed(2)}`);
+        $('#posSummaryDiscount').text(`- Rs. ${totals.discountAmount.toFixed(2)}`);
 
-        if (totals.discountAmount > 0) {
-            $('#posSummaryDiscount').text(`- Rs. ${totals.discountAmount.toFixed(2)}`);
-            $('#btnApplyCartDiscount').text('Edit').addClass('active');
+        if (totals.exclusiveTax > 0 && totals.inclusiveTax > 0) {
+            $('#posSummaryTax').html(`Rs. ${totals.taxAmount.toFixed(2)} <small style="font-size:10px; color:#475569; font-weight:normal;">(+Rs. ${totals.exclusiveTax.toFixed(2)} added)</small>`);
+        } else if (totals.inclusiveTax > 0) {
+            $('#posSummaryTax').html(`Rs. ${totals.inclusiveTax.toFixed(2)} <small style="font-size:10px; color:#2563eb; font-weight:normal;">(Included)</small>`);
         } else {
-            $('#posSummaryDiscount').text(`- Rs. 0.00`);
-            $('#btnApplyCartDiscount').text('+ Add').removeClass('active');
+            $('#posSummaryTax').text(`+ Rs. ${totals.exclusiveTax.toFixed(2)}`);
         }
-
-        $('#posSummaryTax').text(`Rs. ${totals.taxAmount.toFixed(2)}`);
-        $('#btnToggleTax').text(isTaxEnabled ? 'GST 5%' : 'Exempt');
 
         if (orderType === 'Delivery') {
             $('#posDeliveryFeeRow').show();
@@ -717,9 +833,7 @@ const PosApp = (function () {
         $('#posSummaryGrandTotal').text(`Rs. ${totals.grandTotal.toFixed(2)}`);
         $('#btnPayTotalText').text(`Rs. ${totals.grandTotal.toFixed(2)}`);
 
-        if (window.lucide) {
-            lucide.createIcons();
-        }
+        if (window.lucide) lucide.createIcons();
     }
 
     // -------------------------------------------------------------------------
@@ -729,9 +843,8 @@ const PosApp = (function () {
         const code = inputCode.trim();
         if (!code) return;
 
-        // Search in memory by barcode, SKU, or ID
-        const product = realProducts.find(p => 
-            (p.barcode && p.barcode.toLowerCase() === code.toLowerCase()) || 
+        const product = realProducts.find(p =>
+            (p.barcode && p.barcode.toLowerCase() === code.toLowerCase()) ||
             (p.sku && p.sku.toLowerCase() === code.toLowerCase()) ||
             String(p.id) === code
         );
@@ -739,13 +852,10 @@ const PosApp = (function () {
         if (product) {
             addToCart(product.id, 1);
             $('#posBarcodeInput').val('').focus();
-            if (typeof showNotification === 'function') {
-                showNotification(`Scanned: ${product.title}`, "success");
-            }
+            if (typeof showNotification === 'function') showNotification(`Scanned: ${product.title}`, "success");
             return;
         }
 
-        // If not in current view, query backend API
         const skId = getActiveStorekeeperId();
         if (skId) {
             $.ajax({
@@ -758,22 +868,16 @@ const PosApp = (function () {
                         productsCache[mapped.id] = mapped;
                         addToCart(mapped.id, 1);
                         $('#posBarcodeInput').val('').focus();
-                        if (typeof showNotification === 'function') {
-                            showNotification(`Scanned: ${mapped.title}`, "success");
-                        }
+                        if (typeof showNotification === 'function') showNotification(`Scanned: ${mapped.title}`, "success");
                     } else {
                         playWarningBeep();
-                        if (typeof showNotification === 'function') {
-                            showNotification(`Barcode/SKU "${code}" not found!`, "error");
-                        }
+                        if (typeof showNotification === 'function') showNotification(`Barcode/SKU "${code}" not found!`, "error");
                         $('#posBarcodeInput').select();
                     }
                 },
                 error: function () {
                     playWarningBeep();
-                    if (typeof showNotification === 'function') {
-                        showNotification(`Barcode/SKU "${code}" not found!`, "error");
-                    }
+                    if (typeof showNotification === 'function') showNotification(`Barcode/SKU "${code}" not found!`, "error");
                     $('#posBarcodeInput').select();
                 }
             });
@@ -785,9 +889,7 @@ const PosApp = (function () {
     // -------------------------------------------------------------------------
     function holdCurrentOrder() {
         if (cart.length === 0) {
-            if (typeof showNotification === 'function') {
-                showNotification("Cart is empty! Nothing to hold.", "warning");
-            }
+            if (typeof showNotification === 'function') showNotification("Cart is empty! Nothing to hold.", "warning");
             return;
         }
 
@@ -798,8 +900,6 @@ const PosApp = (function () {
             customer: selectedCustomer,
             orderType: orderType,
             cart: [...cart],
-            cartDiscount: { ...cartDiscount },
-            isTaxEnabled: isTaxEnabled,
             totals: totals,
             heldAt: new Date().toISOString()
         };
@@ -809,13 +909,9 @@ const PosApp = (function () {
         updateHeldOrdersBadge();
 
         playBeep(700, 0.1);
-        if (typeof showNotification === 'function') {
-            showNotification(`Order ${currentOrderNum} placed on hold.`, "info");
-        }
+        if (typeof showNotification === 'function') showNotification(`Order ${currentOrderNum} placed on hold.`, "info");
 
-        // Reset to next order
         cart = [];
-        cartDiscount = { type: 'none', value: 0 };
         selectCustomer(DUMMY_CUSTOMERS[0]);
         nextOrderSeq++;
         currentOrderNum = `#ORD-${nextOrderSeq}`;
@@ -829,17 +925,13 @@ const PosApp = (function () {
         if (index === -1) return;
 
         if (cart.length > 0) {
-            if (!confirm("Your active cart will be overwritten by this held order. Proceed?")) {
-                return;
-            }
+            if (!confirm("Your active cart will be overwritten by this held order. Proceed?")) return;
         }
 
         const record = heldOrders[index];
         cart = [...record.cart];
         selectedCustomer = record.customer;
         orderType = record.orderType;
-        cartDiscount = { ...record.cartDiscount };
-        isTaxEnabled = record.isTaxEnabled;
         currentOrderNum = record.orderNum;
 
         $('#posCurrentOrderNum').text(currentOrderNum);
@@ -847,7 +939,6 @@ const PosApp = (function () {
         $(`.pos-order-type-btn[data-type="${orderType}"]`).addClass('active');
         updateCustomerBadge();
 
-        // Remove from held orders
         heldOrders.splice(index, 1);
         savePersistedState();
         updateHeldOrdersBadge();
@@ -856,9 +947,7 @@ const PosApp = (function () {
         playBeep(880, 0.08);
         updateCartUI();
 
-        if (typeof showNotification === 'function') {
-            showNotification(`Resumed held order ${currentOrderNum}`, "success");
-        }
+        if (typeof showNotification === 'function') showNotification(`Resumed held order ${currentOrderNum}`, "success");
     }
 
     function deleteHeldOrder(holdId) {
@@ -945,7 +1034,6 @@ const PosApp = (function () {
 
     function updateCustomerBadge() {
         $('#posCurrentCustomerLabel').text(selectedCustomer.name);
-
         if (selectedCustomer.id === 0) {
             $('#posCustLoyaltyPill').hide();
         } else {
@@ -997,12 +1085,10 @@ const PosApp = (function () {
 
         const newCust = {
             id: DUMMY_CUSTOMERS.length + 1,
-            name: name,
-            phone: phone,
-            email: email,
-            points: 50, // Welcome reward bonus points!
-            credit: credit,
-            address: address
+            name, phone, email,
+            points: 50,
+            credit,
+            address
         };
 
         DUMMY_CUSTOMERS.push(newCust);
@@ -1024,21 +1110,16 @@ const PosApp = (function () {
         $('#payModalDueAmount').text(`Rs. ${totals.grandTotal.toFixed(2)}`);
         $('#payModalCustomerName').text(selectedCustomer.name);
 
-        // Reset inputs
         activePaymentMethod = "Cash";
         $('.pos-pay-tab').removeClass('active');
         $('.pos-pay-tab[data-method="Cash"]').addClass('active');
         $('.pos-method-pane').hide();
         $('#paneMethodCash').show();
 
-        // Render Quick Cash suggestion presets
         renderQuickCashPresets(totals.grandTotal);
-
-        // Pre-fill tendered with exact total
         $('#cashTenderedInput').val(totals.grandTotal.toFixed(2));
         updateCashChangeCalculation(totals.grandTotal, totals.grandTotal);
 
-        // Split inputs reset
         $('#splitCashInput').val((totals.grandTotal / 2).toFixed(2));
         $('#splitCardInput').val((totals.grandTotal / 2).toFixed(2));
         updateSplitStatus(totals.grandTotal);
@@ -1056,16 +1137,12 @@ const PosApp = (function () {
         const exact = Math.ceil(grandTotal);
         const presets = [exact];
 
-        // Suggest clean round note amounts
         const notes = [50, 100, 500, 1000, 5000];
         notes.forEach(n => {
             const roundUp = Math.ceil(grandTotal / n) * n;
-            if (roundUp > grandTotal && !presets.includes(roundUp)) {
-                presets.push(roundUp);
-            }
+            if (roundUp > grandTotal && !presets.includes(roundUp)) presets.push(roundUp);
         });
 
-        // Add +100, +500 if reasonable
         if (!presets.includes(exact + 100)) presets.push(exact + 100);
         if (!presets.includes(exact + 500)) presets.push(exact + 500);
 
@@ -1102,7 +1179,6 @@ const PosApp = (function () {
         const cardPortion = parseFloat($('#splitCardInput').val()) || 0;
         const totalSplit = cashPortion + cardPortion;
         const diff = dueTotal - totalSplit;
-
         const $banner = $('#splitStatusBanner');
         const $amt = $('#splitStatusAmount');
 
@@ -1144,7 +1220,6 @@ const PosApp = (function () {
             tendered = totals.grandTotal;
         }
 
-        // Build Sale Record
         const now = new Date();
         const saleRecord = {
             orderNum: currentOrderNum,
@@ -1154,15 +1229,24 @@ const PosApp = (function () {
             cashier: $('#posCashierName').text() || 'Admin',
             customer: selectedCustomer,
             orderType: orderType,
-            items: cart.map(item => ({
-                id: item.id,
-                title: item.product.title,
-                sku: item.product.sku,
-                unitPrice: item.product.price,
-                qty: item.qty,
-                lineDiscount: item.lineDiscount || 0,
-                total: (item.product.price * item.qty) - (item.lineDiscount || 0)
-            })),
+            items: cart.map(item => {
+                const line = calculateItemLine(item);
+                return {
+                    id: item.id,
+                    title: item.product.title,
+                    sku: item.product.sku,
+                    unitPrice: item.product.price,
+                    qty: item.qty,
+                    lineDiscount: line.itemDiscount,
+                    taxType: line.taxType,
+                    taxRate: line.taxRate,
+                    taxName: line.taxName,
+                    taxAmount: line.taxAmount,
+                    exclusiveTax: line.exclusiveTax,
+                    inclusiveTax: line.inclusiveTax,
+                    total: line.linePayable
+                };
+            }),
             totals: totals,
             paymentMethod: activePaymentMethod,
             tendered: tendered,
@@ -1170,7 +1254,6 @@ const PosApp = (function () {
             note: $('#orderNoteInput').val().trim()
         };
 
-        // Update shift stats
         shiftData.ordersCount++;
         if (activePaymentMethod === 'Cash') {
             shiftData.cashSales += totals.grandTotal;
@@ -1185,21 +1268,16 @@ const PosApp = (function () {
             shiftData.cardSales += cardPart;
         }
 
-        // Add to sales history
         salesHistory.unshift(saleRecord);
 
-        // Add loyalty points to registered customer
         if (selectedCustomer.id !== 0) {
             const earnedPoints = Math.floor(totals.grandTotal / 100);
             selectedCustomer.points += earnedPoints;
         }
 
-        // Decrement local inventory stock
         cart.forEach(item => {
             const prod = productsCache[item.id] || realProducts.find(p => p.id === item.id);
-            if (prod) {
-                prod.stock = Math.max(0, prod.stock - item.qty);
-            }
+            if (prod) prod.stock = Math.max(0, prod.stock - item.qty);
         });
 
         savePersistedState();
@@ -1220,13 +1298,11 @@ const PosApp = (function () {
 
     function resetForNextOrder() {
         cart = [];
-        cartDiscount = { type: 'none', value: 0 };
         selectCustomer(DUMMY_CUSTOMERS[0]);
         nextOrderSeq++;
         currentOrderNum = `#ORD-${nextOrderSeq}`;
         $('#posCurrentOrderNum').text(currentOrderNum);
         savePersistedState();
-
         renderCatalog();
         updateCartUI();
         $('#posBarcodeInput').focus();
@@ -1243,13 +1319,18 @@ const PosApp = (function () {
         $('#recCustomer').text(sale.customer.name);
         $('#recOrderType').text(sale.orderType);
 
-        // Items table
         const $tbody = $('#recItemsTbody');
         $tbody.empty();
         sale.items.forEach(it => {
+            let metaSub = '';
+            if (it.lineDiscount > 0) metaSub += `<br><small style="color: #16a34a;">-Rs. ${it.lineDiscount.toFixed(2)} off</small>`;
+            if (it.taxRate > 0) {
+                const taxLabel = it.taxName || 'Tax';
+                metaSub += `<br><small style="color: #6b7280;">${it.taxType === 2 ? `+${it.taxRate}% ${taxLabel}` : `${it.taxRate}% ${taxLabel} (Incl)`}</small>`;
+            }
             const row = `
                 <tr>
-                    <td>${it.title}<br><small style="color: #6b7280;">${it.sku}</small></td>
+                    <td>${it.title}${metaSub}</td>
                     <td class="text-right">${it.qty}</td>
                     <td class="text-right">${it.unitPrice.toFixed(0)}</td>
                     <td class="text-right">Rs. ${it.total.toFixed(0)}</td>
@@ -1258,7 +1339,6 @@ const PosApp = (function () {
             $tbody.append(row);
         });
 
-        // Totals
         $('#recSubtotal').text(`Rs. ${sale.totals.subtotal.toFixed(2)}`);
 
         if (sale.totals.discountAmount > 0) {
@@ -1270,7 +1350,16 @@ const PosApp = (function () {
 
         if (sale.totals.taxAmount > 0) {
             $('#recTaxRow').show();
-            $('#recTax').text(`Rs. ${sale.totals.taxAmount.toFixed(2)}`);
+            if (sale.totals.inclusiveTax > 0 && (!sale.totals.exclusiveTax || sale.totals.exclusiveTax <= 0)) {
+                $('#recTaxRow').find('span:first').text('Tax (Included):');
+                $('#recTax').text(`Rs. ${sale.totals.inclusiveTax.toFixed(2)}`);
+            } else if (sale.totals.exclusiveTax > 0 && (!sale.totals.inclusiveTax || sale.totals.inclusiveTax <= 0)) {
+                $('#recTaxRow').find('span:first').text('Tax (Added):');
+                $('#recTax').text(`+ Rs. ${sale.totals.exclusiveTax.toFixed(2)}`);
+            } else {
+                $('#recTaxRow').find('span:first').text('Tax:');
+                $('#recTax').text(`Rs. ${sale.totals.taxAmount.toFixed(2)} (+Rs. ${(sale.totals.exclusiveTax || 0).toFixed(2)} added)`);
+            }
         } else {
             $('#recTaxRow').hide();
         }
@@ -1385,17 +1474,13 @@ const PosApp = (function () {
     // 15. EVENT BINDINGS
     // -------------------------------------------------------------------------
     function bindEvents() {
-        // Barcode quick scan in top bar
         $('#posBarcodeInput').on('keypress', function (e) {
-            if (e.which === 13) {
-                processBarcodeScan($(this).val());
-            }
+            if (e.which === 13) processBarcodeScan($(this).val());
         });
         $('#btnSubmitBarcode').on('click', function () {
             processBarcodeScan($('#posBarcodeInput').val());
         });
 
-        // Search in catalog (debounced for API)
         $('#posSearchProduct').on('input', function () {
             const val = $(this).val();
             $('#btnClearSearch').toggle(val.length > 0);
@@ -1413,7 +1498,6 @@ const PosApp = (function () {
             fetchInventory();
         });
 
-        // Category pills click (filters live inventory by categoryId)
         $(document).on('click', '.pos-cat-pill', function () {
             const catId = $(this).data('category-id');
             selectedCategoryId = (catId === '' || catId === undefined || catId === null) ? null : parseInt(catId, 10);
@@ -1422,7 +1506,6 @@ const PosApp = (function () {
             fetchInventory();
         });
 
-        // View mode toggle
         $('#viewModeGrid').on('click', function () {
             viewMode = 'grid';
             $('.pos-view-btn').removeClass('active');
@@ -1436,7 +1519,6 @@ const PosApp = (function () {
             renderCatalog();
         });
 
-        // Reset catalog filter button
         $('#btnResetCatalogFilters').on('click', function () {
             selectedCategoryId = null;
             searchTerm = '';
@@ -1445,15 +1527,11 @@ const PosApp = (function () {
             fetchInventory();
         });
 
-        // Product click in grid or list
         $(document).on('click', '.pos-product-card, .pos-product-row', function (e) {
             const id = parseInt($(this).data('id'), 10);
-            if (id) {
-                addToCart(id, 1);
-            }
+            if (id) addToCart(id, 1);
         });
 
-        // Cart quantity buttons
         $(document).on('click', '.btn-qty-minus', function (e) {
             e.stopPropagation();
             const id = parseInt($(this).closest('.pos-cart-item').data('id'), 10);
@@ -1475,51 +1553,20 @@ const PosApp = (function () {
             updateCartItemQty(id, val);
         });
 
-        // Cart item delete
         $(document).on('click', '.btn-delete-item', function (e) {
             e.stopPropagation();
             const id = parseInt($(this).closest('.pos-cart-item').data('id'), 10);
             removeFromCart(id);
         });
 
-        // Cart item line edit
-        $(document).on('click', '.btn-edit-line', function (e) {
-            e.stopPropagation();
-            const id = parseInt($(this).closest('.pos-cart-item').data('id'), 10);
-            const item = cart.find(i => i.id === id);
-            if (item) {
-                editingLineItemId = id;
-                $('#lineItemTitle').text(item.product.title);
-                $('#lineItemDiscountInput').val(item.lineDiscount || '');
-                $('#lineItemNoteInput').val(item.note || '');
-                openModal('lineItemModal');
-            }
-        });
-
-        $('#btnSaveLineItemOptions').on('click', function () {
-            if (!editingLineItemId) return;
-            const item = cart.find(i => i.id === editingLineItemId);
-            if (item) {
-                item.lineDiscount = parseFloat($('#lineItemDiscountInput').val()) || 0;
-                item.note = $('#lineItemNoteInput').val().trim();
-                updateCartUI();
-            }
-            closeModal('lineItemModal');
-        });
-
-        // Clear cart
         $('#btnClearCart').on('click', clearCart);
-
-        // Hold order
         $('#btnHoldOrder').on('click', holdCurrentOrder);
 
-        // View held orders
         $('#btnHeldOrders').on('click', function () {
             renderHeldOrdersList();
             openModal('heldOrdersModal');
         });
 
-        // Order Type buttons
         $('.pos-order-type-btn').on('click', function () {
             $('.pos-order-type-btn').removeClass('active');
             $(this).addClass('active');
@@ -1527,7 +1574,6 @@ const PosApp = (function () {
             updateCartUI();
         });
 
-        // Customer selection
         $('#btnOpenCustomerModal').on('click', function () {
             renderCustomerList();
             openModal('customerSelectModal');
@@ -1545,92 +1591,16 @@ const PosApp = (function () {
 
         $('#btnSaveNewCustomer').on('click', saveNewCustomer);
 
-        // Order Discount Modal
-        let activeDiscType = 'percent';
-        $('#btnApplyCartDiscount').on('click', function () {
-            if (cart.length === 0) return;
-            activeDiscType = cartDiscount.type === 'fixed' ? 'fixed' : 'percent';
-            if (activeDiscType === 'percent') {
-                $('#btnDiscTypePercent').addClass('active');
-                $('#btnDiscTypeFixed').removeClass('active');
-                $('#discValueLabel').text('Discount Percentage (%)');
-                $('#discValueInput').val(cartDiscount.type === 'percent' ? cartDiscount.value : '');
-            } else {
-                $('#btnDiscTypeFixed').addClass('active');
-                $('#btnDiscTypePercent').removeClass('active');
-                $('#discValueLabel').text('Fixed Amount (Rs.)');
-                $('#discValueInput').val(cartDiscount.type === 'fixed' ? cartDiscount.value : '');
-            }
-            openModal('discountModal');
-        });
-
-        $('#btnDiscTypePercent').on('click', function () {
-            activeDiscType = 'percent';
-            $('#btnDiscTypePercent').addClass('active');
-            $('#btnDiscTypeFixed').removeClass('active');
-            $('#discValueLabel').text('Discount Percentage (%)');
-        });
-
-        $('#btnDiscTypeFixed').on('click', function () {
-            activeDiscType = 'fixed';
-            $('#btnDiscTypeFixed').addClass('active');
-            $('#btnDiscTypePercent').removeClass('active');
-            $('#discValueLabel').text('Fixed Amount (Rs.)');
-        });
-
-        $('.promo-chip').on('click', function () {
-            const pct = $(this).data('pct');
-            const fixed = $(this).data('fixed');
-            if (pct) {
-                activeDiscType = 'percent';
-                $('#btnDiscTypePercent').click();
-                $('#discValueInput').val(pct);
-            } else if (fixed) {
-                activeDiscType = 'fixed';
-                $('#btnDiscTypeFixed').click();
-                $('#discValueInput').val(fixed);
-            }
-        });
-
-        $('#btnApplyDiscountSubmit').on('click', function () {
-            const val = parseFloat($('#discValueInput').val()) || 0;
-            if (val > 0) {
-                cartDiscount = { type: activeDiscType, value: val };
-                playBeep(880, 0.08);
-            } else {
-                cartDiscount = { type: 'none', value: 0 };
-            }
-            closeModal('discountModal');
-            updateCartUI();
-        });
-
-        $('#btnRemoveDiscount').on('click', function () {
-            cartDiscount = { type: 'none', value: 0 };
-            closeModal('discountModal');
-            updateCartUI();
-        });
-
-        // Toggle Tax
-        $('#btnToggleTax').on('click', function () {
-            isTaxEnabled = !isTaxEnabled;
-            playBeep(700, 0.06);
-            updateCartUI();
-        });
-
-        // Open Payment Modal
         $('#btnOpenPaymentModal').on('click', openPaymentModal);
 
-        // Payment Method Tabs
         $('.pos-pay-tab').on('click', function () {
             $('.pos-pay-tab').removeClass('active');
             $(this).addClass('active');
             activePaymentMethod = $(this).data('method');
-
             $('.pos-method-pane').hide();
             $(`#paneMethod${activePaymentMethod}`).show();
         });
 
-        // Quick Cash Chips
         $(document).on('click', '.pos-quick-cash-chip[data-amt]', function () {
             const amt = parseFloat($(this).data('amt')) || 0;
             const totals = calculateTotals();
@@ -1644,50 +1614,34 @@ const PosApp = (function () {
             updateCashChangeCalculation(val, totals.grandTotal);
         });
 
-        // Split inputs
         $('#splitCashInput, #splitCardInput').on('input', function () {
             const totals = calculateTotals();
             updateSplitStatus(totals.grandTotal);
         });
 
-        // Finalize Sale
         $('#btnFinalizeSale').on('click', completeSale);
-
-        // Receipt Modal buttons
         $('#btnPrintReceiptBtn').on('click', printReceipt);
         $('#btnReceiptNewSale').on('click', function () {
             closeModal('receiptModal');
             resetForNextOrder();
         });
 
-        // Sales history
         $('#btnSalesHistory').on('click', function () {
             renderSalesHistoryTable();
             openModal('salesHistoryModal');
         });
         $('#historySearchInput, #historyMethodFilter').on('input change', renderSalesHistoryTable);
 
-        // Register summary
         $('#btnRegisterSummary').on('click', function () {
             renderShiftSummary();
             openModal('registerSummaryModal');
         });
-        $('#btnPrintShiftReport').on('click', function () {
-            window.print();
-        });
+        $('#btnPrintShiftReport').on('click', function () { window.print(); });
 
-        // Shortcuts Dialog
-        $('#btnShortcutsHelp').on('click', function () {
-            openModal('shortcutsModal');
-        });
-
-        // Fullscreen toggle
+        $('#btnShortcutsHelp').on('click', function () { openModal('shortcutsModal'); });
         $('#btnToggleFullscreen').on('click', toggleFullscreen);
-
-        // Sound toggle
         $('#btnToggleSound').on('click', toggleSound);
 
-        // Global Keyboard Shortcuts
         $(document).on('keydown', handleGlobalKeydown);
     }
 
@@ -1696,16 +1650,10 @@ const PosApp = (function () {
         const isFull = $('body').hasClass('pos-fullscreen-mode');
         $('#fullscreenIcon').attr('data-lucide', isFull ? 'minimize' : 'maximize');
         if (window.lucide) lucide.createIcons();
-
-        // Optional browser fullscreen
         if (isFull) {
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            }
+            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => { });
         } else {
-            if (document.exitFullscreen && document.fullscreenElement) {
-                document.exitFullscreen().catch(() => {});
-            }
+            if (document.exitFullscreen && document.fullscreenElement) document.exitFullscreen().catch(() => { });
         }
     }
 
@@ -1714,70 +1662,18 @@ const PosApp = (function () {
         $('#soundLabel').text(soundEnabled ? 'Sound' : 'Muted');
         $('#btnToggleSound').toggleClass('active', soundEnabled);
         savePersistedState();
-        if (soundEnabled) {
-            playBeep(880, 0.08);
-        }
+        if (soundEnabled) playBeep(880, 0.08);
     }
 
     function handleGlobalKeydown(e) {
-        // F1: Focus Barcode / Search
-        if (e.key === 'F1') {
-            e.preventDefault();
-            $('#posBarcodeInput').focus().select();
-            return;
-        }
-
-        // F2: Customer Select
-        if (e.key === 'F2') {
-            e.preventDefault();
-            $('#btnOpenCustomerModal').click();
-            return;
-        }
-
-        // F3: Hold Order
-        if (e.key === 'F3') {
-            e.preventDefault();
-            holdCurrentOrder();
-            return;
-        }
-
-        // F4: View Held Orders
-        if (e.key === 'F4') {
-            e.preventDefault();
-            $('#btnHeldOrders').click();
-            return;
-        }
-
-        // F8: Clear Cart
-        if (e.key === 'F8') {
-            e.preventDefault();
-            clearCart();
-            return;
-        }
-
-        // F9: Pay / Checkout
-        if (e.key === 'F9') {
-            e.preventDefault();
-            if (cart.length > 0) {
-                openPaymentModal();
-            }
-            return;
-        }
-
-        // F11: Toggle Fullscreen Mode
-        if (e.key === 'F11') {
-            e.preventDefault();
-            toggleFullscreen();
-            return;
-        }
-
-        // Escape: Close topmost modal
-        if (e.key === 'Escape') {
-            $('.pos-modal-overlay:visible').last().fadeOut(140);
-            return;
-        }
-
-        // '/' shortcut when not inside an input box: Focus Search
+        if (e.key === 'F1') { e.preventDefault(); $('#posBarcodeInput').focus().select(); return; }
+        if (e.key === 'F2') { e.preventDefault(); $('#btnOpenCustomerModal').click(); return; }
+        if (e.key === 'F3') { e.preventDefault(); holdCurrentOrder(); return; }
+        if (e.key === 'F4') { e.preventDefault(); $('#btnHeldOrders').click(); return; }
+        if (e.key === 'F8') { e.preventDefault(); clearCart(); return; }
+        if (e.key === 'F9') { e.preventDefault(); if (cart.length > 0) openPaymentModal(); return; }
+        if (e.key === 'F11') { e.preventDefault(); toggleFullscreen(); return; }
+        if (e.key === 'Escape') { $('.pos-modal-overlay:visible').last().fadeOut(140); return; }
         if (e.key === '/' && !$(e.target).is('input, textarea, select')) {
             e.preventDefault();
             $('#posSearchProduct').focus().select();
@@ -1811,10 +1707,8 @@ const PosApp = (function () {
     };
 })();
 
-// Self-initialize on DOM ready
 $(document).ready(function () {
     if ($('#posModule').length > 0) {
         PosApp.init();
     }
 });
-
