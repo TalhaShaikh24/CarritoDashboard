@@ -1,0 +1,126 @@
+@{
+    ViewData["Title"] = "Purchase Orders";
+}
+
+<div class="module" id="module-purchase-orders">
+    <div class="module-header">
+        <div>
+            <div class="search-bar">
+                <i style="width: 20px;" data-lucide="search"></i>
+                <input type="text" placeholder="Search PO, supplier, invoice..." id="poSearch">
+            </div>
+        </div>
+
+        <div class="module-header-right">
+            <select class="form-control" id="filterStatus" style="min-width: 140px;">
+                <option value="">All Statuses</option>
+                <option value="1">Draft</option>
+                <option value="2">Sent</option>
+                <option value="3">Partial</option>
+                <option value="4">Received</option>
+                <option value="5">Cancelled</option>
+            </select>
+
+            <select class="form-control" id="filterSupplier" style="min-width: 150px;">
+                <option value="">All Suppliers</option>
+            </select>
+
+            <select class="form-control" id="filterStorekeeper" data-search="true" style="min-width: 170px;">
+                <option value="">Loading Storekeepers...</option>
+            </select>
+
+            <button id="btnImportPO" class="btn-outline">
+                <i style="width: 18px;" data-lucide="upload"></i>
+                Import
+            </button>
+
+            <button id="btnAddNewPO" class="btn-primary">
+                <i style="width: 18px;" data-lucide="plus"></i>
+                New Purchase Order
+            </button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table" id="purchaseOrdersTable">
+            <thead>
+                <tr>
+                    <th>Supplier</th>
+                    <th>Invoice No</th>
+                    <th>Subtotal</th>
+                    <th>Tax</th>
+                    <th>Grand Total</th>
+                    <th>Status</th>
+                    <th>Invoice File</th>
+                    <th>Created At</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Template: View PO Details -->
+<template id="poDetailsTemplate">
+    <div id="poDetailsContent" style="padding: 10px 0;">
+        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 8px;">
+            <div>
+                <p style="margin: 0 0 4px; font-weight: 600; font-size: 15px;" id="viewPoNumber"></p>
+                <p style="margin: 0; color: #64748b; font-size: 13px;" id="viewPoSupplier"></p>
+            </div>
+            <div style="text-align: right;">
+                <div id="viewPoStatus"></div>
+                <p style="margin: 4px 0 0; color: #64748b; font-size: 12px;" id="viewPoDate"></p>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <table class="data-table" style="width: 100%; font-size: 13px;">
+                <thead>
+                    <tr style="background: #f1f5f9;">
+                        <th>Item</th>
+                        <th>Barcode</th>
+                        <th class="text-center">Ordered</th>
+                        <th class="text-center">Received</th>
+                        <th class="text-right">Unit Cost</th>
+                        <th class="text-right">Tax</th>
+                        <th class="text-right">Line Total</th>
+                    </tr>
+                </thead>
+                <tbody id="viewPoItemsBody"></tbody>
+            </table>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end;">
+            <div style="width: 250px; font-size: 13px;">
+                <div style="display: flex; justify-content: space-between; padding: 3px 0;">
+                    <span>Subtotal:</span>
+                    <strong id="viewPoSubtotal">0.00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 3px 0;">
+                    <span>Delivery Charges:</span>
+                    <strong id="viewPoDelivery">0.00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 3px 0;">
+                    <span>Discount:</span>
+                    <strong id="viewPoDiscount">0.00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 3px 0;">
+                    <span>Tax:</span>
+                    <strong id="viewPoTax">0.00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px solid #cbd5e1; margin-top: 4px; font-size: 15px; color: #0f172a;">
+                    <span>Grand Total:</span>
+                    <strong id="viewPoGrandTotal">0.00</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+@section scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="~/views-js/purchaseOrders.js" asp-append-version="true"></script>
+}
+
