@@ -61,7 +61,7 @@
 
             @{
                 var isOperationsActive = Html.IsActive("Order") == "active" || Html.IsActive("Settlement") == "active";
-                var isInventoryActive = Html.IsActive("Inventory") == "active" || Html.IsActive("InventoryBrand") == "active" || Html.IsActive("InventoryCategory") == "active" || Html.IsActive("Supplier") == "active" || Html.IsActive("InventoryUnit") == "active" || Html.IsActive("InventoryTransaction") == "active";
+                var isInventoryActive = Html.IsActive("Inventory") == "active" || Html.IsActive("InventoryBrand") == "active" || Html.IsActive("InventoryCategory") == "active" || Html.IsActive("Supplier") == "active" || Html.IsActive("PurchaseOrder") == "active" || Html.IsActive("TaxRate") == "active" || Html.IsActive("InventoryUnit") == "active" || Html.IsActive("InventoryTransaction") == "active";
                 var isUsersActive = Html.IsActive("Admin") == "active" || Html.IsActive("Customer") == "active" || Html.IsActive("Rider") == "active" || Html.IsActive("Storekeeper") == "active";
                 var isSupportActive = Html.IsActive("Offer") == "active" || Html.IsActive("Ticket") == "active" || Html.IsActive("Faq") == "active";
                 var isAccessActive = Html.IsActive("Role") == "active" || Html.IsActive("Permission") == "active" || Html.IsActive("ActivityLog") == "active";
@@ -86,6 +86,8 @@
                         <a class="submenu-item @Html.IsActive("InventoryBrand")" data-module="inventoryBrand" data-storekeeper="true" href="@Url.Action("Index", "InventoryBrand")">Brands</a>
                         <a class="submenu-item @Html.IsActive("InventoryCategory")" data-module="inventoryCategory" data-storekeeper="true" href="@Url.Action("Index", "InventoryCategory")">Categories</a>
                         <a class="submenu-item @Html.IsActive("Supplier")" data-module="supplier" data-storekeeper="true" href="@Url.Action("Index", "Supplier")">Suppliers</a>
+                        <a class="submenu-item @Html.IsActive("PurchaseOrder")" data-module="purchaseOrder" data-storekeeper="true" href="@Url.Action("Index", "PurchaseOrder")">Purchase Orders</a>
+                        <a class="submenu-item @Html.IsActive("TaxRate")" data-module="taxRate" data-storekeeper="true" href="@Url.Action("Index", "TaxRate")">Tax Rates</a>
                         <a class="submenu-item @Html.IsActive("InventoryUnit")" data-module="inventoryUnit" href="@Url.Action("Index", "InventoryUnit")">Units</a>
                         <a class="submenu-item @Html.IsActive("InventoryTransaction")" data-module="inventoryTransaction" data-storekeeper="true" href="@Url.Action("Index", "InventoryTransaction")">Stock Transactions</a>
                     </div>
@@ -215,8 +217,13 @@
 
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="~/js/lucide.js"></script>
+    <script>
+        // CDN fallback if local file somehow fails
+        if (!window.lucide) {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"><\/script>');
+        }
+    </script>
     <script src="~/views-js/permissions.js"></script>
     <script src="~/js/auth-helper.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
@@ -228,7 +235,7 @@
     <script src="~/plugins/customselect/customselect.js"></script>
     
     <script>
-        lucide.createIcons();
+        if (window.lucide) lucide.createIcons();
         AuthHelper.enforceAccessRestrictions();
     </script>
     <script>

@@ -107,6 +107,8 @@ const AuthHelper = (function () {
                 '/inventorycategory', '/inventorycategory/index',
                 '/inventorybrand', '/inventorybrand/index',
                 '/supplier', '/supplier/index',
+                '/purchaseorder', '/purchaseorder/index',
+                '/taxrate', '/taxrate/index',
                 '/inventorytransaction', '/inventorytransaction/index',
                 '/order', '/order/index'
             ];
